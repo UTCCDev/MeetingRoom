@@ -1,0 +1,356 @@
+{
+  "rooms": [
+    {
+      "name": "ห้องประชุม",
+      "description": "สำนักทะเบียนและประมวลผล - อาคาร 1 ชั้น 2",
+      "capacity": 12,
+      "amenities": "projector,whiteboard",
+      "department": "สำนักทะเบียนและประมวลผล"
+    },
+    {
+      "name": "ห้องประชุม",
+      "description": "สำนักยุทธศาสตร์ และ Data Analytics - อาคาร 1 ชั้น 4",
+      "capacity": 12,
+      "amenities": "projector,whiteboard",
+      "department": "สำนักยุทธศาสตร์ และ Data Analytics"
+    },
+    {
+      "name": "ห้องประชุม 1 (ห้องใหญ่)",
+      "description": "สำนักพัฒนานักศึกษา - อาคาร 3 ชั้น 2",
+      "capacity": 20,
+      "amenities": "projector,whiteboard",
+      "department": "สำนักพัฒนานักศึกษา"
+    },
+    {
+      "name": "ห้องประชุม 2",
+      "description": "สำนักพัฒนานักศึกษา - อาคาร 3 ชั้น 2",
+      "capacity": 6,
+      "amenities": "projector,whiteboard",
+      "department": "สำนักพัฒนานักศึกษา"
+    },
+    {
+      "name": "ห้องประชุม 3",
+      "description": "สำนักพัฒนานักศึกษา - อาคาร 3 ชั้น 2",
+      "capacity": 6,
+      "amenities": "projector,whiteboard",
+      "department": "สำนักพัฒนานักศึกษา"
+    },
+    {
+      "name": "ห้องประชุม 4",
+      "description": "สำนักพัฒนานักศึกษา - อาคาร 3 ชั้น 2",
+      "capacity": 6,
+      "amenities": "projector,whiteboard",
+      "department": "สำนักพัฒนานักศึกษา"
+    },
+    {
+      "name": "ห้องประชุม 5",
+      "description": "สำนักพัฒนานักศึกษา - อาคาร 3 ชั้น 2",
+      "capacity": 8,
+      "amenities": "projector,whiteboard",
+      "department": "สำนักพัฒนานักศึกษา"
+    },
+    {
+      "name": "ห้องประชุมบัณฑิตวิทยาลัย",
+      "description": "บัณฑิตวิทยาลัย - อาคาร 5 ชั้น 1",
+      "capacity": 8,
+      "amenities": "projector,whiteboard",
+      "department": "บัณฑิตวิทยาลัย"
+    },
+    {
+      "name": "ห้อง Meeting",
+      "description": "บัณฑิตวิทยาลัย - อาคาร 5 ชั้น 1",
+      "capacity": 12,
+      "amenities": "projector,whiteboard",
+      "department": "บัณฑิตวิทยาลัย"
+    },
+    {
+      "name": "ห้องประชุม",
+      "description": "สำนักบริการคอมพิวเตอร์ - อาคาร 7 ชั้น 5",
+      "capacity": 15,
+      "amenities": "projector,whiteboard",
+      "department": "สำนักบริการคอมพิวเตอร์"
+    },
+    {
+      "name": "ห้องประชุม 2",
+      "description": "คณะการสร้างเจ้าของธุรกิจสร้างสรรค์ - อาคาร 7 ชั้น 10",
+      "capacity": 15,
+      "amenities": "projector,whiteboard",
+      "department": "คณะการสร้างเจ้าของธุรกิจสร้างสรรค์"
+    },
+    {
+      "name": "ห้องสัมมนา 1",
+      "description": "คณะวิทยพัฒน์ - อาคาร 7 ชั้น 12",
+      "capacity": 15,
+      "amenities": "projector,whiteboard",
+      "department": "คณะวิทยพัฒน์"
+    },
+    {
+      "name": "ห้องสัมมนา 2",
+      "description": "คณะวิทยพัฒน์ - อาคาร 7 ชั้น 12",
+      "capacity": 15,
+      "amenities": "projector,whiteboard",
+      "department": "คณะวิทยพัฒน์"
+    },
+    {
+      "name": "ห้องประชุมทานตะวัน  2",
+      "description": "คณะนิเทศศาสตร์ - อาคาร 9 ชั้น 3",
+      "capacity": 12,
+      "amenities": "projector,whiteboard",
+      "department": "คณะนิเทศศาสตร์"
+    },
+    {
+      "name": "ห้องประชุม",
+      "description": "คณะนิเทศศาสตร์ - อาคาร 9 ชั้น 5",
+      "capacity": 8,
+      "amenities": "projector,whiteboard",
+      "department": "คณะนิเทศศาสตร์"
+    },
+    {
+      "name": "ห้องประชุม",
+      "description": "คณะท่องเที่ยวและอุตสาหรรมบริการ - อาคาร 10 ชั้น 4",
+      "capacity": 12,
+      "amenities": "projector,whiteboard",
+      "department": "คณะท่องเที่ยวและอุตสาหรรมบริการ"
+    },
+    {
+      "name": "ห้องประชุมฝ่ายวิชาการ",
+      "description": "สำนักวิชาการ - อาคาร 10 ชั้น 5",
+      "capacity": 8,
+      "amenities": "projector,whiteboard",
+      "department": "สำนักวิชาการ"
+    },
+    {
+      "name": "ห้องประชุม",
+      "description": "สำนักงานนวัตกรรมการศึกษา - อาคาร 10 ชั้น 5",
+      "capacity": 10,
+      "amenities": "projector,whiteboard",
+      "department": "สำนักงานนวัตกรรมการศึกษา"
+    },
+    {
+      "name": "ห้องประชุมประกันคุณภาพการศึกษา",
+      "description": "กองประกันคุณภาพการศึกษา - อาคาร 10 ชั้น 5",
+      "capacity": 55,
+      "amenities": "projector,whiteboard",
+      "department": "กองประกันคุณภาพการศึกษา"
+    },
+    {
+      "name": "ห้องประชุม",
+      "description": "สำนักบริหารทรัพยากรมนุษย์ - อาคาร 10 ชั้น 5",
+      "capacity": 10,
+      "amenities": "projector,whiteboard",
+      "department": "สำนักบริหารทรัพยากรมนุษย์"
+    },
+    {
+      "name": "ห้องประชุมแผนกคลังพัสดุฯ",
+      "description": "กองพัสดุและจัดการทรัพย์สิน - อาคาร 14 ชั้น 1",
+      "capacity": 10,
+      "amenities": "projector,whiteboard",
+      "department": "กองพัสดุและจัดการทรัพย์สิน"
+    },
+    {
+      "name": "ห้องประชุม",
+      "description": "สำนักงานตรวจสอบภายใน - อาคาร 14 ชั้น 3",
+      "capacity": 8,
+      "amenities": "projector,whiteboard",
+      "department": "สำนักงานตรวจสอบภายใน"
+    },
+    {
+      "name": "ห้องประชุม",
+      "description": "สำนักงานกองนิติการ - อาคาร 14 ชั้น 4",
+      "capacity": 6,
+      "amenities": "projector,whiteboard",
+      "department": "สำนักงานกองนิติการ"
+    },
+    {
+      "name": "ห้องประชุม 3",
+      "description": "กองพัสดุและจัดการทรัพย์สิน - อาคาร 14 ชั้น 3",
+      "capacity": 6,
+      "amenities": "projector,whiteboard",
+      "department": "กองพัสดุและจัดการทรัพย์สิน"
+    },
+    {
+      "name": "ห้องประชุมคณะวิศวกรรมศาสตร์",
+      "description": "คณะวิศวกรรมศาสตร์ - อาคาร 19 ชั้น 3",
+      "capacity": 12,
+      "amenities": "projector,whiteboard",
+      "department": "คณะวิศวกรรมศาสตร์"
+    },
+    {
+      "name": "ห้อง Meeting",
+      "description": "วิทยาลัยนานาชาติ ISM - อาคาร 21 ชั้น 1",
+      "capacity": 8,
+      "amenities": "projector,whiteboard",
+      "department": "วิทยาลัยนานาชาติ ISM"
+    },
+    {
+      "name": "ห้อง Meeting 1",
+      "description": "วิทยาลัยนานาชาติ ISM - อาคาร 21 ชั้น 1",
+      "capacity": 15,
+      "amenities": "projector,whiteboard",
+      "department": "วิทยาลัยนานาชาติ ISM"
+    },
+    {
+      "name": "ห้อง Meeting",
+      "description": "วิทยาลัยนานาชาติ ISM - อาคาร 21 ชั้น 2",
+      "capacity": 6,
+      "amenities": "projector,whiteboard",
+      "department": "วิทยาลัยนานาชาติ ISM"
+    },
+    {
+      "name": "ห้องประชุมศูนย์ RI{ED",
+      "description": "ศูนย์วิจัย RIPED - อาคาร 21 ชั้น 7",
+      "capacity": 15,
+      "amenities": "projector,whiteboard",
+      "department": "ศูนย์วิจัย RIPED"
+    },
+    {
+      "name": "ห้องประชุมศูนย์วิจัยชิคาโก้",
+      "description": "กองอาคารและสิ่งแวดล้อม - อาคาร 21 ชั้น 7",
+      "capacity": 20,
+      "amenities": "projector,whiteboard",
+      "department": "กองอาคารและสิ่งแวดล้อม"
+    },
+    {
+      "name": "ห้อง Meeting",
+      "description": "คณะการศึกษาปฐมวัย - อาคาร 21 ชั้น 7",
+      "capacity": 10,
+      "amenities": "projector,whiteboard",
+      "department": "คณะการศึกษาปฐมวัย"
+    },
+    {
+      "name": "ห้อง Meeting",
+      "description": "กองวิเทศสัมพันธ์ - อาคาร 21 ชั้น 7",
+      "capacity": 8,
+      "amenities": "projector,whiteboard",
+      "department": "กองวิเทศสัมพันธ์"
+    },
+    {
+      "name": "ห้องประชุม",
+      "description": "วิทยาลัยนานาชาติไทย-จีน - อาคาร 22 ชั้น 4",
+      "capacity": 12,
+      "amenities": "projector,whiteboard",
+      "department": "วิทยาลัยนานาชาติไทย-จีน"
+    },
+    {
+      "name": "ห้องประชุม",
+      "description": "คณะพยาบาลศาสตร์ - อาคาร 23 ชั้น 5",
+      "capacity": 10,
+      "amenities": "projector,whiteboard",
+      "department": "คณะพยาบาลศาสตร์"
+    },
+    {
+      "name": "ห้องประชุม",
+      "description": "คณะนิติศาสตร์ - อาคาร 23 ชั้น 6",
+      "capacity": 20,
+      "amenities": "projector,whiteboard",
+      "department": "คณะนิติศาสตร์"
+    },
+    {
+      "name": "ห้องประชุม",
+      "description": "คณะมนุษยศาสตร์ - อาคาร 24 ชั้น 9",
+      "capacity": 10,
+      "amenities": "projector,whiteboard",
+      "department": "คณะมนุษยศาสตร์"
+    },
+    {
+      "name": "ห้องประชุม",
+      "description": "คณะมนุษยศาสตร์ - อาคาร 24 ชั้น 10",
+      "capacity": 10,
+      "amenities": "projector,whiteboard",
+      "department": "คณะมนุษยศาสตร์"
+    },
+    {
+      "name": "ห้องประชุม",
+      "description": "คณะท่องเที่ยวและอุตสาหรรมบริการ - อาคาร 24 ชั้น 11",
+      "capacity": 10,
+      "amenities": "projector,whiteboard",
+      "department": "คณะท่องเที่ยวและอุตสาหรรมบริการ"
+    },
+    {
+      "name": "ห้องประชุม (1206)",
+      "description": "คณะวิทยาศาสตร์ - อาคาร 24 ชั้น 12",
+      "capacity": 6,
+      "amenities": "projector,whiteboard",
+      "department": "คณะวิทยาศาสตร์"
+    },
+    {
+      "name": "ห้องประชุม",
+      "description": "คณะเศรษฐศาสตร์ - อาคาร 24 ชั้น 12",
+      "capacity": 12,
+      "amenities": "projector,whiteboard",
+      "department": "คณะเศรษฐศาสตร์"
+    },
+    {
+      "name": "ห้องประชุม",
+      "description": "คณะบริหารธุรกิจ - อาคาร 24 ชั้น 12A",
+      "capacity": 10,
+      "amenities": "projector,whiteboard",
+      "department": "คณะบริหารธุรกิจ"
+    },
+    {
+      "name": "ห้องประชุม",
+      "description": "คณะบัญชี - อาคาร 24 ชั้น 14",
+      "capacity": 10,
+      "amenities": "projector,whiteboard",
+      "department": "คณะบัญชี"
+    },
+    {
+      "name": "ห้องประชุม",
+      "description": "กองอาคารและสิ่งแวดล้อม - อาคาร 24 ชั้น 15",
+      "capacity": 55,
+      "amenities": "projector,whiteboard",
+      "department": "กองอาคารและสิ่งแวดล้อม"
+    },
+    {
+      "name": "ห้องประชุม 1",
+      "description": "กองอาคารและสิ่งแวดล้อม - อาคาร 24 ชั้น 15",
+      "capacity": 30,
+      "amenities": "projector,whiteboard",
+      "department": "กองอาคารและสิ่งแวดล้อม"
+    },
+    {
+      "name": "ห้องประชุม 2",
+      "description": "กองอาคารและสิ่งแวดล้อม - อาคาร 24 ชั้น 15",
+      "capacity": 10,
+      "amenities": "projector,whiteboard",
+      "department": "กองอาคารและสิ่งแวดล้อม"
+    },
+    {
+      "name": "ห้องประชุม 3",
+      "description": "กองอาคารและสิ่งแวดล้อม - อาคาร 24 ชั้น 15",
+      "capacity": 12,
+      "amenities": "projector,whiteboard",
+      "department": "กองอาคารและสิ่งแวดล้อม"
+    },
+    {
+      "name": "ห้องประชุม",
+      "description": "กองอาคารและสิ่งแวดล้อม - อาคาร 24 ชั้น 16",
+      "capacity": 15,
+      "amenities": "projector,whiteboard",
+      "department": "กองอาคารและสิ่งแวดล้อม"
+    },
+    {
+      "name": "ห้องประชุม",
+      "description": "กองอาคารและสิ่งแวดล้อม - อาคาร 24 ชั้น 17",
+      "capacity": 12,
+      "amenities": "projector,whiteboard",
+      "department": "กองอาคารและสิ่งแวดล้อม"
+    },
+    {
+      "name": "ห้องประชุม",
+      "description": "กองอาคารและสิ่งแวดล้อม - อาคาร 24 ชั้น 17",
+      "capacity": 8,
+      "amenities": "projector,whiteboard",
+      "department": "กองอาคารและสิ่งแวดล้อม"
+    },
+    {
+      "name": "ห้องประชุม",
+      "description": "กองอาคารและสิ่งแวดล้อม - อาคาร แผนกซ่อมบำรุง ชั้น 1",
+      "capacity": 10,
+      "amenities": "projector,whiteboard",
+      "department": "กองอาคารและสิ่งแวดล้อม"
+    }
+  ],
+  "total": 50,
+  "timestamp": "2026-09-22T04:39:17.750Z"
+}

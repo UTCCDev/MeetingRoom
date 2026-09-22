@@ -1,0 +1,83 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// User model - stores employee information
+model User {
+  id        String     @id @default(cuid())
+  email     String     @unique
+  name      String
+  password  String
+  role      UserRole   @default(USER)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  // Relations
+  bookings  Booking[]
+  roomsAsAdmin Room[] // Rooms this user administers
+
+  @@map("users")
+}
+
+enum UserRole {
+  USER
+  ROOM_ADMIN
+  SYSTEM_ADMIN
+}
+
+// Room model - stores meeting room information
+model Room {
+  id          String   @id @default(cuid())
+  name        String
+  description String?  @db.Text
+  capacity    Int
+  image       String?
+  amenities   Json? // JSON array of amenities
+  roomAdminId String
+  status      Boolean  @default(true) // true = active, false = inactive
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  roomAdmin   User     @relation(fields: [roomAdminId], references: [id], onDelete: Cascade)
+  bookings    Booking[]
+
+  @@map("rooms")
+}
+
+// Booking model - stores booking information
+model Booking {
+  id            String        @id @default(cuid())
+  userId        String
+  roomId        String
+  title         String
+  description   String?       @db.Text
+  attendees     Int
+  startTime     DateTime
+  endTime       DateTime
+  status        BookingStatus @default(PENDING)
+  rejectionReason String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // Relations
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  room          Room          @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@map("bookings")
+}
+
+enum BookingStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
