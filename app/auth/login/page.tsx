@@ -1,25 +1,98 @@
 "use client";
 
-import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { useEffect, useState } from "react";
+import { getProviders, signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import "./login.css";
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MICROSOFT_PROVIDER = "azure-ad";
+
+// next-auth redirects back with ?error=<code> when an OAuth sign-in fails.
+const OAUTH_ERRORS: Record<string, string> = {
+  AccessDenied: "บัญชี Microsoft 365 นี้ไม่มีสิทธิ์เข้าใช้ระบบ หรือบัญชีถูกระงับ",
+  OAuthAccountNotLinked: "อีเมลนี้เชื่อมกับวิธีเข้าสู่ระบบอื่นอยู่แล้ว",
+};
+const DEFAULT_OAUTH_ERROR = "เข้าสู่ระบบด้วย Microsoft 365 ไม่สำเร็จ กรุณาลองใหม่";
+
+// Only same-site relative paths, so the login page can't be used as an open redirect.
+function safeCallbackUrl(): string {
+  const params = new URLSearchParams(window.location.search);
+  const raw = params.get("callbackUrl") || "/";
+  try {
+    const url = new URL(raw, window.location.origin);
+    if (url.origin !== window.location.origin) return "/";
+    return url.pathname + url.search + url.hash;
+  } catch {
+    return "/";
+  }
+}
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [notice, setNotice] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [hasMicrosoft, setHasMicrosoft] = useState(false);
+  const [isSsoLoading, setIsSsoLoading] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("registered") === "1") {
+      setNotice("ลงทะเบียนสำเร็จ กรุณาเข้าสู่ระบบ");
+    }
+    // Credentials failures are handled inline (redirect: false), so any error here is from SSO.
+    const oauthError = params.get("error");
+    if (oauthError) {
+      setError(OAUTH_ERRORS[oauthError] ?? DEFAULT_OAUTH_ERROR);
+    }
+
+    getProviders()
+      .then((providers) => setHasMicrosoft(!!providers?.[MICROSOFT_PROVIDER]))
+      .catch(() => setHasMicrosoft(false));
+  }, []);
+
+  const handleMicrosoftSignIn = async () => {
+    setError("");
+    // The button is shown before the Entra ID app is set up (AZURE_AD_* in .env).
+    if (!hasMicrosoft) {
+      setError("การเข้าสู่ระบบด้วย Microsoft 365 ยังไม่เปิดใช้งาน กรุณาใช้อีเมลและรหัสผ่าน");
+      return;
+    }
+    setIsSsoLoading(true);
+    try {
+      // Full-page redirect to Microsoft; we only get back here if it fails to start.
+      await signIn(MICROSOFT_PROVIDER, { callbackUrl: safeCallbackUrl() });
+    } catch {
+      setError(DEFAULT_OAUTH_ERROR);
+      setIsSsoLoading(false);
+    }
+  };
+
+  const isBusy = isLoading || isSsoLoading;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (!email.trim() || !password) {
+      setError("กรุณากรอกอีเมลและรหัสผ่าน");
+      return;
+    }
+    if (!EMAIL_PATTERN.test(email.trim())) {
+      setError("รูปแบบอีเมลไม่ถูกต้อง");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       const result = await signIn("credentials", {
-        email,
+        email: email.trim(),
         password,
         redirect: false,
       });
@@ -27,7 +100,8 @@ export default function LoginPage() {
       if (result?.error) {
         setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
       } else if (result?.ok) {
-        router.push("/");
+        router.push(safeCallbackUrl());
+        router.refresh();
       }
     } catch (err) {
       setError("เกิดข้อผิดพลาดบางประการ");
@@ -36,91 +110,137 @@ export default function LoginPage() {
     }
   };
 
+  const clearError = () => setError("");
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-white p-4">
-      <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full border-t-4 border-blue-700">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-blue-700 mb-2">
-            ระบบจองห้อง
-          </h1>
-          <p className="text-gray-600">
-            ระบบจองห้องประชุมแบบรวมศูนย์
+    <div className="login">
+      <aside className="login__brand">
+        <div className="login__logo">ระบบจองห้องประชุม</div>
+        <div>
+          <div className="login__overline">ระบบงานภายใน</div>
+          <h1 className="login__headline">ยินดีต้อนรับกลับมา</h1>
+          <p className="login__lede">
+            จองห้องประชุมส่วนกลาง ตรวจสอบห้องว่าง และติดตามสถานะการจองได้ในที่เดียว
           </p>
         </div>
+        <div className="login__legal">© {new Date().getFullYear()} ระบบจองห้องประชุมส่วนกลาง</div>
+      </aside>
 
-        {error && (
-          <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
-            ⚠️ {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
+      <main className="login__main">
+        <form className="login__form" onSubmit={handleSubmit} noValidate>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              อีเมล
-            </label>
-            <input
-              type="text"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="input-field"
-              placeholder="example@utcc.ac.th"
-              required
-            />
+            <h2 className="login__title">เข้าสู่ระบบ</h2>
+            <p className="login__subtitle">ใช้อีเมลและรหัสผ่านของคุณเพื่อเข้าสู่ระบบ</p>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              รหัสผ่าน
+          {notice && !error && (
+            <div className="alert alert--success" role="status">
+              {notice}
+            </div>
+          )}
+
+          {error && (
+            <div className="alert alert--error" role="alert">
+              {error}
+            </div>
+          )}
+
+          <div className="field">
+            <label className="field__label" htmlFor="login-email">
+              <span>อีเมล</span>
             </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="input-field"
-              placeholder="••••••••"
-              required
-            />
+            <div className="field__control">
+              <input
+                id="login-email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                inputMode="email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  clearError();
+                }}
+                className="field__input"
+                placeholder="example@utcc.ac.th"
+              />
+            </div>
+          </div>
+
+          <div className="field">
+            <label className="field__label" htmlFor="login-password">
+              <span>รหัสผ่าน</span>
+            </label>
+            <div className="field__control">
+              <input
+                id="login-password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  clearError();
+                }}
+                className="field__input field__input--with-toggle"
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                className="field__toggle"
+                onClick={() => setShowPassword((s) => !s)}
+                aria-pressed={showPassword}
+                aria-controls="login-password"
+              >
+                {showPassword ? "ซ่อน" : "แสดง"}
+              </button>
+            </div>
           </div>
 
           <button
             type="submit"
-            disabled={isLoading}
-            className="w-full btn-primary disabled:opacity-50"
+            disabled={isBusy}
+            aria-busy={isLoading || undefined}
+            className="btn btn--filled btn--l btn--block"
           >
-            {isLoading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
+            {isLoading ? "กำลังเข้าสู่ระบบ…" : "เข้าสู่ระบบ"}
           </button>
-        </form>
 
-        <div className="mt-6 text-center">
-          <p className="text-gray-600">
-            ยังไม่มีบัญชี?{" "}
-            <Link href="/auth/register" className="font-semibold text-blue-700 hover:text-blue-800 hover:underline">
-              ลงทะเบียนที่นี่
-            </Link>
-          </p>
-        </div>
+          <div className="divider">หรือ</div>
 
-        <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
-          <p className="text-sm font-semibold mb-3 text-center text-blue-700">
-            🔐 ข้อมูลสำหรับทดสอบ:
-          </p>
-          <div className="space-y-2 text-xs text-gray-700">
-            <div className="bg-white p-2 rounded">
-              <p className="font-semibold text-blue-700">ผู้ใช้ทั่วไป:</p>
-              <p>user@example.com / password</p>
-            </div>
-            <div className="bg-white p-2 rounded">
-              <p className="font-semibold text-blue-700">ผู้ดูแลห้อง:</p>
-              <p>admin@example.com / password</p>
-            </div>
-            <div className="bg-white p-2 rounded">
-              <p className="font-semibold text-blue-700">ผู้ดูแลระบบ:</p>
-              <p>system@example.com / password</p>
-            </div>
+          <button
+            type="button"
+            onClick={handleMicrosoftSignIn}
+            disabled={isBusy}
+            aria-busy={isSsoLoading || undefined}
+            className="btn btn--outlined btn--l btn--block"
+          >
+            <span className="ms-logo" aria-hidden="true">
+              <span /><span /><span /><span />
+            </span>
+            {isSsoLoading ? "กำลังเชื่อมต่อ Microsoft 365…" : "เข้าสู่ระบบด้วย Microsoft 365"}
+          </button>
+
+          <div className="divider">ยังไม่มีบัญชี?</div>
+
+          <Link href="/auth/register" className="btn btn--outlined btn--l btn--block">
+            ลงทะเบียนบัญชีใหม่
+          </Link>
+
+          {/* Demo accounts. TODO: remove this box and the seed users before going live. */}
+          <div className="login__demo">
+            <p className="login__demo-title">ข้อมูลสำหรับทดสอบ (รหัสผ่าน: password)</p>
+            <dl className="login__demo-list">
+              <dt>ผู้ใช้ทั่วไป</dt>
+              <dd>user@example.com</dd>
+              <dt>ผู้ดูแลห้อง</dt>
+              <dd>admin@example.com</dd>
+              <dt>ผู้ดูแลระบบ</dt>
+              <dd>system@example.com</dd>
+            </dl>
           </div>
-        </div>
-      </div>
+        </form>
+      </main>
     </div>
   );
 }

@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import AppHeader from "@/app/components/AppHeader";
+import { SkeletonCards } from "@/app/components/Skeleton";
+import { useToast } from "@/app/components/Toast";
+import { roomLocation } from "@/lib/format";
 
 interface Room {
   id: string;
@@ -11,7 +14,8 @@ interface Room {
   description?: string;
   capacity: number;
   image?: string;
-  amenities?: string;
+  amenities?: string | string[];
+  status?: boolean;
 }
 
 export default function MyRoomsPage() {
@@ -23,10 +27,12 @@ export default function MyRoomsPage() {
   const [editData, setEditData] = useState<Partial<Room>>({});
 
   const router = useRouter();
+  const pathname = usePathname();
+  const toast = useToast();
 
   useEffect(() => {
     if (status === "unauthenticated") {
-      router.push("/auth/login");
+      router.push(`/auth/login?callbackUrl=${encodeURIComponent(pathname || "/")}`);
     } else if (status === "authenticated") {
       const userRole = (session?.user as any)?.role;
       if (userRole !== "ROOM_ADMIN") {
@@ -35,11 +41,13 @@ export default function MyRoomsPage() {
         fetchMyRooms();
       }
     }
-  }, [status, session, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
 
   const fetchMyRooms = async () => {
     try {
-      const response = await fetch("/api/rooms");
+      // all=1 returns this room admin's rooms, including disabled ones.
+      const response = await fetch("/api/rooms?all=1");
       if (!response.ok) throw new Error("Failed to fetch rooms");
       const data = await response.json();
       const userId = (session?.user as any)?.id;
@@ -48,7 +56,7 @@ export default function MyRoomsPage() {
       );
       setRooms(myRooms);
     } catch (err) {
-      setError("Failed to load your rooms");
+      setError("ไม่สามารถโหลดห้องของคุณได้");
     } finally {
       setIsLoading(false);
     }
@@ -84,31 +92,22 @@ export default function MyRoomsPage() {
         }),
       });
 
-      if (!response.ok) throw new Error("Failed to update room");
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || "แก้ไขห้องไม่สำเร็จ");
+      }
 
-      alert("Room updated successfully!");
+      toast("บันทึกการแก้ไขห้องแล้ว", { type: "success" });
       setEditingRoomId(null);
       fetchMyRooms();
     } catch (err) {
-      alert("Failed to update room");
+      toast(err instanceof Error ? err.message : "แก้ไขห้องไม่สำเร็จ", { type: "error" });
     }
   };
 
-  if (isLoading) {
-    return <div className="p-8 text-center">กำลังโหลด...</div>;
-  }
-
   return (
     <div className="min-h-screen bg-white">
-      <nav className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <Link href="/" className="text-blue-700 font-semibold hover:text-blue-800">
-            ← กลับหน้าหลัก
-          </Link>
-          <h1 className="text-3xl font-bold text-blue-700">ห้องของหน่วย</h1>
-          <div></div>
-        </div>
-      </nav>
+      <AppHeader title="ห้องที่ฉันดูแล" breadcrumbs={[{ label: "ห้องของฉัน" }]} />
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         {error && (
@@ -117,10 +116,12 @@ export default function MyRoomsPage() {
           </div>
         )}
 
-        {rooms.length === 0 ? (
+        {isLoading ? (
+          <SkeletonCards count={2} />
+        ) : rooms.length === 0 ? (
           <div className="card text-center">
             <p className="text-gray-500">
-              You don't have any rooms assigned yet.
+              ยังไม่มีห้องที่คุณดูแล
             </p>
           </div>
         ) : (
@@ -153,6 +154,7 @@ export default function MyRoomsPage() {
                         </label>
                         <input
                           type="number"
+                          min="1"
                           value={editData.capacity || ""}
                           onChange={(e) =>
                             setEditData({
@@ -206,7 +208,7 @@ export default function MyRoomsPage() {
                           typeof editData.amenities === "string"
                             ? editData.amenities
                             : Array.isArray(editData.amenities)
-                            ? editData.amenities.join(", ")
+                            ? (editData.amenities as string[]).join(", ")
                             : ""
                         }
                         onChange={(e) =>
@@ -247,7 +249,10 @@ export default function MyRoomsPage() {
                     <h3 className="text-2xl font-bold mb-2 text-blue-700">
                       {room.name}
                     </h3>
-                    <p className="text-gray-600 mb-4">{room.description}</p>
+                    <p className="text-gray-600 mb-4">{roomLocation(room.description)}</p>
+                    {room.status === false && (
+                      <p className="mb-4 inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-200 text-gray-600">ปิดใช้งาน</p>
+                    )}
 
                     <div className="grid grid-cols-2 gap-4 mb-4">
                       <div>
@@ -259,12 +264,12 @@ export default function MyRoomsPage() {
                     {room.amenities && (
                       <div className="mb-4">
                         <p className="text-sm font-medium text-gray-600 mb-2">
-                          Amenities:
+                          สิ่งอำนวยความสะดวก:
                         </p>
                         <div className="flex flex-wrap gap-2">
                           {(Array.isArray(room.amenities)
                             ? room.amenities
-                            : room.amenities.split(",")
+                            : String(room.amenities).split(",")
                           )
                             .map((amenity: any) =>
                               typeof amenity === "string"
@@ -288,7 +293,7 @@ export default function MyRoomsPage() {
                         onClick={() => handleEditRoom(room)}
                         className="btn-primary"
                       >
-                        Edit Room
+                        แก้ไขห้อง
                       </button>
                     </div>
                   </>

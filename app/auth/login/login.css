@@ -1,0 +1,142 @@
+/* Heavent DS v0.1 — login page (dev-kit tokens.css + buttons.css + login.css).
+   Tokens are scoped to .login so the rest of the app keeps its current theme.
+   Font files go in public/fonts; until they are there the page falls back to Prompt. */
+@font-face { font-family: "DB Heavent"; src: url("/fonts/DBHeavent-Light.ttf") format("truetype"); font-weight: 300; font-display: swap; }
+@font-face { font-family: "DB Heavent"; src: url("/fonts/DBHeavent-Med.ttf") format("truetype"); font-weight: 500; font-display: swap; }
+@font-face { font-family: "DB Heavent"; src: url("/fonts/DBHeavent-Bold.ttf") format("truetype"); font-weight: 700; font-display: swap; }
+
+.login {
+  --font-family: "DB Heavent", "Prompt", "Noto Sans Thai", sans-serif;
+
+  /* Type scale — Foundation 01 Typography. rem for sizes, unitless line-height.
+     Only headings shrink per breakpoint; body/label/caption stay the same on every device. */
+  --h2-size: 3rem;      /* 2.5rem tablet · 2rem mobile */
+  --h3-size: 2.25rem;   /* 2rem tablet · 1.75rem mobile */
+  --type-h2: 700 var(--h2-size)/1.15 var(--font-family);
+  --type-h3: 500 var(--h3-size)/1.2 var(--font-family);
+  --type-nav-title: 500 1.5rem/1.35 var(--font-family);
+  --type-body: 300 1.25rem/1.65 var(--font-family);
+  --type-body-small: 300 1.125rem/1.6 var(--font-family);
+  --type-label: 500 1.125rem/1.4 var(--font-family);
+  --type-caption: 300 1rem/1.45 var(--font-family);
+  --type-overline: 700 1rem/1.3 var(--font-family);
+
+  --color-primary: #2E3192;
+  --color-primary-hover: #232670;
+  --color-primary-pressed: #1B1E5C;
+  --color-on-primary: #FFFFFF;
+  --color-primary-container: #E8E9F6;
+  --color-accent: #00B1EB;
+  --color-highlight: #FFC709;
+  --color-ink: #12142E;
+  --color-ink-muted: #3D4160;
+  --color-ink-subtle: #6A6F91;
+  --color-on-primary-muted: #D5D7F2;
+  --color-outline: #C6C9DC;
+  --color-line: #E2E4EE;
+  --color-surface: #FFFFFF;
+  --color-canvas: #FAFBFD;
+  --color-disabled-bg: #E4E5EC;
+  --color-disabled-fg: #8B8FA8;
+  --color-error-text: #8A1C12;
+  --color-error-bg: #FDF1F1;
+  --color-error-line: #F1B8B8;
+  --color-success: #146C3A;
+  --color-success-bg: #EEF9F2;
+  --color-success-line: #B9E6C9;
+
+  --radius-xs: 4px;
+  --radius-control: var(--radius-xs);
+  --focus-ring: 2px solid var(--color-accent);
+
+  display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 9fr); min-height: 100vh;
+  background: var(--color-surface); color: var(--color-ink); font: var(--type-body);
+  word-break: normal;
+}
+.login__brand { background: var(--color-primary); color: var(--color-on-primary); padding: 48px;
+  display: flex; flex-direction: column; justify-content: space-between; gap: 40px; }
+.login__logo { font: var(--type-nav-title); }
+.login__overline { font: var(--type-overline); letter-spacing: .14em; text-transform: uppercase; color: var(--color-highlight); }
+.login__headline { margin: 16px 0; font: var(--type-h2); color: var(--color-on-primary); text-wrap: pretty; }
+.login__lede { margin: 0; max-width: 26rem; font: var(--type-body); color: var(--color-on-primary-muted); text-wrap: pretty; }
+.login__legal { font: var(--type-caption); color: var(--color-on-primary-muted); }
+
+.login__main { display: flex; align-items: center; justify-content: center; padding: 56px 48px; }
+.login__form { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 24px; }
+.login__title { margin: 0; font: var(--type-h3); color: var(--color-ink); text-wrap: pretty; }
+.login__subtitle { margin: 6px 0 0; font: var(--type-body-small); color: var(--color-ink-subtle); }
+
+@media (max-width: 1023px) {
+  .login { --h2-size: 2.5rem; --h3-size: 2rem; }
+}
+
+@media (max-width: 767px) {
+  .login { grid-template-columns: 1fr; --h2-size: 2rem; --h3-size: 1.75rem; }
+  .login__brand { padding: 20px 24px; }
+  .login__brand > :not(.login__logo) { display: none; }
+  .login__main { padding: 32px 24px; align-items: flex-start; }
+}
+
+/* Buttons */
+.login .btn {
+  font: var(--type-label);
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  box-sizing: border-box; cursor: pointer; border: none; text-decoration: none;
+  height: 44px; padding: 0 28px; border-radius: var(--radius-control);
+  transition: background 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+}
+.login .btn:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+.login .btn:disabled { background: var(--color-disabled-bg); color: var(--color-disabled-fg); cursor: not-allowed; box-shadow: none; }
+.login .btn[aria-busy="true"] { opacity: .75; cursor: progress; }
+.login .btn--block { width: 100%; }
+.login .btn--l { height: 52px; padding: 0 34px; }
+
+.login .btn--filled { background: var(--color-primary); color: var(--color-on-primary); }
+.login .btn--filled:hover:not(:disabled) { background: var(--color-primary-hover); }
+.login .btn--filled:active:not(:disabled) { background: var(--color-primary-pressed); }
+
+.login .btn--outlined { background: transparent; color: var(--color-primary); border: 1px solid var(--color-outline); }
+.login .btn--outlined:hover { border-color: var(--color-primary); background: var(--color-canvas); }
+.login .btn--outlined:active { background: var(--color-primary-container); }
+
+/* Text field */
+.login .field { display: flex; flex-direction: column; gap: 8px; }
+.login .field__label { font: var(--type-label); color: var(--color-ink); display: flex; justify-content: space-between; align-items: baseline; }
+.login .field__control { position: relative; }
+.login .field__input {
+  font: var(--type-body); color: var(--color-ink);
+  width: 100%; box-sizing: border-box; height: 48px; padding: 0 16px;
+  border: 1px solid var(--color-outline); border-radius: var(--radius-control); background: var(--color-surface);
+}
+.login .field__input--with-toggle { padding-right: 72px; }
+.login .field__input::placeholder { color: var(--color-ink-subtle); }
+.login .field__input:focus { border-color: var(--color-primary); outline: var(--focus-ring); outline-offset: 1px; }
+.login .field__toggle { position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  font: var(--type-label); color: var(--color-primary); background: none; border: 0; height: 36px; padding: 0 10px; cursor: pointer; }
+.login .field__toggle:focus-visible { outline: var(--focus-ring); }
+
+/* Alert */
+.login .alert { padding: 16px 20px; border: 1px solid; font: var(--type-body-small); }
+.login .alert--error { font-weight: 500; background: var(--color-error-bg); border-color: var(--color-error-line); color: var(--color-error-text); }
+.login .alert--success { background: var(--color-success-bg); border-color: var(--color-success-line); color: var(--color-success); }
+
+/* Divider */
+.login .divider { display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; align-items: center;
+  font: var(--type-caption); color: var(--color-ink-subtle); }
+.login .divider::before, .login .divider::after { content: ""; height: 1px; background: var(--color-line); }
+
+/* Microsoft logo (four squares in Microsoft's brand colours) */
+.login .ms-logo { display: grid; grid-template-columns: 9px 9px; gap: 2px; }
+.login .ms-logo span { width: 9px; height: 9px; }
+.login .ms-logo span:nth-child(1) { background: #F25022; }
+.login .ms-logo span:nth-child(2) { background: #7FBA00; }
+.login .ms-logo span:nth-child(3) { background: #00A4EF; }
+.login .ms-logo span:nth-child(4) { background: #FFB900; }
+.login .btn:disabled .ms-logo { filter: grayscale(1); opacity: .6; }
+
+/* Demo accounts (not in the DS; built from its tokens) */
+.login__demo { padding: 16px 20px; border: 1px solid var(--color-line); background: var(--color-canvas); }
+.login__demo-title { margin: 0 0 8px; font: var(--type-label); color: var(--color-ink); }
+.login__demo-list { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; font: var(--type-body-small); }
+.login__demo-list dt { font-weight: 500; color: var(--color-primary); }
+.login__demo-list dd { margin: 0; color: var(--color-ink-muted); }

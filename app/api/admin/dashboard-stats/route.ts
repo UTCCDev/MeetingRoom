@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
 
     if (userRole !== "SYSTEM_ADMIN") {
       return NextResponse.json(
-        { error: "Only system admins can access this endpoint" },
+        { error: "เฉพาะผู้ดูแลระบบเท่านั้นที่เข้าถึงส่วนนี้ได้" },
         { status: 403 }
       );
     }
@@ -33,20 +33,30 @@ export async function GET(request: NextRequest) {
         prisma.booking.count({ where: { status: "APPROVED" } }),
       ]);
 
-    // Get room utilization
-    const roomUtilization = await prisma.room.findMany({
-      select: {
-        id: true,
-        name: true,
-        _count: {
-          select: {
-            bookings: {
-              where: { status: "APPROVED" },
-            },
-          },
-        },
-      },
-    });
+    // Get room utilization (Prisma 3.x doesn't support filtered relation
+    // counts via _count.select.bookings.where, so aggregate manually)
+    const [rooms, approvedCountsByRoom] = await Promise.all([
+      prisma.room.findMany({ select: { id: true, name: true, description: true } }),
+      prisma.booking.groupBy({
+        by: ["roomId"],
+        where: { status: "APPROVED" },
+        _count: { id: true },
+      }),
+    ]);
+
+    const approvedCountMap = new Map(
+      approvedCountsByRoom.map((row) => [row.roomId, row._count.id])
+    );
+
+    // Counts approved bookings only; most-used rooms first.
+    const roomUtilization = rooms
+      .map((room) => ({
+        roomId: room.id,
+        roomName: room.name,
+        roomDescription: room.description,
+        bookingCount: approvedCountMap.get(room.id) || 0,
+      }))
+      .sort((a, b) => b.bookingCount - a.bookingCount);
 
     // Get booking status breakdown
     const bookingsByStatus = await prisma.booking.groupBy({
@@ -62,11 +72,7 @@ export async function GET(request: NextRequest) {
       totalBookings,
       pendingBookings,
       approvedBookings,
-      roomUtilization: roomUtilization.map((room) => ({
-        roomId: room.id,
-        roomName: room.name,
-        bookingCount: room._count.bookings,
-      })),
+      roomUtilization,
       bookingsByStatus: Object.fromEntries(
         bookingsByStatus.map((bs) => [bs.status, bs._count.id])
       ),
@@ -74,9 +80,12 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(stats);
   } catch (error) {
-    console.error("Error fetching dashboard stats:", error);
+    console.error(
+      "Error fetching dashboard stats:",
+      error instanceof Error ? `${error.name}: ${error.message}\n${error.stack}` : error
+    );
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "เกิดข้อผิดพลาดที่เซิร์ฟเวอร์ กรุณาลองใหม่" },
       { status: 500 }
     );
   }

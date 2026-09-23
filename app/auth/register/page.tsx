@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
+const PASSWORD_MIN_LENGTH = 8;
+
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -17,6 +19,21 @@ export default function RegisterPage() {
     e.preventDefault();
     setError("");
 
+    if (!name.trim() || !email.trim() || !password || !confirmPassword) {
+      setError("กรุณากรอกข้อมูลให้ครบทุกช่อง");
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setError("รูปแบบอีเมลไม่ถูกต้อง");
+      return;
+    }
+
+    if (password.length < PASSWORD_MIN_LENGTH) {
+      setError(`รหัสผ่านต้องมีอย่างน้อย ${PASSWORD_MIN_LENGTH} ตัวอักษร`);
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError("รหัสผ่านไม่ตรงกัน");
       return;
@@ -28,7 +45,7 @@ export default function RegisterPage() {
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, name, password }),
+        body: JSON.stringify({ email: email.trim(), name: name.trim(), password }),
       });
 
       if (!response.ok) {
@@ -37,7 +54,7 @@ export default function RegisterPage() {
         return;
       }
 
-      router.push("/auth/login?message=ลงทะเบียนสำเร็จ");
+      router.push("/auth/login?registered=1");
     } catch (err) {
       setError("เกิดข้อผิดพลาดบางประการ");
     } finally {
@@ -58,65 +75,89 @@ export default function RegisterPage() {
         </div>
 
         {error && (
-          <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
+          <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg" role="alert">
             ⚠️ {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="register-name" className="block text-sm font-medium text-gray-700 mb-1">
               ชื่อ-สกุล
             </label>
             <input
+              id="register-name"
               type="text"
+              autoComplete="name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value);
+                setError("");
+              }}
               className="input-field"
               placeholder="นาย/นาง/นางสาว... (ชื่อ นามสกุล)"
-              required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="register-email" className="block text-sm font-medium text-gray-700 mb-1">
               อีเมล
             </label>
             <input
+              id="register-email"
               type="email"
+              autoComplete="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setError("");
+              }}
               className="input-field"
               placeholder="example@utcc.ac.th"
-              required
+              aria-describedby="register-email-hint"
             />
+            <p id="register-email-hint" className="text-xs text-gray-500 mt-1">
+              ใช้อีเมลของมหาวิทยาลัย (@utcc.ac.th)
+            </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="register-password" className="block text-sm font-medium text-gray-700 mb-1">
               รหัสผ่าน
             </label>
             <input
+              id="register-password"
               type="password"
+              autoComplete="new-password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setError("");
+              }}
               className="input-field"
               placeholder="••••••••"
-              required
+              aria-describedby="register-password-hint"
             />
+            <p id="register-password-hint" className="text-xs text-gray-500 mt-1">
+              อย่างน้อย {PASSWORD_MIN_LENGTH} ตัวอักษร
+            </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="register-confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
               ยืนยันรหัสผ่าน
             </label>
             <input
+              id="register-confirmPassword"
               type="password"
+              autoComplete="new-password"
               value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              onChange={(e) => {
+                setConfirmPassword(e.target.value);
+                setError("");
+              }}
               className="input-field"
               placeholder="••••••••"
-              required
             />
           </div>
 

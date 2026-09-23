@@ -2,45 +2,25 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import LogoutButton from "@/app/components/LogoutButton";
+import AppHeader from "@/app/components/AppHeader";
 
 export default async function Home() {
   const session = await getServerSession(authOptions);
 
-  if (!session) {
+  if (!session?.user) {
     redirect("/auth/login");
   }
 
   const userRole = (session.user as any)?.role;
 
-  const roleDisplay = {
-    USER: "ผู้ใช้ทั่วไป",
-    ROOM_ADMIN: "ผู้ดูแลห้อง",
-    SYSTEM_ADMIN: "ผู้ดูแลระบบ",
-  }[userRole] || userRole;
-
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <nav className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-blue-700">ระบบจองห้องประชุม</h1>
-          </div>
-          <div className="flex items-center gap-6">
-            <span className="text-gray-700">ยินดีต้อนรับ, {session.user?.name}</span>
-            <span className="text-sm text-white px-4 py-2 rounded-full bg-blue-700 font-semibold">
-              {roleDisplay}
-            </span>
-            <LogoutButton />
-          </div>
-        </div>
-      </nav>
+      <AppHeader />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="mb-12">
-          <h2 className="text-4xl font-bold text-gray-800 mb-2">เมนูหลัก</h2>
+          <h2 className="text-4xl font-bold text-gray-800 mb-2">สวัสดี, {session.user?.name}</h2>
           <p className="text-gray-600 text-lg">เลือกฟีเจอร์ที่ต้องการใช้งาน</p>
         </div>
         
@@ -101,6 +81,16 @@ export default async function Home() {
                     <h3 className="text-xl font-semibold text-blue-700">แดชบอร์ด</h3>
                   </div>
                   <p className="text-gray-600">ดูสถิติระบบและการใช้งาน</p>
+                </div>
+              </Link>
+
+              <Link href="/admin/pending-approvals">
+                <div className="card bg-white hover:shadow-lg cursor-pointer">
+                  <div className="flex items-start gap-3 mb-3">
+                    <span className="text-3xl">✅</span>
+                    <h3 className="text-xl font-semibold text-emerald-600">อนุมัติการจอง</h3>
+                  </div>
+                  <p className="text-gray-600">ตรวจสอบและอนุมัติ/ปฏิเสธคำขอจองห้องทั้งหมด</p>
                 </div>
               </Link>
 

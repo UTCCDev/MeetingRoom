@@ -3,7 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-// GET pending bookings for a room admin
+// GET pending bookings for a room admin. Includes requests whose meeting
+// already started; the page shows those separately as read-only.
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -57,7 +58,7 @@ export async function GET(request: NextRequest) {
       });
     } else {
       return NextResponse.json(
-        { error: "Only admins can access this endpoint" },
+        { error: "เฉพาะผู้ดูแลเท่านั้นที่เข้าถึงส่วนนี้ได้" },
         { status: 403 }
       );
     }
@@ -66,7 +67,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Error fetching pending bookings:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "เกิดข้อผิดพลาดที่เซิร์ฟเวอร์ กรุณาลองใหม่" },
       { status: 500 }
     );
   }

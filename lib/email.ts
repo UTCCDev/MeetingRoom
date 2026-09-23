@@ -1,4 +1,8 @@
 import nodemailer from "nodemailer";
+import { formatDate, formatTime } from "@/lib/format";
+
+const escapeHtml = (s: string) =>
+  s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
@@ -26,10 +30,10 @@ export const sendBookingNotification = async (
   const message = `
     <h2>${subject}</h2>
     <p>สถานะการจอง: <strong>${status === "APPROVED" ? "อนุมัติแล้ว" : "ปฏิเสธ"}</strong></p>
-    <p>ห้องประชุม: ${roomName}</p>
-    <p>หัวข้อการประชุม: ${bookingTitle}</p>
-    <p>เวลาเริ่มต้น: ${startTime.toLocaleString("th-TH")}</p>
-    ${rejectionReason ? `<p>เหตุผลการปฏิเสธ: ${rejectionReason}</p>` : ""}
+    <p>ห้องประชุม: ${escapeHtml(roomName)}</p>
+    <p>หัวข้อการประชุม: ${escapeHtml(bookingTitle)}</p>
+    <p>เวลาเริ่มต้น: ${formatDate(startTime)} ${formatTime(startTime)} น.</p>
+    ${rejectionReason ? `<p>เหตุผลการปฏิเสธ: ${escapeHtml(rejectionReason)}</p>` : ""}
   `;
 
   try {

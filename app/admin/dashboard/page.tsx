@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import AppHeader from "@/app/components/AppHeader";
+import { SkeletonCards } from "@/app/components/Skeleton";
+import { roomLocation } from "@/lib/format";
 
 interface DashboardStats {
   totalRooms: number;
@@ -14,6 +17,7 @@ interface DashboardStats {
   roomUtilization: Array<{
     roomId: string;
     roomName: string;
+    roomDescription?: string | null;
     bookingCount: number;
   }>;
   bookingsByStatus: Record<string, number>;
@@ -25,10 +29,11 @@ export default function AdminDashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (status === "unauthenticated") {
-      router.push("/auth/login");
+      router.push(`/auth/login?callbackUrl=${encodeURIComponent(pathname || "/")}`);
     } else if (status === "authenticated") {
       const userRole = (session?.user as any)?.role;
       if (userRole !== "SYSTEM_ADMIN") {
@@ -37,44 +42,48 @@ export default function AdminDashboardPage() {
         fetchStats();
       }
     }
-  }, [status, session, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
 
   const fetchStats = async () => {
+    setIsLoading(true);
+    setError("");
     try {
       const response = await fetch("/api/admin/dashboard-stats");
-      if (!response.ok) throw new Error("Failed to fetch stats");
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
       setStats(data);
     } catch (err) {
-      setError("Failed to load dashboard statistics");
+      console.error("Dashboard stats failed:", err);
+      setError("ไม่สามารถโหลดสถิติแดชบอร์ดได้");
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (isLoading) {
-    return <div className="min-h-screen bg-white p-8 text-center">กำลังโหลด...</div>;
-  }
-
-  if (!stats) {
+  if (isLoading || !stats) {
     return (
-      <div className="min-h-screen bg-white p-8 text-center">
-        <p className="text-rose-600 text-lg">{error || "ไม่สามารถโหลดสถิติได้"}</p>
+      <div className="min-h-screen bg-white">
+        <AppHeader title="แดชบอร์ดระบบ" breadcrumbs={[{ label: "แดชบอร์ด" }]} />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+          {isLoading ? (
+            <SkeletonCards count={3} className="grid grid-cols-1 md:grid-cols-3 gap-4" />
+          ) : (
+            <div className="card text-center" role="alert">
+              <p className="text-rose-600 text-lg mb-4">{error || "ไม่สามารถโหลดสถิติได้"}</p>
+              <button type="button" onClick={fetchStats} className="btn-primary">
+                ลองใหม่
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-white">
-      <nav className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <Link href="/" className="text-blue-700 font-semibold hover:text-blue-800">
-            ← กลับหน้าหลัก
-          </Link>
-          <h1 className="text-3xl font-bold text-blue-700">แดชบอร์ดระบบ</h1>
-          <div></div>
-        </div>
-      </nav>
+      <AppHeader title="แดชบอร์ดระบบ" breadcrumbs={[{ label: "แดชบอร์ด" }]} />
 
       <div className="max-w-7xl mx-auto px-6 py-12">
         {/* Main Stats */}
@@ -134,17 +143,23 @@ export default function AdminDashboardPage() {
 
           {/* Room Utilization */}
           <div className="card bg-gray-50">
-            <h2 className="text-2xl font-bold text-blue-700 mb-6">📈 การใช้ห้อง</h2>
+            <h2 className="text-2xl font-bold text-blue-700 mb-1">📈 การใช้ห้อง</h2>
+            <p className="text-sm text-gray-500 mb-6">จำนวนการจองที่อนุมัติแล้ว เรียงจากมากไปน้อย</p>
             <div className="space-y-4 max-h-96 overflow-y-auto">
               {stats.roomUtilization.length === 0 ? (
                 <p className="text-gray-500 text-center py-8">ยังไม่มีห้องที่มีการจอง</p>
               ) : (
                 stats.roomUtilization.map((room) => (
                   <div key={room.roomId} className="p-4 bg-white rounded-lg hover:shadow-sm transition-shadow">
-                    <div className="flex justify-between items-center mb-3">
-                      <p className="font-semibold text-gray-800">{room.roomName}</p>
-                      <span className="text-white px-3 py-1 rounded-full text-sm font-semibold bg-blue-700">
-                        {room.bookingCount} การจอง
+                    <div className="flex justify-between items-start gap-3 mb-3">
+                      <div className="min-w-0">
+                        <p className="font-semibold text-gray-800">{room.roomName}</p>
+                        {room.roomDescription && (
+                          <p className="text-xs text-gray-500">{roomLocation(room.roomDescription)}</p>
+                        )}
+                      </div>
+                      <span className="text-white px-3 py-1 rounded-full text-sm font-semibold bg-emerald-600 whitespace-nowrap">
+                        อนุมัติแล้ว {room.bookingCount}
                       </span>
                     </div>
                     <div className="w-full bg-gray-300 rounded-full h-2 overflow-hidden">

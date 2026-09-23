@@ -3,12 +3,13 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const bookings = await prisma.booking.findMany({
       where: {
-        roomId: params.id,
+        roomId: id,
         status: { in: ["PENDING", "APPROVED"] },
       },
       select: {
@@ -27,7 +28,7 @@ export async function GET(
   } catch (error) {
     console.error("Error fetching room bookings:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "เกิดข้อผิดพลาดที่เซิร์ฟเวอร์ กรุณาลองใหม่" },
       { status: 500 }
     );
   }
