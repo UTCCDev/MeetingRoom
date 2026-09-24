@@ -26,13 +26,6 @@ interface Booking {
   createdAt?: string;
 }
 
-// Left colour strip per status, so the list can be scanned at a glance.
-const STATUS_STRIP: Record<string, string> = {
-  APPROVED: "border-l-success",
-  PENDING: "border-l-highlight",
-  REJECTED: "border-l-error",
-  CANCELLED: "border-l-outline",
-};
 
 const ACTIVE_STATUSES = ["PENDING", "APPROVED"];
 
@@ -154,7 +147,7 @@ export default function MyBookingsPage() {
               </span>
               {t.label}
               <span
-                className={`min-w-[1.5rem] px-1.5 rounded-full text-label-small tabular-nums ${
+                className={`min-w-[1.75rem] px-2.5 py-2 leading-none rounded-full text-label-medium tabular-nums ${
                   tab === t.value ? "bg-primary text-white" : "bg-gray-100 text-ink-subtle"
                 }`}
               >
@@ -170,10 +163,10 @@ export default function MyBookingsPage() {
               key={value}
               onClick={() => setFilter(value)}
               aria-pressed={filter === value}
-              className={`inline-flex items-center gap-2 h-10 px-4 rounded-s text-label-medium border transition-colors ${
+              className={`inline-flex items-center gap-2 h-10 px-4 rounded-full text-label-medium border transition-colors ${
                 filter === value
-                  ? "bg-primary-container text-primary border-primary-container"
-                  : "bg-white text-ink-muted border-outline hover:bg-canvas"
+                  ? "bg-primary-container text-on-primary-container border-primary-container"
+                  : "bg-surface text-ink-muted border-outline hover:bg-surface-variant"
               }`}
             >
               {filter === value && <span className="icon icon--20 icon--w500" aria-hidden="true">check</span>}
@@ -219,9 +212,7 @@ export default function MyBookingsPage() {
               return (
                 <div
                   key={booking.id}
-                  className={`card border-l-4 ${STATUS_STRIP[booking.status] || "border-l-outline"} ${
-                    muted ? "bg-canvas" : "bg-white"
-                  }`}
+                  className="card"
                 >
                   <div className="flex flex-wrap justify-between items-start gap-3 mb-3">
                     <div className="flex-1 min-w-0">
@@ -250,8 +241,8 @@ export default function MyBookingsPage() {
                       </span>
                       {countdown && (
                         <span
-                          className={`inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-label-medium ${
-                            countdown.urgent ? "bg-primary text-white" : "bg-primary-container text-primary"
+                          className={`inline-flex items-center gap-1.5 py-2 pl-2.5 pr-3.5 rounded-full text-label-medium ${
+                            countdown.urgent ? "bg-primary text-white" : "bg-primary-container text-on-primary-container"
                           }`}
                         >
                           <span className="icon icon--20 icon--w500" aria-hidden="true">timer</span>
@@ -276,7 +267,7 @@ export default function MyBookingsPage() {
                   )}
 
                   {booking.description && (
-                    <div className="mb-3 px-4 py-3 bg-canvas border border-line rounded-s text-body-small text-ink-muted">
+                    <div className="mb-3 px-4 py-3 bg-canvas border border-line rounded-sm text-body-small text-ink-muted">
                       <span className="text-ink-subtle">หมายเหตุ: </span>
                       {booking.description}
                     </div>
@@ -285,7 +276,7 @@ export default function MyBookingsPage() {
                   {cancellable && (
                     <button
                       onClick={() => setPendingCancel(booking)}
-                      className="btn-secondary btn--s text-error hover:border-error hover:bg-[#FDF1F1]"
+                      className="btn-outline-error btn--s"
                     >
                       <span className="icon icon--20 icon--w500" aria-hidden="true">event_busy</span>
                       ยกเลิกการจอง

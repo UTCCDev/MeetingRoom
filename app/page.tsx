@@ -3,64 +3,70 @@ import { authOptions } from "@/lib/auth";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import AppHeader from "@/app/components/AppHeader";
+import { prisma } from "@/lib/prisma";
+import { formatRange, roomLabel } from "@/lib/format";
 
-interface Feature {
+type Tone = "default" | "warning";
+
+interface Tile {
   href: string;
   icon: string; // Material Symbols name
+  overline: string;
   title: string;
   description: string;
-  roles?: string[];
+  meta?: string;
+  details?: { icon: string; text: string }[]; // icon + text rows, e.g. the next meeting
+  action: string;
+  tone: Tone; // warning = semantic card when something needs attention
 }
 
-const FEATURES: Feature[] = [
-  {
-    href: "/rooms",
-    icon: "meeting_room",
-    title: "ค้นหาห้อง",
-    description: "ดูรายชื่อห้องประชุมที่ว่างและจองห้องเพื่อการประชุมของคุณ",
-  },
-  {
-    href: "/my-bookings",
-    icon: "event_note",
-    title: "การจองของฉัน",
-    description: "ดูประวัติการจองและจัดการการจองของคุณ",
-  },
-  {
-    href: "/admin/pending-approvals",
-    icon: "fact_check",
-    title: "อนุมัติการจอง",
-    description: "ตรวจสอบและอนุมัติ/ปฏิเสธคำขอจองห้อง",
-    roles: ["ROOM_ADMIN", "SYSTEM_ADMIN"],
-  },
-  {
-    href: "/admin/my-rooms",
-    icon: "edit_square",
-    title: "จัดการห้องของฉัน",
-    description: "แก้ไขข้อมูลห้องและจัดการรายละเอียด",
-    roles: ["ROOM_ADMIN"],
-  },
-  {
-    href: "/admin/dashboard",
-    icon: "monitoring",
-    title: "แดชบอร์ด",
-    description: "ดูสถิติระบบและการใช้งาน",
-    roles: ["SYSTEM_ADMIN"],
-  },
-  {
-    href: "/admin/users",
-    icon: "group",
-    title: "จัดการผู้ใช้",
-    description: "สร้างผู้ใช้และจัดการบทบาทสิทธิ์",
-    roles: ["SYSTEM_ADMIN"],
-  },
-  {
-    href: "/admin/rooms",
-    icon: "domain",
-    title: "จัดการห้องทั้งหมด",
-    description: "จัดการห้องประชุมทั้งหมด",
-    roles: ["SYSTEM_ADMIN"],
-  },
-];
+/* White outlined card (design.md › Cards): surface + line border, title ink, body ink-muted,
+   overline primary, footer canvas, hover = primary border. When requests are waiting the
+   approvals card switches to the semantic warning card (one on-* colour for all text). */
+function TileCard({ t }: { t: Tile }) {
+  const warning = t.tone === "warning";
+  return (
+    <Link
+      href={t.href}
+      className={`card card--interactive group p-0 sm:p-0 flex flex-col overflow-hidden ${warning ? "card--warning" : ""}`}
+    >
+      <div className="flex-1 flex gap-4 p-4 sm:p-6">
+        <span
+          className={`icon-tile ${warning ? "bg-surface" : "bg-primary-container text-on-primary-container"}`}
+          aria-hidden="true"
+        >
+          <span className="icon icon--24 icon--w500">{t.icon}</span>
+        </span>
+        <div className="min-w-0">
+          <span className={`block text-label-large ${warning ? "" : "text-primary"}`}>{t.overline}</span>
+          <h3 className={`text-title-medium mt-0.5 ${warning ? "" : "text-ink"}`}>{t.title}</h3>
+          <p className={`text-body-medium mt-1 ${warning ? "" : "text-ink-muted"}`}>{t.description}</p>
+          {t.meta && <p className={`mt-2 text-title-small ${warning ? "" : "text-ink"}`}>{t.meta}</p>}
+          {t.details && (
+            <ul className={`mt-3 space-y-1 ${warning ? "" : "text-ink-muted"}`}>
+              {t.details.map((d) => (
+                <li key={d.icon} className="icon-lead gap-2 text-body-medium">
+                  <span className={`icon icon--20 icon--w500 ${warning ? "" : "text-primary"}`} aria-hidden="true">{d.icon}</span>
+                  <span className="min-w-0">{d.text}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+      <span
+        className={`px-4 sm:px-6 h-12 flex items-center justify-between border-t text-label-large ${
+          warning ? "border-highlight-90" : "card__footer text-primary"
+        }`}
+      >
+        {t.action}
+        <span className="icon icon--20 icon--w500 transition-transform duration-100 group-hover:translate-x-1" aria-hidden="true">
+          arrow_forward
+        </span>
+      </span>
+    </Link>
+  );
+}
 
 export default async function Home() {
   const session = await getServerSession(authOptions);
@@ -69,47 +75,175 @@ export default async function Home() {
     redirect("/auth/login");
   }
 
-  const userRole = (session.user as any)?.role;
-  const features = FEATURES.filter((f) => !f.roles || f.roles.includes(userRole));
+  const me = (session.user as any).id as string;
+  const role = (session.user as any)?.role as string;
+  const isAdmin = role === "ROOM_ADMIN" || role === "SYSTEM_ADMIN";
+  const now = new Date();
+
+  const [activeRooms, upcoming, nextMeeting, pending, myRooms, users] = await Promise.all([
+    prisma.room.count({ where: { status: true } }),
+    prisma.booking.count({ where: { userId: me, status: { in: ["PENDING", "APPROVED"] }, endTime: { gt: now } } }),
+    prisma.booking.findFirst({
+      where: { userId: me, status: { in: ["PENDING", "APPROVED"] }, endTime: { gt: now } },
+      orderBy: { startTime: "asc" },
+      include: { room: { select: { name: true, description: true } } },
+    }),
+    isAdmin
+      ? prisma.booking.count({
+          where: {
+            status: "PENDING",
+            startTime: { gt: now },
+            userId: { not: me },
+            ...(role === "ROOM_ADMIN" ? { room: { roomAdminId: me } } : {}),
+          },
+        })
+      : Promise.resolve(0),
+    role === "ROOM_ADMIN" ? prisma.room.count({ where: { roomAdminId: me } }) : Promise.resolve(0),
+    role === "SYSTEM_ADMIN" ? prisma.user.count({ where: { active: true } }) : Promise.resolve(0),
+  ]);
+
+  const bookingsTile: Tile = {
+    href: "/my-bookings",
+    icon: "event_note",
+    overline: "การจองของฉัน",
+    title: upcoming ? `กำลังจะมาถึง ${upcoming} รายการ` : "ยังไม่มีการประชุมที่จะมาถึง",
+    description: nextMeeting ? `ถัดไป: ${nextMeeting.title}` : "ดูประวัติการจองและติดตามสถานะคำขอของคุณ",
+    details: nextMeeting
+      ? [
+          { icon: "schedule", text: formatRange(nextMeeting.startTime, nextMeeting.endTime) },
+          { icon: "location_on", text: roomLabel(nextMeeting.room) },
+          { icon: nextMeeting.status === "APPROVED" ? "check_circle" : "hourglass_top", text: nextMeeting.status === "APPROVED" ? "อนุมัติแล้ว" : "รอการอนุมัติ" },
+        ]
+      : undefined,
+    action: "ดูการจองของฉัน",
+    tone: "default",
+  };
+
+  const adminTiles: Tile[] = [
+    {
+      href: "/admin/pending-approvals",
+      icon: pending ? "pending_actions" : "fact_check",
+      overline: "อนุมัติการจอง",
+      title: pending ? `รออนุมัติ ${pending} รายการ` : "ไม่มีคำขอค้าง",
+      description: pending ? "ตรวจสอบและอนุมัติ/ปฏิเสธก่อนถึงเวลาประชุม" : "คำขอใหม่จะแจ้งเตือนที่กระดิ่งด้านบน",
+      action: pending ? "ตรวจสอบคำขอ" : "ดูหน้าอนุมัติ",
+      tone: pending ? "warning" : "default",
+    },
+    ...(role === "ROOM_ADMIN"
+      ? [
+          {
+            href: "/admin/my-rooms",
+            icon: "edit_square",
+            overline: "ห้องของฉัน",
+            title: "จัดการห้องของฉัน",
+            description: "แก้ไขข้อมูล รูป และสิ่งอำนวยความสะดวกของห้อง",
+            meta: `ดูแลอยู่ ${myRooms} ห้อง`,
+            action: "จัดการห้อง",
+            tone: "default" as Tone,
+          },
+        ]
+      : []),
+    ...(role === "SYSTEM_ADMIN"
+      ? [
+          {
+            href: "/admin/dashboard",
+            icon: "monitoring",
+            overline: "ภาพรวม",
+            title: "แดชบอร์ด",
+            description: "สถิติการจองและการใช้ห้อง",
+            action: "เปิดแดชบอร์ด",
+            tone: "default" as Tone,
+          },
+          {
+            href: "/admin/users",
+            icon: "group",
+            overline: "ผู้ใช้",
+            title: "จัดการผู้ใช้",
+            description: "สร้างผู้ใช้และกำหนดบทบาทสิทธิ์",
+            meta: `ใช้งานอยู่ ${users} คน`,
+            action: "จัดการผู้ใช้",
+            tone: "default" as Tone,
+          },
+          {
+            href: "/admin/rooms",
+            icon: "domain",
+            overline: "ห้องประชุม",
+            title: "จัดการห้องทั้งหมด",
+            description: "เพิ่ม แก้ไข และเปิด/ปิดการจองห้อง",
+            meta: `เปิดให้จอง ${activeRooms} ห้อง`,
+            action: "จัดการห้อง",
+            tone: "default" as Tone,
+          },
+        ]
+      : []),
+  ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-canvas">
+    <div className="min-h-screen flex flex-col bg-surface">
       <AppHeader />
 
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-12">
-        <div className="mb-8 sm:mb-10">
-          <h1 className="text-headline-small md:text-headline-medium lg:text-headline-large text-ink mb-1">
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 pt-6 pb-10 sm:pt-8 sm:pb-12">
+        <div>
+          <h1 className="text-title-large md:text-headline-small text-ink">
             สวัสดี, {session.user?.name}
           </h1>
-          <p className="text-body-medium text-ink-subtle">เลือกฟีเจอร์ที่ต้องการใช้งาน</p>
+          <p className="text-body-medium text-ink-subtle">วันนี้ต้องการจองห้องประชุมหรือไม่</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {features.map((f) => (
-            <Link key={f.href} href={f.href} className="card card--interactive group flex flex-col gap-4">
-              <div className="flex items-center justify-between">
-                <span className="inline-flex items-center justify-center w-12 h-12 rounded-m bg-primary-container text-primary">
-                  <span className="icon icon--24 icon--w500" aria-hidden="true">
-                    {f.icon}
-                  </span>
-                </span>
-                <span
-                  className="icon icon--24 icon--w300 text-ink-subtle transition-transform duration-100 group-hover:translate-x-1 group-hover:text-primary"
-                  aria-hidden="true"
-                >
-                  arrow_forward
-                </span>
-              </div>
+
+        <section aria-labelledby="home-booking" className="mt-5 grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <h2 id="home-booking" className="sr-only">การจองห้อง</h2>
+
+          {/* Overlay card (design.md › Cards): primary / on-primary, overline in highlight. */}
+          <Link
+            href="/rooms"
+            className="group relative lg:col-span-2 min-h-[18rem] rounded-md overflow-hidden bg-primary text-on-primary flex"
+          >
+            <img
+              src="/room-photos/board-1.jpg"
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:transition-none"
+            />
+            <span className="absolute inset-0 bg-gradient-to-r from-primary via-primary/90 to-primary/30" aria-hidden="true" />
+            <div className="relative flex flex-col justify-between gap-6 p-6 sm:p-8 max-w-xl">
               <div>
-                <h2 className="card__title mb-1">{f.title}</h2>
-                <p className="card__body">{f.description}</p>
+                <span className="block text-label-large text-highlight">จองห้องประชุม</span>
+                <h3 className="text-headline-small text-on-primary mt-1">ค้นหาห้องที่ว่างและจองได้ทันที</h3>
+                <p className="text-body-medium text-primary-90 mt-2">
+                  เลือกวัน เวลา และจำนวนที่นั่ง ระบบจะแสดงเฉพาะห้องที่ว่างให้
+                </p>
               </div>
-            </Link>
-          ))}
-        </div>
+              <div className="flex flex-wrap items-center gap-4">
+                <span className="inline-flex items-center gap-2 h-[52px] px-[34px] rounded-full bg-surface text-primary text-title-small transition-colors group-hover:bg-primary-95">
+                  <span className="icon icon--24 icon--w500" aria-hidden="true">search</span>
+                  ค้นหาห้อง
+                </span>
+                <span className="text-body-small text-primary-90">
+                  เปิดให้จอง <span className="font-bold text-on-primary tabular-nums">{activeRooms}</span> ห้อง
+                </span>
+              </div>
+            </div>
+          </Link>
+
+          <TileCard t={bookingsTile} />
+        </section>
+
+        {isAdmin && (
+          <section aria-labelledby="home-admin" className="mt-10">
+            <h2 id="home-admin" className="flex items-center gap-2 text-title-medium text-ink mb-4">
+              <span className="icon icon--24 icon--w500 text-primary" aria-hidden="true">admin_panel_settings</span>
+              งานผู้ดูแล
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+              {adminTiles.map((t) => (
+                <TileCard key={t.href} t={t} />
+              ))}
+            </div>
+          </section>
+        )}
       </main>
 
-      <footer className="py-8 border-t border-line bg-white">
+      <footer className="py-8 border-t border-line bg-surface">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
           <p className="text-label-large text-ink">ระบบจองห้องประชุมรวมศูนย์</p>
           <p className="text-body-small text-ink-subtle mt-1">© {new Date().getFullYear()} - ทุกสิทธิ์สงวนไว้</p>

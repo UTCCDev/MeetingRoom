@@ -225,7 +225,7 @@ export default function RoomsPage() {
               <button
                 type="button"
                 onClick={clearFilters}
-                className="inline-flex items-center gap-2 h-11 px-3 -mr-3 rounded-xs text-label-large text-primary hover:bg-primary-container"
+                className="inline-flex items-center gap-2 h-11 px-4 -mr-4 rounded-full text-label-large text-primary hover:bg-primary-container"
               >
                 <span className="icon icon--20 icon--w500" aria-hidden="true">filter_alt_off</span>
                 ล้างตัวกรอง
@@ -236,7 +236,7 @@ export default function RoomsPage() {
 
         {error && (
           <div
-            className="mb-6 flex items-center gap-3 px-5 py-4 border border-[#F1B8B8] bg-[#FDF1F1] text-[#8A1C12] text-body-small font-medium rounded-xs"
+            className="alert alert--error mb-6"
             role="alert"
           >
             <span className="icon icon--24 icon--w500 icon--error" aria-hidden="true">error</span>
@@ -268,7 +268,7 @@ export default function RoomsPage() {
                 href={bookingHref(room.id)}
                 className="card card--interactive group p-0 sm:p-0 overflow-hidden h-full flex flex-col"
               >
-                <div className="relative aspect-video bg-primary-container overflow-hidden">
+                <div className="relative aspect-video card__media overflow-hidden">
                   <img
                     src={roomCover(room)}
                     alt=""
@@ -276,12 +276,12 @@ export default function RoomsPage() {
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 motion-reduce:transition-none"
                   />
                   {!room.image && (
-                    <span className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-ink/60 text-white text-label-small font-normal">
+                    <span className="absolute top-3 right-3 px-3 py-2 rounded-full bg-ink/70 text-white text-label-medium">
                       ภาพตัวอย่าง
                     </span>
                   )}
                   {window_ && (
-                    <span className="absolute top-3 left-3 inline-flex items-center gap-1 px-3 py-0.5 rounded-full bg-white text-label-medium text-success shadow-sm">
+                    <span className="absolute top-3 left-3 inline-flex items-center gap-1.5 py-2 pl-2.5 pr-3.5 rounded-full bg-white text-label-medium text-success shadow-sm">
                       <span className="icon icon--20 icon--w500 icon--fill" aria-hidden="true">check_circle</span>
                       ว่างช่วงนี้
                     </span>
@@ -314,16 +314,16 @@ export default function RoomsPage() {
                     </div>
                   </dl>
 
-                  <span className="mt-auto pt-4 border-t border-line flex items-center justify-between text-label-large text-primary">
-                    {window_ ? "จองช่วงเวลานี้" : "ดูรายละเอียดและจอง"}
-                    <span
-                      className="icon icon--20 icon--w500 transition-transform duration-100 group-hover:translate-x-1"
-                      aria-hidden="true"
-                    >
-                      arrow_forward
-                    </span>
-                  </span>
                 </div>
+                <span className="card__footer px-4 sm:px-6 h-12 flex items-center justify-between text-label-large text-primary">
+                  {window_ ? "จองช่วงเวลานี้" : "ดูรายละเอียดและจอง"}
+                  <span
+                    className="icon icon--20 icon--w500 transition-transform duration-100 group-hover:translate-x-1"
+                    aria-hidden="true"
+                  >
+                    arrow_forward
+                  </span>
+                </span>
               </Link>
             ))}
           </div>

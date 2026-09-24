@@ -61,7 +61,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`${STYLES[t.type || "info"]} text-white rounded-s shadow-lg pl-4 pr-1 py-1 min-h-[3.5rem] flex items-center gap-3`}
+            className={`${STYLES[t.type || "info"]} text-white rounded-sm shadow-lg pl-4 pr-1 py-1 min-h-[3.5rem] flex items-center gap-3`}
           >
             <span className="icon icon--24 icon--w500 icon--fill" aria-hidden="true">
               {ICONS[t.type || "info"]}
@@ -74,7 +74,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                   t.action!.onClick();
                   dismiss(t.id);
                 }}
-                className="h-11 px-3 rounded-xs text-label-large text-highlight hover:bg-white/10"
+                className="h-11 px-4 rounded-full text-label-large text-highlight hover:bg-white/10"
               >
                 {t.action.label}
               </button>

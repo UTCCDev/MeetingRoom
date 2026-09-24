@@ -43,15 +43,24 @@
 
   --radius-xs: 4px;
   --radius-control: var(--radius-xs);
+  --radius-button: 999px; /* pill buttons; fields keep --radius-control */
   --focus-ring: 2px solid var(--color-accent);
 
   display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 9fr); min-height: 100vh;
   background: var(--color-surface); color: var(--color-ink); font: var(--type-body);
   word-break: normal;
 }
-.login__brand { background: var(--color-primary); color: var(--color-on-primary); padding: 48px;
+/* Brand panel layers, back to front: primary fill → UTCC building photo (bottom-right)
+   → a primary fade from the left so the headline and body stay readable. */
+.login__brand {
+  background:
+    linear-gradient(90deg, var(--color-primary) 0%, rgb(46 49 146 / .92) 30%, rgb(46 49 146 / .35) 60%, rgb(46 49 146 / 0) 80%),
+    url("/brand/utcc-building.png") right -6% bottom / auto 78% no-repeat,
+    var(--color-primary);
+  color: var(--color-on-primary); padding: 48px;
   display: flex; flex-direction: column; justify-content: space-between; gap: 40px; }
 .login__logo { font: var(--type-nav-title); }
+.login__logo img { display: block; width: auto; height: 96px; }
 .login__overline { font: var(--type-overline); letter-spacing: .14em; text-transform: uppercase; color: var(--color-highlight); }
 .login__headline { margin: 16px 0; font: var(--type-h2); color: var(--color-on-primary); text-wrap: pretty; }
 .login__lede { margin: 0; max-width: 26rem; font: var(--type-body); color: var(--color-on-primary-muted); text-wrap: pretty; }
@@ -68,7 +77,8 @@
 
 @media (max-width: 767px) {
   .login { grid-template-columns: 1fr; --h2-size: 2rem; --h3-size: 1.75rem; }
-  .login__brand { padding: 20px 24px; }
+  .login__brand { padding: 20px 24px; background: var(--color-primary); }
+  .login__logo img { height: 48px; }
   .login__brand > :not(.login__logo) { display: none; }
   .login__main { padding: 32px 24px; align-items: flex-start; }
 }
@@ -78,7 +88,7 @@
   font: var(--type-label);
   display: inline-flex; align-items: center; justify-content: center; gap: 10px;
   box-sizing: border-box; cursor: pointer; border: none; text-decoration: none;
-  height: 44px; padding: 0 28px; border-radius: var(--radius-control);
+  height: 44px; padding: 0 28px; border-radius: var(--radius-button);
   transition: background 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
 }
 .login .btn:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }

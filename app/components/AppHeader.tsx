@@ -55,7 +55,7 @@ export default function AppHeader({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-4">
         <Link href="/" className="flex items-center gap-2 text-title-medium text-primary whitespace-nowrap">
           <span
-            className="inline-flex items-center justify-center w-9 h-9 rounded-s bg-primary text-white"
+            className="icon-tile bg-primary text-on-primary"
             aria-hidden="true"
           >
             <span className="icon icon--20 icon--w500 icon--fill">meeting_room</span>
@@ -88,13 +88,14 @@ export default function AppHeader({
 
         <div className="ml-auto flex items-center gap-3">
           {user && (
-            <div className="hidden sm:flex items-center gap-3">
-              <div className="flex flex-col items-end leading-tight">
-                <span className="text-label-large text-ink">{user.name}</span>
-                <span className="text-label-small font-normal text-ink-subtle">{ROLE_LABELS[role || ""] || role}</span>
+            <div className="hidden sm:flex items-center gap-2.5">
+              {/* Two tight lines (name / role) centred on the avatar. */}
+              <div className="flex flex-col items-end gap-1">
+                <span className="text-label-large leading-none text-ink">{user.name}</span>
+                <span className="text-label-medium leading-none text-ink-subtle">{ROLE_LABELS[role || ""] || role}</span>
               </div>
               <span
-                className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary-container text-primary"
+                className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary-container text-on-primary-container"
                 aria-hidden="true"
               >
                 <span className="icon icon--24 icon--w300">person</span>
@@ -121,7 +122,7 @@ export default function AppHeader({
       {menuOpen && (
         <nav id="mobile-nav" className="lg:hidden border-t border-line px-2 py-2 flex flex-col" aria-label="เมนูหลัก">
           {user && (
-            <span className="sm:hidden px-3 py-2 text-label-medium font-normal text-ink-subtle">
+            <span className="sm:hidden px-3 py-2 text-body-small text-ink-subtle">
               {user.name} · {ROLE_LABELS[role || ""] || role}
             </span>
           )}
@@ -133,8 +134,8 @@ export default function AppHeader({
                 href={n.href}
                 onClick={() => setMenuOpen(false)}
                 aria-current={active ? "page" : undefined}
-                className={`flex items-center gap-3 px-3 h-12 rounded-s text-label-large ${
-                  active ? "bg-primary-container text-primary" : "text-ink-muted hover:bg-canvas"
+                className={`flex items-center gap-3 px-3 h-12 rounded-sm text-label-large ${
+                  active ? "bg-primary-container text-on-primary-container" : "text-ink-muted hover:bg-canvas"
                 }`}
               >
                 <span className={`icon icon--24 ${active ? "icon--w500 icon--fill" : "icon--w300"}`} aria-hidden="true">
@@ -151,7 +152,7 @@ export default function AppHeader({
         <div className="bg-canvas border-t border-line">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 flex flex-wrap items-end justify-between gap-3">
             <div>
-              <ol className="flex flex-wrap items-center gap-1 text-label-medium font-normal text-ink-subtle mb-1" aria-label="breadcrumb">
+              <ol className="flex flex-wrap items-center gap-1 text-body-small text-ink-subtle mb-1" aria-label="breadcrumb">
                 <li>
                   <Link href="/" className="hover:text-primary hover:underline">หน้าหลัก</Link>
                 </li>

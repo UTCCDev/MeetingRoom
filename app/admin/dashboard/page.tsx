@@ -84,11 +84,12 @@ export default function AdminDashboardPage() {
   }
 
   const STAT_TILES = [
-    { icon: "domain", label: "ห้องทั้งหมด", value: stats.totalRooms, tone: "bg-primary-container text-primary" },
-    { icon: "group", label: "ผู้ใช้ทั้งหมด", value: stats.totalUsers, tone: "bg-primary-container text-primary" },
-    { icon: "event_note", label: "การจองทั้งหมด", value: stats.totalBookings, tone: "bg-primary-container text-primary" },
-    { icon: STATUS_ICONS.PENDING, label: "รอการตัดสินใจ", value: stats.pendingBookings, tone: "bg-highlight/20 text-ink" },
-    { icon: STATUS_ICONS.APPROVED, label: "อนุมัติแล้ว", value: stats.approvedBookings, tone: "bg-[#EEF9F2] text-success" },
+    { icon: "domain", label: "ห้องทั้งหมด", value: stats.totalRooms, card: "" },
+    { icon: "group", label: "ผู้ใช้ทั้งหมด", value: stats.totalUsers, card: "" },
+    { icon: "event_note", label: "การจองทั้งหมด", value: stats.totalBookings, card: "" },
+    // Status tiles are semantic cards: one on-* colour for icon and text.
+    { icon: STATUS_ICONS.PENDING, label: "รอการตัดสินใจ", value: stats.pendingBookings, card: "card--warning" },
+    { icon: STATUS_ICONS.APPROVED, label: "อนุมัติแล้ว", value: stats.approvedBookings, card: "card--success" },
   ];
   const maxRoomBookings = Math.max(...stats.roomUtilization.map((r) => r.bookingCount), 1);
 
@@ -100,13 +101,19 @@ export default function AdminDashboardPage() {
         {/* Main Stats */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
           {STAT_TILES.map((t) => (
-            <div key={t.label} className="card flex flex-col gap-3">
-              <span className={`inline-flex items-center justify-center w-10 h-10 rounded-s ${t.tone}`} aria-hidden="true">
-                <span className="icon icon--24 icon--w500">{t.icon}</span>
-              </span>
+            <div key={t.label} className={`card flex flex-col gap-3 ${t.card}`} role={t.card ? "status" : undefined}>
+              {t.card ? (
+                <span className="inline-flex items-center h-10" aria-hidden="true">
+                  <span className="icon icon--32 icon--w500">{t.icon}</span>
+                </span>
+              ) : (
+                <span className="icon-tile bg-primary-container text-on-primary-container" aria-hidden="true">
+                  <span className="icon icon--24 icon--w500">{t.icon}</span>
+                </span>
+              )}
               <div>
-                <p className="text-label-medium font-normal text-ink-subtle">{t.label}</p>
-                <p className="text-headline-medium text-ink tabular-nums">{t.value}</p>
+                <p className={`text-body-small ${t.card ? "" : "text-ink-subtle"}`}>{t.label}</p>
+                <p className={`text-headline-medium tabular-nums ${t.card ? "" : "text-ink"}`}>{t.value}</p>
               </div>
             </div>
           ))}
@@ -149,7 +156,7 @@ export default function AdminDashboardPage() {
                       <div className="min-w-0">
                         <p className="text-label-large text-ink truncate">{room.roomName}</p>
                         {room.roomDescription && (
-                          <p className="text-label-small font-normal text-ink-subtle truncate">
+                          <p className="text-body-small text-ink-subtle truncate">
                             {roomLocation(room.roomDescription)}
                           </p>
                         )}
@@ -180,7 +187,7 @@ export default function AdminDashboardPage() {
           ].map((a) => (
             <Link key={a.href} href={a.href} className="card card--interactive group flex items-center gap-4">
               <span
-                className="inline-flex items-center justify-center w-12 h-12 rounded-m bg-primary-container text-primary"
+                className="icon-tile bg-primary-container text-on-primary-container"
                 aria-hidden="true"
               >
                 <span className="icon icon--24 icon--w500">{a.icon}</span>

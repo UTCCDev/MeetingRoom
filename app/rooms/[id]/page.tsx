@@ -325,13 +325,13 @@ export default function RoomDetailPage() {
                   ].map((item) => (
                     <div key={item.label} className="flex items-center gap-3">
                       <span
-                        className="inline-flex items-center justify-center w-10 h-10 rounded-s bg-primary-container text-primary"
+                        className="icon-tile bg-primary-container text-on-primary-container"
                         aria-hidden="true"
                       >
                         <span className="icon icon--20 icon--w500">{item.icon}</span>
                       </span>
                       <div className="min-w-0">
-                        <dt className="text-label-medium font-normal text-ink-subtle">{item.label}</dt>
+                        <dt className="text-body-small text-ink-subtle">{item.label}</dt>
                         <dd className="text-label-large text-ink break-all tabular-nums">{item.value}</dd>
                       </div>
                     </div>
@@ -389,7 +389,7 @@ export default function RoomDetailPage() {
                   const state = slotState(slot);
                   const cls = {
                     past: "bg-disabled-bg text-disabled-fg border-transparent cursor-not-allowed",
-                    booked: "bg-[#FDF1F1] text-error border-[#F1B8B8] line-through cursor-not-allowed",
+                    booked: "bg-error-container text-on-error-container border-error-90 line-through cursor-not-allowed",
                     selected: "bg-primary text-white border-primary",
                     free: "bg-white text-ink border-outline hover:border-primary hover:bg-primary-container hover:text-primary",
                   }[state];
@@ -408,9 +408,9 @@ export default function RoomDetailPage() {
                   );
                 })}
               </div>
-              <div className="flex flex-wrap gap-4 mt-3 text-label-medium font-normal text-ink-subtle">
+              <div className="flex flex-wrap gap-4 mt-3 text-body-small text-ink-subtle">
                 <span className="flex items-center gap-2"><span className="w-4 h-4 rounded-xs bg-white border border-outline" /> ว่าง</span>
-                <span className="flex items-center gap-2"><span className="w-4 h-4 rounded-xs bg-[#FDF1F1] border border-[#F1B8B8]" /> ไม่ว่าง</span>
+                <span className="flex items-center gap-2"><span className="w-4 h-4 rounded-xs bg-error-container border border-error-90" /> ไม่ว่าง</span>
                 <span className="flex items-center gap-2"><span className="w-4 h-4 rounded-xs bg-primary" /> ที่เลือก</span>
                 <span className="flex items-center gap-2"><span className="w-4 h-4 rounded-xs bg-disabled-bg" /> เลยเวลาแล้ว</span>
               </div>
@@ -420,7 +420,7 @@ export default function RoomDetailPage() {
                   {dayBookings.map((booking) => (
                     <li
                       key={booking.id}
-                      className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 rounded-s border border-line bg-canvas text-body-small"
+                      className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 rounded-sm border border-line bg-canvas text-body-small"
                     >
                       <span className="icon icon--20 icon--w300 text-ink-subtle" aria-hidden="true">schedule</span>
                       <span className="text-label-large text-ink tabular-nums">{formatRange(booking.startTime, booking.endTime)}</span>
@@ -600,7 +600,7 @@ export default function RoomDetailPage() {
                 <span className="icon icon--24 icon--w500" aria-hidden="true">send</span>
                 {isSubmitting ? "กำลังจอง..." : "ส่งคำขอจอง"}
               </button>
-              <p className="text-label-medium font-normal text-ink-subtle text-center">
+              <p className="text-body-small text-ink-subtle text-center">
                 การจองจะรอการอนุมัติจากผู้ดูแลห้อง
               </p>
             </form>

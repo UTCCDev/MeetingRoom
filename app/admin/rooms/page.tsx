@@ -379,10 +379,10 @@ export default function RoomsManagementPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {filteredRooms.map((room) => (
               <div key={room.id} className="card relative p-0 sm:p-0 flex flex-col">
-                <div className={`relative aspect-video bg-primary-container rounded-t-m overflow-hidden ${room.status ? "" : "grayscale opacity-60"}`}>
+                <div className={`relative aspect-video card__media rounded-t-md overflow-hidden ${room.status ? "" : "grayscale opacity-60"}`}>
                   <img src={roomCover(room)} alt="" loading="lazy" className="w-full h-full object-cover" />
                   {!room.image && (
-                    <span className="absolute top-3 left-3 px-2 py-0.5 rounded-full bg-ink/60 text-white text-label-small font-normal">
+                    <span className="absolute top-3 left-3 px-3 py-2 rounded-full bg-ink/70 text-white text-label-medium">
                       ภาพตัวอย่าง
                     </span>
                   )}
@@ -403,7 +403,7 @@ export default function RoomsManagementPage() {
                       <span className="icon icon--24" aria-hidden="true">more_vert</span>
                     </button>
                     {openMenuRoomId === room.id && (
-                      <div className="absolute right-0 mt-1 w-48 py-1 bg-white border border-line rounded-s shadow-lg z-10 overflow-hidden">
+                      <div className="absolute right-0 mt-1 w-48 py-1 bg-white border border-line rounded-sm shadow-lg z-10 overflow-hidden">
                         <button
                           type="button"
                           onClick={() => openEdit(room)}
@@ -428,7 +428,7 @@ export default function RoomsManagementPage() {
                             setOpenMenuRoomId(null);
                             setRoomPendingDelete(room);
                           }}
-                          className="w-full flex items-center gap-3 px-4 h-11 text-left text-body-small text-error border-t border-line hover:bg-[#FDF1F1]"
+                          className="w-full flex items-center gap-3 px-4 h-11 text-left text-body-small text-error border-t border-line hover:bg-error-container"
                         >
                           <span className="icon icon--20 icon--w300" aria-hidden="true">delete</span>
                           ลบ
@@ -471,7 +471,7 @@ export default function RoomsManagementPage() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="room-form-title"
-            className="bg-white rounded-l shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 id="room-form-title" className="flex items-center gap-2 text-title-large text-ink mb-5">
@@ -592,14 +592,14 @@ export default function RoomsManagementPage() {
                 </div>
 
                 {/* What the room card and gallery will show. */}
-                <div className="md:col-span-2 flex items-center gap-4 p-3 mb-2 rounded-s border border-line bg-canvas">
+                <div className="md:col-span-2 flex items-center gap-4 p-3 mb-2 rounded-sm border border-line bg-canvas">
                   <img
                     src={
                       form.image.trim() ||
                       roomCover({ id: editing === "new" ? "new" : editing.id, capacity: Number(form.capacity) || 10 })
                     }
                     alt=""
-                    className="w-32 aspect-video flex-none rounded-xs object-cover bg-primary-container"
+                    className="w-32 aspect-video flex-none rounded-xs object-cover bg-surface-variant"
                   />
                   <p id="room-image-hint" className="text-body-small text-ink-muted">
                     {form.image.trim()

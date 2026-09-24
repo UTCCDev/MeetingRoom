@@ -66,7 +66,10 @@ export default function RegisterPage() {
   return (
     <div className="login">
       <aside className="login__brand">
-        <div className="login__logo">ระบบจองห้องประชุม</div>
+        <div className="login__logo">
+          {/* UTCC RoomSync logo, all-white variant for the primary brand panel. */}
+          <img src="/brand/roomsync-logo-on-primary.svg" alt="UTCC RoomSync ระบบจองห้องประชุม" width={635} height={241} />
+        </div>
         <div>
           <div className="login__overline">ระบบงานภายใน</div>
           <h1 className="login__headline">เริ่มต้นใช้งาน</h1>

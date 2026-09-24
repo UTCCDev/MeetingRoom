@@ -15,9 +15,9 @@ interface ConfirmDialogProps {
 }
 
 const TONE_ICON = {
-  danger: { name: "warning", className: "bg-[#FDF1F1] text-error" },
-  primary: { name: "help", className: "bg-primary-container text-primary" },
-  success: { name: "check_circle", className: "bg-[#EEF9F2] text-success" },
+  danger: { name: "warning", className: "bg-error-container text-on-error-container" },
+  primary: { name: "help", className: "bg-primary-container text-on-primary-container" },
+  success: { name: "check_circle", className: "bg-success-container text-on-success-container" },
 };
 
 const TONE_CLASS = {
@@ -58,11 +58,11 @@ export default function ConfirmDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="confirm-dialog-title"
-        className="bg-white rounded-l shadow-xl max-w-md w-full p-6"
+        className="bg-white rounded-lg shadow-xl max-w-md w-full p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <span
-          className={`inline-flex items-center justify-center w-12 h-12 rounded-full mb-4 ${TONE_ICON[tone].className}`}
+          className={`icon-tile mb-4 ${TONE_ICON[tone].className}`}
           aria-hidden="true"
         >
           <span className="icon icon--24 icon--w500">{TONE_ICON[tone].name}</span>

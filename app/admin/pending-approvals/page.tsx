@@ -361,12 +361,12 @@ export default function PendingApprovalsPage() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 sm:pl-8">
                     <div>
-                      <p className="text-label-medium font-normal text-ink-subtle">ผู้ขอ</p>
+                      <p className="text-body-small text-ink-subtle">ผู้ขอ</p>
                       <p className="text-label-large text-ink">{booking.user.name}</p>
                       <p className="text-body-small text-ink-subtle break-all">{booking.user.email}</p>
                     </div>
                     <div>
-                      <p className="text-label-medium font-normal text-ink-subtle">จำนวนผู้เข้าร่วม</p>
+                      <p className="text-body-small text-ink-subtle">จำนวนผู้เข้าร่วม</p>
                       <p className="text-label-large text-ink tabular-nums">
                         {booking.attendees} คน{" "}
                         <span className="text-ink-subtle font-normal">/ ความจุ {booking.room.capacity}</span>
@@ -381,7 +381,7 @@ export default function PendingApprovalsPage() {
                   </div>
 
                   {booking.description && (
-                    <div className="mb-4 px-4 py-3 bg-canvas border border-line rounded-s sm:ml-8 text-body-small text-ink-muted">
+                    <div className="mb-4 px-4 py-3 bg-canvas border border-line rounded-sm sm:ml-8 text-body-small text-ink-muted">
                       <span className="text-ink-subtle">หมายเหตุ: </span>
                       {booking.description}
                     </div>
@@ -393,7 +393,7 @@ export default function PendingApprovalsPage() {
                       คำขอของคุณเอง — ต้องให้ผู้ดูแลท่านอื่นเป็นผู้อนุมัติ
                     </p>
                   ) : rejectingId === booking.id ? (
-                    <div className="p-4 bg-[#FDF1F1] border border-[#F1B8B8] rounded-s sm:ml-8">
+                    <div className="p-4 bg-error-container rounded-sm sm:ml-8">
                       <label htmlFor={`reason-${booking.id}`} className="field-label">
                         เหตุผลในการปฏิเสธ *
                       </label>
@@ -449,7 +449,7 @@ export default function PendingApprovalsPage() {
                           setRejectionReason("");
                           setRejectError("");
                         }}
-                        className="btn-secondary btn--s text-error hover:border-error hover:bg-[#FDF1F1]"
+                        className="btn-outline-error btn--s"
                       >
                         <span className="icon icon--20 icon--w500" aria-hidden="true">close</span>
                         ปฏิเสธ

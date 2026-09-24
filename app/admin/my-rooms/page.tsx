@@ -245,7 +245,7 @@ export default function MyRoomsPage() {
                 ) : (
                   // View Mode
                   <>
-                    <div className="relative aspect-video bg-primary-container">
+                    <div className="relative aspect-video card__media">
                       {room.image ? (
                         <img src={room.image} alt="" className="w-full h-full object-cover" />
                       ) : (
@@ -276,7 +276,7 @@ export default function MyRoomsPage() {
 
                     {room.amenities && (
                       <div className="mb-5">
-                        <p className="text-label-medium font-normal text-ink-subtle mb-2">
+                        <p className="text-body-small text-ink-subtle mb-2">
                           สิ่งอำนวยความสะดวก
                         </p>
                         <div className="flex flex-wrap gap-2">
@@ -301,7 +301,8 @@ export default function MyRoomsPage() {
                       </div>
                     )}
 
-                    <div className="mt-auto pt-4 border-t border-line">
+                    </div>
+                    <div className="card__footer px-4 sm:px-6 py-3">
                       <button
                         onClick={() => handleEditRoom(room)}
                         className="btn-tonal btn--s"
@@ -309,7 +310,6 @@ export default function MyRoomsPage() {
                         <span className="icon icon--20 icon--w500" aria-hidden="true">edit</span>
                         แก้ไขห้อง
                       </button>
-                    </div>
                     </div>
                   </>
                 )}

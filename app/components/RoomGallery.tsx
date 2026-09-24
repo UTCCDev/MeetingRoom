@@ -146,7 +146,7 @@ function Lightbox({
       <div className="flex items-center gap-3 px-4 sm:px-6 h-16 flex-none">
         <div className="min-w-0 flex-1">
           <p className="text-title-small truncate">{room.name}</p>
-          <p className="text-label-medium font-normal text-white/70" aria-live="polite">
+          <p className="text-body-small text-white/70" aria-live="polite">
             {current.title} · {index + 1} / {count}
             {current.sample && " · ภาพตัวอย่าง"}
           </p>
@@ -187,7 +187,7 @@ function Lightbox({
                 alt={`${s.sample ? "ภาพตัวอย่าง" : "ภาพ"}${s.title} ${room.name}`}
                 draggable={false}
                 loading={Math.abs(i - index) <= 1 ? "eager" : "lazy"}
-                className="max-w-full max-h-full w-auto h-auto rounded-m shadow-2xl object-contain"
+                className="max-w-full max-h-full w-auto h-auto rounded-md shadow-2xl object-contain"
               />
             </div>
           ))}
@@ -224,7 +224,7 @@ function Lightbox({
               onClick={() => go(i)}
               aria-label={`ดูภาพ ${s.title}`}
               aria-current={i === index}
-              className={`flex-none w-20 sm:w-28 aspect-video rounded-s overflow-hidden transition ${
+              className={`flex-none w-20 sm:w-28 aspect-video rounded-sm overflow-hidden transition ${
                 i === index ? "ring-2 ring-white ring-offset-2 ring-offset-ink" : "opacity-50 hover:opacity-100"
               }`}
             >
@@ -232,7 +232,7 @@ function Lightbox({
             </button>
           ))}
         </div>
-        <p className="min-h-[1.4rem] text-label-small font-normal text-white/60 text-center">
+        <p className="min-h-[1.4rem] text-body-small text-white/60 text-center">
           {current.credit && <Credit photo={current.credit} />}
         </p>
       </div>
@@ -250,7 +250,7 @@ export default function RoomGallery({ room }: { room: GalleryRoom }) {
       <button
         type="button"
         onClick={() => setOpen(0)}
-        className="group relative block w-full aspect-video overflow-hidden bg-primary-container"
+        className="group relative block w-full aspect-video overflow-hidden card__media"
         aria-label={`ดูภาพห้องทั้งหมด ${slides.length} ภาพ`}
       >
         <img
@@ -281,7 +281,7 @@ export default function RoomGallery({ room }: { room: GalleryRoom }) {
               aria-label={`ดูภาพ ${s.title}`}
             >
               <img src={s.src} alt="" loading="lazy" className="w-full h-full object-cover" />
-              <span className="absolute inset-x-0 bottom-0 px-1.5 py-0.5 bg-ink/60 text-white text-label-small font-normal truncate">
+              <span className="absolute inset-x-0 bottom-0 px-1.5 py-0.5 bg-ink/70 text-white text-label-medium truncate">
                 {s.title}
               </span>
             </button>

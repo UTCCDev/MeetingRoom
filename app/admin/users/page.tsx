@@ -29,7 +29,7 @@ const ROLE_LABELS: Record<string, string> = {
 
 const ROLE_CLASS: Record<string, string> = {
   SYSTEM_ADMIN: "bg-primary text-white",
-  ROOM_ADMIN: "bg-primary-container text-primary",
+  ROOM_ADMIN: "bg-primary-container text-on-primary-container",
   USER: "bg-gray-100 text-ink-muted",
 };
 
@@ -268,11 +268,11 @@ export default function UsersPage() {
                     <tr key={user.id} className={user.active ? "" : "opacity-60"}>
                       <td>
                         <span className="text-label-large text-ink">{user.name}</span>
-                        {user.id === myId && <span className="ml-2 text-label-small font-normal text-ink-subtle">(คุณ)</span>}
+                        {user.id === myId && <span className="ml-2 text-body-small text-ink-subtle">(คุณ)</span>}
                       </td>
                       <td className="break-all">{user.email}</td>
                       <td>
-                        <span className={`inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-label-medium whitespace-nowrap ${ROLE_CLASS[user.role]}`}>
+                        <span className={`inline-flex items-center gap-1.5 py-2 pl-2.5 pr-3.5 rounded-full text-label-medium whitespace-nowrap ${ROLE_CLASS[user.role]}`}>
                           <span className="icon icon--20 icon--w500" aria-hidden="true">{ROLE_ICONS[user.role] || "person"}</span>
                           {ROLE_LABELS[user.role] || user.role}
                         </span>
@@ -340,7 +340,7 @@ export default function UsersPage() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="user-form-title"
-            className="bg-white rounded-l shadow-xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-lg shadow-xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 id="user-form-title" className="flex items-center gap-2 text-title-large text-ink mb-5">

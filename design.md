@@ -1,6 +1,6 @@
 # Heavent DS — design.md
 
-ระบบออกแบบองค์กร v0.1.4 สำหรับเว็บและแอปพลิเคชัน ใช้ได้ทั้งภาษาไทยและอังกฤษ บุคลิก: ทางการ องค์กร ความหนาแน่นระดับกลาง
+ระบบออกแบบองค์กร v0.1.6 สำหรับเว็บและแอปพลิเคชัน ใช้ได้ทั้งภาษาไทยและอังกฤษ บุคลิก: ทางการ องค์กร ความหนาแน่นระดับกลาง
 
 ## Typography
 
@@ -40,23 +40,62 @@ DB Heavent มีความสูงตัวอักษรเล็ก ท�
 
 ## Color
 
-| Token | Hex | ใช้กับ |
+สามสีแบรนด์ขยายเป็นชุดโทน 10–99 แล้วจับคู่เป็นบทบาท — ในงานออกแบบและโค้ดให้อ้าง **บทบาท (--color-*)** เสมอ ไม่อ้างเลขโทนหรือ hex ตรงๆ
+
+สีแบรนด์: Primary #2E3192 (โทน 40) · Accent #00B1EB (โทน 60) · Highlight #FFC709 (โทน 70)
+
+### ชุดโทน (--palette-{ชื่อ}-{โทน})
+
+| | 10 | 20 | 30 | 40 | 50 | 60 | 70 | 80 | 90 | 95 | 99 |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| primary | #0B0C33 | #151757 | #1F2275 | #2E3192 | #4548AB | #6164C2 | #8487D4 | #A9ABE4 | #D2D3F2 | #E8E9F6 | #F8F8FD |
+| accent | #002231 | #003A52 | #005475 | #00709A | #0089B8 | #00B1EB | #45C6F2 | #85D9F6 | #C2ECFA | #E1F6FD | #F5FCFF |
+| highlight | #2A1F00 | #463400 | #634A00 | #7A5A00 | #9E7600 | #C79500 | #FFC709 | #FFD84D | #FFEBA6 | #FFF4CC | #FFFCF2 |
+| neutral | #12142E | #262944 | #3D4160 | #545878 | #6A6F91 | #8B8FA8 | #A9ACC0 | #C6C9DC | #E2E4EE | #F1F2F8 | #FAFBFD |
+| error | #410E0B | #6B1610 | #8A1C12 | #B42318 | #D93025 | #EB5A4F | #F28B82 | #F6B3AD | #FAD7D4 | #FDF1F1 | #FFFBFB |
+| success | #06291A | #0C4527 | #0F5A31 | #146C3A | #1E8A4B | #34A865 | #5CC486 | #8FDAAC | #C6EFD5 | #EEF9F2 | #F8FDF9 |
+
+### บทบาทหลัก (ใช้เป็นคู่เสมอ)
+
+| พื้น | ข้อความบนพื้น | ค่า | ความต่าง | ใช้กับ |
+|---|---|---|---|---|
+| --color-primary | --color-on-primary | #2E3192 / #FFFFFF | 10.7:1 | ปุ่มหลัก ลิงก์ สถานะเลือก |
+| --color-primary-container | --color-on-primary-container | #E8E9F6 / #151757 | 13.5:1 | ปุ่ม tonal ชิปที่เลือก |
+| --color-accent | --color-on-accent | #00709A / #FFFFFF | 5.5:1 | พื้นสีรองที่มีข้อความ |
+| --color-accent-container | --color-on-accent-container | #E1F6FD / #003A52 | 10.9:1 | กล่องข้อมูล (info) |
+| --color-highlight | --color-on-highlight | #FFC709 / #12142E | 11.5:1 | ป้ายเด่น ตัวเลขสำคัญ |
+| --color-highlight-container | --color-on-highlight-container | #FFF4CC / #7A5A00 | 5.8:1 | ป้ายสถานะรอดำเนินการ |
+| --color-error | --color-on-error | #B42318 / #FFFFFF | 6.6:1 | ปุ่มลบ |
+| --color-error-container | --color-on-error-container | #FDF1F1 / #8A1C12 | 8.4:1 | ข้อความแจ้งผิดพลาด |
+| --color-success-container | --color-on-success-container | #EEF9F2 / #146C3A | 6.0:1 | ข้อความสำเร็จ |
+
+### พื้นผิว ข้อความ และเส้น
+
+| Token | ค่า | ใช้กับ |
 |---|---|---|
-| primary | #2E3192 | ปุ่มหลัก ลิงก์ หัวข้อเน้น |
-| primary-hover | #232670 | hover |
-| primary-pressed | #1B1E5C | pressed |
-| primary-container | #E8E9F6 | ปุ่ม tonal, สถานะเลือก |
-| accent | #00B1EB | เส้นโฟกัส, สีเน้น — ไม่ใช้เป็นพื้นหลังข้อความ |
-| highlight | #FFC709 | ตัวเน้นและป้ายสถานะ — ไม่ใช้เป็นพื้นปุ่ม |
-| ink | #12142E | ข้อความหลัก |
-| ink-muted | #3D4160 | เนื้อความ |
-| ink-subtle | #6A6F91 | ข้อความรอง (ต่ำสุดที่ยังผ่าน 4.5:1) |
-| outline | #C6C9DC | เส้นขอบคอนโทรล |
-| line | #E2E4EE | เส้นคั่น |
-| canvas | #FAFBFD | พื้นหลังส่วนรอง |
-| disabled-bg / fg | #E4E5EC / #8B8FA8 | ปิดใช้งาน |
-| error | #B42318 | ข้อผิดพลาด |
-| success | #146C3A | สำเร็จ |
+| --color-surface | #FFFFFF | พื้นหลังหลัก การ์ด dialog |
+| --color-canvas | #FAFBFD (neutral-99) | พื้นส่วนรอง |
+| --color-surface-variant | #F1F2F8 (neutral-95) | hover รายการ พื้น input ปิดใช้งาน |
+| --color-ink | #12142E (neutral-10) | ข้อความหลัก |
+| --color-ink-muted | #3D4160 (neutral-30) | เนื้อความ |
+| --color-ink-subtle | #6A6F91 (neutral-50) | ข้อความรอง (ต่ำสุดที่ผ่าน 4.5:1) |
+| --color-disabled-fg | #8B8FA8 (neutral-60) | ข้อความปิดใช้งาน |
+| --color-outline | #C6C9DC (neutral-80) | เส้นขอบคอนโทรล |
+| --color-line | #E2E4EE (neutral-90) | เส้นคั่น เส้นขอบการ์ด |
+| --color-focus | #00B1EB (accent-60) | เส้นโฟกัส 2px |
+
+### กฎ
+
+- สัดส่วนต่อหน้าจอ: พื้นผิว 60% · neutral 25% · primary 10% · accent + highlight รวม 5%
+- #00B1EB บนขาวได้แค่ 2.5:1 — ใช้เป็นเส้นโฟกัสและพื้นตกแต่ง ข้อความโทนฟ้าใช้ accent-40 (#00709A)
+- #FFC709 ห้ามใช้เป็นพื้นข้อความขาว (1.6:1) — ป้ายสถานะใช้ highlight-95 คู่ highlight-40
+- สีสถานะต้องมาคู่กับไอคอนหรือข้อความเสมอ
+- เกณฑ์: เนื้อความ 4.5:1 · ข้อความ 24px ขึ้นไป 3:1 (แนะนำ 4.5:1 สำหรับไทย) · ไอคอนและเส้นขอบคอนโทรล 3:1
+
+### ไฟล์
+
+- dev: `dev-kit/colors.css` (โหลดหลัง tokens.css)
+- Figma: `figma/colors.tokens.json` — นำเข้าผ่าน Tokens Studio ได้ชุด palette และ role ใช้เฉพาะ role ในงานออกแบบ
 
 ## Shape
 
@@ -129,6 +168,58 @@ Figma: ติดตั้งฟอนต์ Material Symbols Outlined แล้�
 - ปุ่มในการ์ดใช้ size S, filled ได้ไม่เกินหนึ่งปุ่มต่อใบ
 - การ์ดที่กดได้ทั้งใบห้ามมีปุ่มหรือลิงก์ซ้อนข้างใน
 
+สีของการ์ด (อ้างบทบาทจาก Color)
+
+| ส่วน | Token |
+|---|---|
+| พื้น / เส้นขอบ | --color-surface / --color-line |
+| filled | --color-primary-container |
+| หัว / เนื้อความ / meta | --color-ink / --color-ink-muted / --color-ink-subtle |
+| overline | --color-primary |
+| footer | --color-canvas |
+| พื้นรูประหว่างโหลด | --color-surface-variant |
+| hover / selected | เส้น --color-primary · selected พื้น primary-99 เส้น 2px |
+| focus | --color-focus |
+| overlay | --color-primary / on-primary · overline --color-highlight |
+
+การ์ดสื่อความหมาย — ข้อความทั้งใบใช้สี on-* ตัวเดียว ไม่ปนสีเทา
+
+| Class | พื้น | ข้อความ | ความต่าง | ใช้กับ |
+|---|---|---|---|---|
+| `.card--primary` | primary-container #E8E9F6 | on-primary-container #151757 | 14.3:1 | ประกาศ ข่าวสาร |
+| `.card--info` | accent-container #E1F6FD | on-accent-container #003A52 | 11.0:1 | ข้อมูลประกอบ คำแนะนำ |
+| `.card--warning` | highlight-container #FFF4CC | on-highlight-container #7A5A00 | 5.8:1 | รอดำเนินการ ต้องตรวจสอบ |
+| `.card--error` | error-container #FDF1F1 | on-error-container #8A1C12 | 8.5:1 | ส่งไม่สำเร็จ ข้อผิดพลาด |
+| `.card--success` | success-container #EEF9F2 | on-success-container #146C3A | 6.3:1 | อนุมัติแล้ว สำเร็จ |
+
+- ใส่ไอคอนสถานะ 24–28px สีเดียวกับข้อความเสมอ ไม่ใช้สีอย่างเดียวสื่อความหมาย
+- ไม่มีเส้นขอบ ไม่มีเงา
+- ปุ่มในการ์ดสื่อความหมายใช้ text หรือ outlined เท่านั้น
+
+Badge: `.badge--warning / --success / --error` ใช้คู่สี container เดียวกัน radius full
+
+โค้ด
+```html
+<article class="card card--outlined">
+  <img class="card__media" src="…" alt="…">
+  <div class="card__body">
+    <span class="card__overline">ข่าวองค์กร</span>
+    <h3 class="card__title">เปิดสำนักงานสาขาใหม่</h3>
+    <p class="card__text">…</p>
+    <span class="card__meta">12 ก.ย. 2569</span>
+  </div>
+</article>
+
+<div class="card card--warning" role="status">
+  <div class="card__body">
+    <span class="icon">pending</span>
+    <h3 class="card__title">รอดำเนินการ</h3>
+    <p class="card__text">คำขอ 3 รายการรอการอนุมัติ</p>
+  </div>
+</div>
+```
+ลำดับโหลด CSS: tokens.css → colors.css → icons.css → cards.css
+
 ## Login pattern
 
 ลำดับ: หัวเรื่อง → ชื่อผู้ใช้ → รหัสผ่าน (แสดง/ซ่อน, ลืมรหัสผ่าน) → จดจำฉัน → ปุ่ม "เข้าสู่ระบบ" (filled) → เส้นคั่น "หรือ" → "เข้าสู่ระบบด้วย Microsoft 365" (outlined)
@@ -140,9 +231,9 @@ Figma: ติดตั้งฟอนต์ Material Symbols Outlined แล้�
 
 ## ไฟล์ที่เกี่ยวข้อง
 
-- `dev-kit/` — tokens.css, buttons.css, cards.css, icons.css, login.css, Button.jsx, Login.jsx, login.html
-- `figma/typography.tokens.json` — นำเข้าผ่าน Tokens Studio
-- `figma-plugin/` — สร้าง component Buttons + Login + Cards ใน Figma
+- `dev-kit/` — tokens.css, colors.css, buttons.css, cards.css, icons.css, login.css, Button.jsx, Login.jsx, login.html
+- `figma/typography.tokens.json`, `figma/colors.tokens.json` — นำเข้าผ่าน Tokens Studio
+- `figma-plugin/` — สร้าง component Buttons + Login + Cards (รวม Card / Tone) ใน Figma
 
 ## Figma components
 
@@ -161,12 +252,15 @@ Figma: ติดตั้งฟอนต์ Material Symbols Outlined แล้�
 | Divider / หรือ | — |
 | Card | type (elevated/filled/outlined) |
 | Card / Pattern | basic, image, header-footer, stat, list, overlay, horizontal |
+| Card / Tone | tone (primary/info/warning/error/success) |
 | Card / Selectable | selected |
 
 ชื่อ property ตรงกับ prop และ class ในโค้ด (`variant`, `size` → `.btn--filled`, `.btn--s`, `.card--outlined`)
 
 ## Changelog
 
+- 0.1.6 — Cards อ้างบทบาทสี, เพิ่มการ์ดสื่อความหมาย 5 โทน (เว็บ, CSS, Figma)
+- 0.1.5 — Color: ชุดโทน 6 ชุด, บทบาท, เกณฑ์ความต่าง, colors.css, colors.tokens.json
 - 0.1.4 — Icons: Material Symbols, icons.css, ไลบรารีค้นหาและคัดลอกโค้ด
 - 0.1.3 — Cards: หน้าเอกสาร, cards.css, Figma component
 - 0.1.2 — Login pattern: หน้าเอกสาร, login.css, Login.jsx, Figma component

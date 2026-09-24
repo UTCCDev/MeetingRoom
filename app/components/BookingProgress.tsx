@@ -85,10 +85,10 @@ const STATE_TEXT: Record<StepState, string> = {
 };
 
 const MARKER: Record<StepState, string> = {
-  done: "bg-primary text-white",
-  current: "bg-white text-primary ring-2 ring-primary ring-offset-2",
-  upcoming: "bg-white text-disabled-fg border border-outline",
-  error: "bg-error text-white",
+  done: "bg-primary text-on-primary",
+  current: "bg-surface text-primary ring-2 ring-primary ring-offset-2",
+  upcoming: "bg-surface text-disabled-fg border border-outline",
+  error: "bg-error text-on-error",
   stopped: "bg-disabled-bg text-ink-subtle",
 };
 
@@ -135,12 +135,12 @@ export default function BookingProgress({
                 {step.state === "done" ? "check" : step.icon}
               </span>
             </span>
-            <span className={`mt-2 text-label-medium ${LABEL[step.state]}`}>
+            <span className={`mt-2 text-label-large ${LABEL[step.state]}`}>
               {step.label}
               <span className="sr-only"> ({STATE_TEXT[step.state]})</span>
             </span>
             {step.caption && (
-              <span className="text-label-small font-normal text-ink-subtle">{step.caption}</span>
+              <span className="text-body-small text-ink-subtle">{step.caption}</span>
             )}
           </li>
         );

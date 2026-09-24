@@ -1,4 +1,4 @@
-/* Heavent DS v0.1.4 — see design.md. DB Heavent is served from public/fonts;
+/* Heavent DS v0.1.6 — see design.md. DB Heavent is served from public/fonts;
    Prompt is only the fallback while it loads. */
 @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;500;700&family=Noto+Sans+Thai:wght@300;500;700&display=swap');
 
@@ -19,24 +19,42 @@
 @tailwind utilities;
 
 @layer base {
+  /* Colour roles (design.md › Color). Pages use the Tailwind names of the
+     same roles; these variables are for plain CSS such as login.css. */
   :root {
     --color-primary: #2E3192;
+    --color-on-primary: #FFFFFF;
     --color-primary-hover: #232670;
     --color-primary-pressed: #1B1E5C;
     --color-primary-container: #E8E9F6;
-    --color-accent: #00B1EB;
+    --color-on-primary-container: #151757;
+    --color-accent: #00709A;
+    --color-on-accent: #FFFFFF;
+    --color-accent-container: #E1F6FD;
+    --color-on-accent-container: #003A52;
     --color-highlight: #FFC709;
+    --color-on-highlight: #12142E;
+    --color-highlight-container: #FFF4CC;
+    --color-on-highlight-container: #7A5A00;
+    --color-error: #B42318;
+    --color-on-error: #FFFFFF;
+    --color-error-container: #FDF1F1;
+    --color-on-error-container: #8A1C12;
+    --color-success: #146C3A;
+    --color-success-container: #EEF9F2;
+    --color-on-success-container: #146C3A;
+    --color-surface: #FFFFFF;
+    --color-canvas: #FAFBFD;
+    --color-surface-variant: #F1F2F8;
     --color-ink: #12142E;
     --color-ink-muted: #3D4160;
     --color-ink-subtle: #6A6F91;
-    --color-outline: #C6C9DC;
-    --color-line: #E2E4EE;
-    --color-canvas: #FAFBFD;
     --color-disabled-bg: #E4E5EC;
     --color-disabled-fg: #8B8FA8;
-    --color-error: #B42318;
-    --color-success: #146C3A;
-    --focus-ring: 2px solid var(--color-accent);
+    --color-outline: #C6C9DC;
+    --color-line: #E2E4EE;
+    --color-focus: #00B1EB;
+    --focus-ring: 2px solid var(--color-focus);
   }
 
   html {
@@ -75,12 +93,12 @@
 }
 
 @layer components {
-  /* Buttons — size m (44px, 28px padding, label-large), radius xs. */
+  /* Buttons — size m (44px, 28px padding, label-large), radius full (pill). */
   .btn-primary,
   .btn-secondary,
   .btn-success,
   .btn-danger {
-    @apply inline-flex items-center justify-center gap-2 h-11 px-7 rounded-xs text-label-large transition-colors duration-100
+    @apply inline-flex items-center justify-center gap-2 h-11 px-7 rounded-full text-label-large transition-colors duration-100
       disabled:bg-disabled-bg disabled:text-disabled-fg disabled:border-transparent disabled:cursor-not-allowed;
   }
 
@@ -96,18 +114,18 @@
 
   .btn-tonal,
   .btn-text {
-    @apply inline-flex items-center justify-center gap-2 h-11 px-7 rounded-xs text-label-large transition-colors duration-100
+    @apply inline-flex items-center justify-center gap-2 h-11 px-7 rounded-full text-label-large transition-colors duration-100
       disabled:bg-transparent disabled:text-disabled-fg disabled:cursor-not-allowed;
   }
 
   /* tonal */
   .btn-tonal {
-    @apply bg-primary-container text-primary hover:bg-[#D5D7F2] active:bg-[#C6C9EA] disabled:bg-disabled-bg;
+    @apply bg-primary-container text-on-primary-container hover:bg-primary-90 active:bg-primary-80 disabled:bg-disabled-bg;
   }
 
   /* text */
   .btn-text {
-    @apply px-3 text-primary hover:bg-primary-container active:bg-[#D5D7F2];
+    @apply px-3 text-primary hover:bg-primary-container active:bg-primary-90;
   }
 
   /* size s (40px) — in cards and dense rows */
@@ -118,7 +136,14 @@
   /* Icon button — 44×44 touch target, 24px icon. */
   .icon-button {
     @apply inline-flex items-center justify-center w-11 h-11 rounded-full text-ink-muted hover:bg-primary-container hover:text-primary
-      active:bg-[#D5D7F2] transition-colors duration-100 disabled:text-disabled-fg disabled:bg-transparent disabled:cursor-not-allowed;
+      active:bg-primary-90 transition-colors duration-100 disabled:text-disabled-fg disabled:bg-transparent disabled:cursor-not-allowed;
+  }
+
+  /* outlined, destructive (reject / cancel booking) */
+  .btn-outline-error {
+    @apply inline-flex items-center justify-center gap-2 h-11 px-7 rounded-full text-label-large transition-colors duration-100
+      bg-transparent border border-outline text-error hover:border-error hover:bg-error-container active:bg-error-90
+      disabled:bg-disabled-bg disabled:text-disabled-fg disabled:border-transparent disabled:cursor-not-allowed;
   }
 
   .btn-success {
@@ -134,7 +159,7 @@
   }
 
   .field-hint {
-    @apply mt-1 text-label-medium font-normal text-ink-subtle;
+    @apply mt-1 text-body-small text-ink-subtle;
   }
 
   .field-error {
@@ -164,15 +189,19 @@
   }
 
   .alert--error {
-    @apply font-medium bg-[#FDF1F1] border-[#F1B8B8] text-[#8A1C12];
+    @apply font-medium bg-error-container border-error-90 text-on-error-container;
   }
 
   .alert--success {
-    @apply bg-[#EEF9F2] border-[#B9E6C9] text-success;
+    @apply bg-success-container border-success-90 text-on-success-container;
+  }
+
+  .alert--warning {
+    @apply bg-highlight-container border-highlight-90 text-on-highlight-container;
   }
 
   .alert--info {
-    @apply bg-primary-container border-[#D5D7F2] text-ink;
+    @apply bg-accent-container border-accent-90 text-on-accent-container;
   }
 
   /* Data table — header label-medium, rows separated by line. */
@@ -193,16 +222,17 @@
   }
 
   .table tbody tr:hover td {
-    @apply bg-canvas;
+    @apply bg-surface-variant;
   }
 
   .empty-state {
     @apply flex flex-col items-center text-center py-16 gap-3 text-body-large text-ink-muted;
   }
 
-  /* Cards — outlined by default; radius m, padding 24 (16 on mobile). */
+  /* Cards — outlined by default; radius m, padding 24 (16 on mobile).
+     Colours follow design.md › Cards › สีของการ์ด. */
   .card {
-    @apply p-4 sm:p-6 bg-white rounded-m border border-line;
+    @apply p-4 sm:p-6 bg-surface rounded-md border border-line;
   }
 
   .card--elevated {
@@ -213,10 +243,37 @@
     @apply bg-primary-container border-transparent;
   }
 
-  /* Whole card is the link — no buttons or links nested inside. */
+  /* Semantic cards — one on-* colour for all text, no border, no shadow,
+     always with a status icon (design.md › Cards). */
+  .card--primary,
+  .card--info,
+  .card--warning,
+  .card--error,
+  .card--success {
+    @apply border-transparent shadow-none;
+  }
+  .card--primary { @apply bg-primary-container text-on-primary-container; }
+  .card--info { @apply bg-accent-container text-on-accent-container; }
+  .card--warning { @apply bg-highlight-container text-on-highlight-container; }
+  .card--error { @apply bg-error-container text-on-error-container; }
+  .card--success { @apply bg-success-container text-on-success-container; }
+  :is(.card--primary, .card--info, .card--warning, .card--error, .card--success) :is(.card__title, .card__body) {
+    color: inherit;
+  }
+
+  /* Whole card is the link — no buttons or links nested inside.
+     hover: primary border · pressed/selected: primary-99 with a 2px primary border. */
   .card--interactive {
-    @apply block cursor-pointer transition-[border-color,background-color,box-shadow] duration-100
-      hover:border-primary hover:shadow-[0_4px_12px_rgba(18,20,46,0.08)] active:bg-primary-container;
+    @apply block cursor-pointer transition-[border-color,background-color] duration-100
+      hover:border-primary active:bg-primary-99;
+  }
+
+  .card--selected {
+    @apply bg-primary-99 border-primary shadow-[inset_0_0_0_1px_theme(colors.primary.DEFAULT)];
+  }
+
+  .card__overline {
+    @apply block text-label-medium text-primary;
   }
 
   .card__title {
@@ -225,6 +282,20 @@
 
   .card__body {
     @apply text-body-small text-ink-muted;
+  }
+
+  .card__meta {
+    @apply text-body-small text-ink-subtle;
+  }
+
+  /* Full-bleed footer strip; pair with a card whose padding lives on inner blocks. */
+  .card__footer {
+    @apply bg-surface-variant border-t border-line rounded-b-md;
+  }
+
+  /* Image area while the photo loads. */
+  .card__media {
+    @apply bg-surface-variant;
   }
 
   /* Icons — Material Symbols Outlined (loaded in app/layout.tsx). */
@@ -251,6 +322,12 @@
     font-variation-settings: "FILL" var(--icon-fill), "wght" var(--icon-wght), "GRAD" 0, "opsz" var(--icon-opsz);
   }
 
+  /* Icon on a coloured background: 8px radius, 8px padding — the tile size
+     follows the icon (24px icon → 40px tile). */
+  .icon-tile {
+    @apply inline-flex items-center justify-center flex-none w-fit h-fit rounded-sm p-2;
+  }
+
   .icon--20 { font-size: 20px; --icon-opsz: 20; }
   .icon--24 { font-size: 24px; --icon-opsz: 24; }
   .icon--32 { font-size: 32px; --icon-opsz: 32; }
@@ -261,12 +338,13 @@
   .icon--w600 { --icon-wght: 600; }
   .icon--fill { --icon-fill: 1; }
   .icon--primary { color: var(--color-primary); }
+  .icon--accent { color: var(--color-accent); }
   .icon--error { color: var(--color-error); }
   .icon--success { color: var(--color-success); }
 
   .input-field {
     @apply w-full px-4 py-2.5 border border-outline rounded-xs bg-white text-body-medium text-ink placeholder:text-ink-subtle
-      focus:border-primary focus:outline focus:outline-2 focus:outline-offset-1 focus:outline-accent transition-colors duration-100;
+      focus:border-primary focus:outline focus:outline-2 focus:outline-offset-1 focus:outline-focus transition-colors duration-100;
   }
 
   input.input-field,
@@ -274,31 +352,38 @@
     @apply h-12 py-0;
   }
 
+  /* Badges — container / on-container pairs, radius full (design.md › Cards › Badge). */
   .badge-available,
   .badge-booked,
   .badge-pending,
   .badge-neutral,
-  .badge-primary {
-    @apply inline-flex items-center gap-1 px-3 py-0.5 text-label-medium rounded-full whitespace-nowrap;
+  .badge-primary,
+  .badge--success,
+  .badge--error,
+  .badge--warning {
+    @apply inline-flex items-center gap-1.5 py-2 px-3.5 has-[.icon]:pl-2.5 text-label-medium rounded-full whitespace-nowrap;
+  }
+
+  .badge-available,
+  .badge--success {
+    @apply bg-success-container text-on-success-container;
+  }
+
+  .badge-booked,
+  .badge--error {
+    @apply bg-error-container text-on-error-container;
+  }
+
+  .badge-pending,
+  .badge--warning {
+    @apply bg-highlight-container text-on-highlight-container;
   }
 
   .badge-neutral {
-    @apply bg-gray-100 text-ink-muted;
+    @apply bg-surface-variant text-ink-muted;
   }
 
   .badge-primary {
-    @apply bg-primary-container text-primary;
-  }
-
-  .badge-available {
-    @apply bg-emerald-50 text-success;
-  }
-
-  .badge-booked {
-    @apply bg-red-50 text-error;
-  }
-
-  .badge-pending {
-    @apply bg-highlight/20 text-ink;
+    @apply bg-primary-container text-on-primary-container;
   }
 }

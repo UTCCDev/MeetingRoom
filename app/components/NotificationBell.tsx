@@ -11,11 +11,11 @@ const POLL_MS = 60_000;
 export const BOOKING_DECIDED_EVENT = "booking-decided";
 
 const LOOK: Record<NotificationType, { icon: string; tone: string }> = {
-  approval: { icon: "pending_actions", tone: "bg-highlight/25 text-ink" },
-  approved: { icon: "check_circle", tone: "bg-[#EEF9F2] text-success" },
-  rejected: { icon: "cancel", tone: "bg-[#FDF1F1] text-error" },
-  cancelled: { icon: "event_busy", tone: "bg-gray-100 text-ink-muted" },
-  reminder: { icon: "alarm", tone: "bg-primary-container text-primary" },
+  approval: { icon: "pending_actions", tone: "bg-highlight-container text-on-highlight-container" },
+  approved: { icon: "check_circle", tone: "bg-success-container text-on-success-container" },
+  rejected: { icon: "cancel", tone: "bg-error-container text-on-error-container" },
+  cancelled: { icon: "event_busy", tone: "bg-surface-variant text-ink-muted" },
+  reminder: { icon: "alarm", tone: "bg-primary-container text-on-primary-container" },
 };
 
 function headline(n: NotificationItem): React.ReactNode {
@@ -156,7 +156,7 @@ export default function NotificationBell({ userId, isApprover }: { userId: strin
           notifications
         </span>
         {unread > 0 && (
-          <span className="absolute top-1 right-1 min-w-[1.25rem] h-5 px-1 rounded-full bg-error text-white text-label-small leading-5 text-center tabular-nums ring-2 ring-white">
+          <span className="absolute top-0.5 left-[1.375rem] min-w-[1.25rem] h-5 px-1 rounded-full bg-error text-on-error text-label-small leading-5 text-center tabular-nums ring-2 ring-white">
             {unread > 99 ? "99+" : unread}
           </span>
         )}
@@ -167,25 +167,25 @@ export default function NotificationBell({ userId, isApprover }: { userId: strin
           id="notification-panel"
           role="dialog"
           aria-label="การแจ้งเตือน"
-          className="fixed sm:absolute inset-x-2 sm:inset-x-auto top-16 sm:top-full sm:right-0 sm:mt-2 sm:w-[28rem] z-40 bg-white border border-line rounded-m shadow-xl flex flex-col max-h-[calc(100vh-5rem)]"
+          className="fixed sm:absolute inset-x-2 sm:inset-x-auto top-16 sm:top-full sm:right-0 sm:mt-2 sm:w-[34rem] z-40 bg-white border border-line rounded-md shadow-xl flex flex-col max-h-[calc(100vh-5rem)]"
         >
-          <div className="flex items-center justify-between px-4 h-14 border-b border-line flex-none">
-            <h2 className="text-title-small text-ink">การแจ้งเตือน</h2>
+          <div className="flex items-center justify-between px-5 h-16 border-b border-line flex-none">
+            <h2 className="text-title-medium text-ink">การแจ้งเตือน</h2>
             <button type="button" onClick={load} className="icon-button -mr-2" aria-label="รีเฟรช">
-              <span className="icon icon--20" aria-hidden="true">refresh</span>
+              <span className="icon icon--24" aria-hidden="true">refresh</span>
             </button>
           </div>
 
           <div className="overflow-y-auto">
             {isApprover && (
               <section aria-label="รอคุณอนุมัติ">
-                <h3 className="flex items-center gap-2 px-4 pt-3 pb-1 text-label-medium text-ink-subtle">
+                <h3 className="flex items-center gap-2 px-5 pt-4 pb-2 text-label-large text-ink-muted">
                   รอคุณอนุมัติ
-                  <span className="badge-pending px-2 py-0 tabular-nums">{approvals.length}</span>
+                  <span className="badge-pending px-2.5 tabular-nums">{approvals.length}</span>
                 </h3>
                 {approvals.length === 0 ? (
-                  <p className="flex items-center gap-2 px-4 pb-3 text-body-small text-ink-subtle">
-                    <span className="icon icon--20 icon--w300" aria-hidden="true">task_alt</span>
+                  <p className="flex items-center gap-2 px-5 pb-4 text-body-medium text-ink-subtle">
+                    <span className="icon icon--24 icon--w300" aria-hidden="true">task_alt</span>
                     ไม่มีคำขอค้าง
                   </p>
                 ) : (
@@ -193,24 +193,29 @@ export default function NotificationBell({ userId, isApprover }: { userId: strin
                     {approvals.map((n) => {
                       const over = n.attendees > n.capacity;
                       return (
-                        <li key={n.id} className={`px-4 py-3 border-b border-line ${isNew(n) ? "bg-primary-container/40" : ""}`}>
+                        <li key={n.id} className={`px-5 py-4 border-b border-line ${isNew(n) ? "bg-primary-99" : ""}`}>
                           <div className="flex gap-3">
-                            <span className={`inline-flex items-center justify-center w-10 h-10 flex-none rounded-full ${LOOK.approval.tone}`} aria-hidden="true">
-                              <span className="icon icon--20 icon--w500">{LOOK.approval.icon}</span>
+                            <span className={`icon-tile ${LOOK.approval.tone}`} aria-hidden="true">
+                              <span className="icon icon--24 icon--w500">{LOOK.approval.icon}</span>
                             </span>
                             <div className="min-w-0 flex-1">
-                              <p className="text-body-small text-ink-muted">{headline(n)}</p>
-                              <p className="text-label-large text-ink truncate">{n.title}</p>
-                              <p className="flex items-center gap-1 text-label-medium font-normal text-ink-subtle tabular-nums">
-                                <span className="icon icon--20 icon--w300" aria-hidden="true">schedule</span>
+                              <p className="text-body-medium text-ink-muted">{headline(n)}</p>
+                              <p className="text-title-small text-ink mt-0.5">{n.title}</p>
+                              <p className="flex items-center gap-2 mt-1 text-body-small text-ink-muted tabular-nums">
+                                <span className="icon icon--20 icon--w300 text-ink-subtle" aria-hidden="true">schedule</span>
                                 {formatRange(n.startTime, n.endTime)}
                               </p>
-                              <p className="flex items-center gap-1 text-label-medium font-normal text-ink-subtle">
-                                <span className="icon icon--20 icon--w300" aria-hidden="true">group</span>
-                                {n.attendees} คน / ความจุ {n.capacity}
-                                {over && <span className="text-error font-medium">· เกินความจุ</span>}
+                              <p className="flex items-center gap-2 text-body-small text-ink-muted">
+                                <span className="icon icon--20 icon--w300 text-ink-subtle" aria-hidden="true">group</span>
+                                <span className="tabular-nums">{n.attendees}</span> คน / ความจุ {n.capacity}
+                                {over && (
+                                  <span className="badge--error">
+                                    <span className="icon icon--20 icon--w500" aria-hidden="true">warning</span>
+                                    เกินความจุ
+                                  </span>
+                                )}
                               </p>
-                              <p className="text-label-small font-normal text-ink-subtle mt-0.5">{timeAgo(n.at)}</p>
+                              <p className="text-body-small text-ink-subtle">{timeAgo(n.at)}</p>
 
                               {rejecting === n.id ? (
                                 <div className="mt-2">
@@ -226,14 +231,14 @@ export default function NotificationBell({ userId, isApprover }: { userId: strin
                                       setReasonError("");
                                     }}
                                     placeholder="เหตุผลในการปฏิเสธ (จำเป็น)"
-                                    className={`input-field text-body-small ${reasonError ? "border-error" : ""}`}
+                                    className={`input-field ${reasonError ? "border-error" : ""}`}
                                     aria-invalid={!!reasonError}
                                   />
                                   {reasonError && <p className="field-error">{reasonError}</p>}
-                                  <div className="flex justify-end gap-3 mt-2">
+                                  <div className="flex justify-end gap-3 mt-3">
                                     <button
                                       type="button"
-                                      className="btn-text btn--s"
+                                      className="btn-text"
                                       onClick={() => {
                                         setRejecting(null);
                                         setReason("");
@@ -242,20 +247,20 @@ export default function NotificationBell({ userId, isApprover }: { userId: strin
                                     >
                                       ยกเลิก
                                     </button>
-                                    <button type="button" className="btn-danger btn--s" disabled={busy === n.id} onClick={() => decide(n, "REJECTED")}>
+                                    <button type="button" className="btn-danger" disabled={busy === n.id} onClick={() => decide(n, "REJECTED")}>
                                       {busy === n.id ? "กำลังส่ง…" : "ยืนยันปฏิเสธ"}
                                     </button>
                                   </div>
                                 </div>
                               ) : (
-                                <div className="flex flex-wrap gap-2 mt-2">
-                                  <button type="button" className="btn-primary btn--s" disabled={busy === n.id} onClick={() => decide(n, "APPROVED")}>
+                                <div className="flex flex-wrap gap-3 mt-3">
+                                  <button type="button" className="btn-primary" disabled={busy === n.id} onClick={() => decide(n, "APPROVED")}>
                                     <span className="icon icon--20 icon--w500" aria-hidden="true">check</span>
                                     {busy === n.id ? "กำลังอนุมัติ…" : "อนุมัติ"}
                                   </button>
                                   <button
                                     type="button"
-                                    className="btn-secondary btn--s text-error hover:border-error hover:bg-[#FDF1F1]"
+                                    className="btn-outline-error"
                                     disabled={busy === n.id}
                                     onClick={() => {
                                       setRejecting(n.id);
@@ -279,10 +284,10 @@ export default function NotificationBell({ userId, isApprover }: { userId: strin
             )}
 
             <section aria-label="อัปเดตล่าสุด">
-              <h3 className="px-4 pt-3 pb-1 text-label-medium text-ink-subtle">อัปเดตล่าสุด</h3>
+              <h3 className="px-5 pt-4 pb-2 text-label-large text-ink-muted">อัปเดตล่าสุด</h3>
               {updates.length === 0 ? (
-                <p className="flex items-center gap-2 px-4 pb-4 text-body-small text-ink-subtle">
-                  <span className="icon icon--20 icon--w300" aria-hidden="true">notifications_off</span>
+                <p className="flex items-center gap-2 px-5 pb-5 text-body-medium text-ink-subtle">
+                  <span className="icon icon--24 icon--w300" aria-hidden="true">notifications_off</span>
                   ยังไม่มีการแจ้งเตือน
                 </p>
               ) : (
@@ -292,23 +297,23 @@ export default function NotificationBell({ userId, isApprover }: { userId: strin
                       <Link
                         href={n.type === "cancelled" ? `/rooms/${n.roomId}` : "/my-bookings"}
                         onClick={() => setOpen(false)}
-                        className={`flex gap-3 px-4 py-3 border-b border-line hover:bg-canvas ${isNew(n) ? "bg-primary-container/40" : ""}`}
+                        className={`flex gap-3 px-5 py-4 border-b border-line hover:bg-surface-variant ${isNew(n) ? "bg-primary-99" : ""}`}
                       >
-                        <span className={`inline-flex items-center justify-center w-10 h-10 flex-none rounded-full ${LOOK[n.type].tone}`} aria-hidden="true">
-                          <span className="icon icon--20 icon--w500">{LOOK[n.type].icon}</span>
+                        <span className={`icon-tile ${LOOK[n.type].tone}`} aria-hidden="true">
+                          <span className="icon icon--24 icon--w500">{LOOK[n.type].icon}</span>
                         </span>
                         <span className="min-w-0 flex-1">
-                          <span className="block text-body-small text-ink-muted">{headline(n)}</span>
-                          <span className="block text-label-medium font-normal text-ink-subtle tabular-nums">
+                          <span className="block text-body-medium text-ink-muted">{headline(n)}</span>
+                          <span className="block mt-0.5 text-body-small text-ink-subtle tabular-nums">
                             {n.roomName}
                             {roomLocation(n.roomDescription) && ` · ${roomLocation(n.roomDescription)}`} · {formatRange(n.startTime, n.endTime)}
                           </span>
                           {n.type === "rejected" && n.reason && (
-                            <span className="block mt-1 text-label-medium font-normal text-error">เหตุผล: {n.reason}</span>
+                            <span className="block mt-1 text-body-small text-on-error-container">เหตุผล: {n.reason}</span>
                           )}
-                          <span className="block text-label-small font-normal text-ink-subtle mt-0.5">{timeAgo(n.at)}</span>
+                          <span className="block text-body-small text-ink-subtle">{timeAgo(n.at)}</span>
                         </span>
-                        {isNew(n) && <span className="w-2 h-2 mt-2 flex-none rounded-full bg-primary" aria-label="ใหม่" />}
+                        {isNew(n) && <span className="w-2.5 h-2.5 mt-2 flex-none rounded-full bg-primary" aria-label="ใหม่" />}
                       </Link>
                     </li>
                   ))}
@@ -317,12 +322,12 @@ export default function NotificationBell({ userId, isApprover }: { userId: strin
             </section>
           </div>
 
-          <div className="flex-none flex justify-between gap-2 px-2 py-2 border-t border-line">
-            <Link href="/my-bookings" onClick={() => setOpen(false)} className="btn-text btn--s">
+          <div className="flex-none flex justify-between gap-2 px-3 py-2 border-t border-line bg-canvas rounded-b-md">
+            <Link href="/my-bookings" onClick={() => setOpen(false)} className="btn-text">
               การจองของฉัน
             </Link>
             {isApprover && (
-              <Link href="/admin/pending-approvals" onClick={() => setOpen(false)} className="btn-text btn--s">
+              <Link href="/admin/pending-approvals" onClick={() => setOpen(false)} className="btn-text">
                 ดูคำขอทั้งหมด
                 <span className="icon icon--20 icon--w500" aria-hidden="true">arrow_forward</span>
               </Link>
