@@ -123,7 +123,10 @@ export default function LoginPage() {
           <div className="login__overline">ระบบงานภายใน</div>
           <h1 className="login__headline">ยินดีต้อนรับกลับมา</h1>
           <p className="login__lede">
-            จองห้องประชุมส่วนกลาง ตรวจสอบห้องว่าง และติดตามสถานะการจองได้ในที่เดียว
+            <span className="login__phrase">จองห้องประชุมส่วนกลาง</span>{" "}
+            <span className="login__phrase">ตรวจสอบห้องว่าง</span>{" "}
+            <span className="login__phrase">และติดตามสถานะการจอง</span>
+            <span className="login__phrase">ได้ในที่เดียว</span>
           </p>
         </div>
         <div className="login__legal">© {new Date().getFullYear()} ระบบจองห้องประชุมส่วนกลาง</div>

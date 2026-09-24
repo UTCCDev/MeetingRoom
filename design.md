@@ -1,6 +1,74 @@
 # Heavent DS — design.md
 
-ระบบออกแบบองค์กร v0.1.6 สำหรับเว็บและแอปพลิเคชัน ใช้ได้ทั้งภาษาไทยและอังกฤษ บุคลิก: ทางการ องค์กร ความหนาแน่นระดับกลาง
+ระบบออกแบบองค์กร v0.1.8 สำหรับเว็บและแอปพลิเคชัน ใช้ได้ทั้งภาษาไทยและอังกฤษ บุคลิก: ทางการ องค์กร ความหนาแน่นระดับกลาง
+
+## Logo — เว็บไซต์ Design System
+
+โลโก้ UTCC Material Design ใช้ที่หัว sidebar ของเว็บไซต์เอกสารนี้
+
+| ไฟล์ (assets/logo/) | ใช้กับ |
+|---|---|
+| utcc-material-design.svg | สีน้ำเงิน #34328F บนพื้นขาว / canvas |
+| utcc-material-design-white.svg | บนพื้น primary หรือพื้นเข้ม |
+
+- ขนาดใน sidebar: กว้าง 110px สูงอัตโนมัติ ระยะห่างใต้โลโก้ 4px
+- ใต้โลโก้แสดงชื่อระบบ "Heavent DS" และเลขเวอร์ชัน
+- alt="UTCC Material Design"
+
+```html
+<img src="assets/logo/utcc-material-design.svg" alt="UTCC Material Design" width="110">
+```
+
+## Logo — ROOM Sync
+
+ประกอบด้วยสัญลักษณ์ประตู (mark) + ชื่อ UTCC / ROOM / Sync ใช้ไฟล์ SVG ต้นฉบับเสมอ
+
+| ไฟล์ (assets/logo/) | ใช้กับ |
+|---|---|
+| room-sync.svg | ค่าตั้งต้น บนพื้นขาวหรืออ่อน |
+| room-sync-white.svg | บนพื้น primary หรือภาพเข้ม |
+| room-sync-primary.svg | งานพิมพ์สีเดียว |
+| room-sync-black.svg | เอกสารขาวดำ |
+| room-sync-mark.svg | favicon, app icon, avatar |
+| room-sync-mark-white.svg / -mark-primary.svg | mark บนพื้นเข้ม / สีเดียว |
+
+สีในโลโก้: น้ำเงิน #34328F · ฟ้า #29ABE2 · ประตูไล่สี #00AEEF → #00FFFF — ใช้เฉพาะในตัวโลโก้ ส่วนอื่นของ UI ใช้สีจาก Color
+
+- พื้นที่ว่างรอบโลโก้อย่างน้อยเท่าความสูงคำว่า "UTCC" (~15% ของความสูงโลโก้)
+- ขนาดต่ำสุด: โลโก้เต็ม 120px (30 มม. สิ่งพิมพ์) · mark 24px — เล็กกว่า 120px ให้ใช้ mark
+- Header 64px ใช้โลโก้สูง 40px · มือถือใช้ mark 32px · ลิงก์กลับหน้าแรก alt="ROOM Sync"
+- ห้าม: ยืด/บีบ, หมุน, ใส่เงาหรือเอฟเฟกต์, เปลี่ยนสี, ใช้สีเต็มบนพื้นเข้ม, วางบนพื้นลายหรือภาพที่ไม่ชัด
+
+เลือกไฟล์ตามพื้นหลัง
+
+| พื้นหลัง | ไฟล์ |
+|---|---|
+| ขาว / canvas / surface-variant | room-sync.svg |
+| primary (#2E3192) / ภาพเข้ม | room-sync-white.svg |
+| พิมพ์สีเดียว | room-sync-primary.svg หรือ room-sync-black.svg |
+| พื้นที่เล็กกว่า 120px | room-sync-mark*.svg |
+
+โค้ด
+```html
+<a href="/" class="brand" aria-label="ROOM Sync — หน้าแรก">
+  <img src="/assets/logo/room-sync.svg" alt="ROOM Sync" height="40">
+</a>
+
+<link rel="icon" type="image/svg+xml" href="/assets/logo/room-sync-mark.svg">
+
+<style>
+  .brand { display: inline-flex; padding: 6px; }
+  .brand img { height: 40px; width: auto; }
+  @media (max-width: 599px) {
+    .brand img { content: url(/assets/logo/room-sync-mark.svg); height: 32px; }
+  }
+</style>
+```
+
+หมายเหตุสำหรับ dev
+- ใช้ `<img>` อ้างไฟล์ SVG ไม่ inline SVG ลงในหน้า (ไฟล์มี gradient id ที่อาจชนกันถ้าวางซ้ำ)
+- ใส่ `width` หรือ `height` เสมอเพื่อกันเลย์เอาต์กระโดด
+- ไฟล์ต้นฉบับถูกลบ metadata ออกแล้ว ขนาดประมาณ 16 KB
 
 ## Typography
 
@@ -231,6 +299,8 @@ Badge: `.badge--warning / --success / --error` ใช้คู่สี containe
 
 ## ไฟล์ที่เกี่ยวข้อง
 
+- `assets/logo/utcc-material-design.svg` (+ `-white.svg`) — โลโก้ของเว็บไซต์ Design System นี้
+- `assets/logo/` — โลโก้ ROOM Sync 7 ไฟล์ (SVG)
 - `dev-kit/` — tokens.css, colors.css, buttons.css, cards.css, icons.css, login.css, Button.jsx, Login.jsx, login.html
 - `figma/typography.tokens.json`, `figma/colors.tokens.json` — นำเข้าผ่าน Tokens Studio
 - `figma-plugin/` — สร้าง component Buttons + Login + Cards (รวม Card / Tone) ใน Figma
@@ -259,6 +329,8 @@ Badge: `.badge--warning / --success / --error` ใช้คู่สี containe
 
 ## Changelog
 
+- 0.1.8 — โลโก้เว็บไซต์ UTCC Material Design ที่หัว sidebar (110px) + แบบสีขาว
+- 0.1.7 — Logo ROOM Sync: 7 รูปแบบ, พื้นที่ว่าง, ขนาดต่ำสุด, ข้อห้าม, ตารางเลือกไฟล์ตามพื้นหลัง, โค้ด
 - 0.1.6 — Cards อ้างบทบาทสี, เพิ่มการ์ดสื่อความหมาย 5 โทน (เว็บ, CSS, Figma)
 - 0.1.5 — Color: ชุดโทน 6 ชุด, บทบาท, เกณฑ์ความต่าง, colors.css, colors.tokens.json
 - 0.1.4 — Icons: Material Symbols, icons.css, ไลบรารีค้นหาและคัดลอกโค้ด

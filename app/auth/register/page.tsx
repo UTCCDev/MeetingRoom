@@ -74,7 +74,9 @@ export default function RegisterPage() {
           <div className="login__overline">ระบบงานภายใน</div>
           <h1 className="login__headline">เริ่มต้นใช้งาน</h1>
           <p className="login__lede">
-            สร้างบัญชีด้วยอีเมลมหาวิทยาลัย แล้วจองห้องประชุมส่วนกลางได้ทันที
+            <span className="login__phrase">สร้างบัญชีด้วยอีเมลมหาวิทยาลัย</span>{" "}
+            <span className="login__phrase">แล้วจองห้องประชุมส่วนกลาง</span>
+            <span className="login__phrase">ได้ทันที</span>
           </p>
         </div>
         <div className="login__legal">© {new Date().getFullYear()} ระบบจองห้องประชุมส่วนกลาง</div>

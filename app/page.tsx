@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import AppHeader from "@/app/components/AppHeader";
+import Phrases from "@/app/components/Phrases";
 import { prisma } from "@/lib/prisma";
 import { formatRange, roomLabel } from "@/lib/format";
 
@@ -39,15 +40,21 @@ function TileCard({ t }: { t: Tile }) {
         </span>
         <div className="min-w-0">
           <span className={`block text-label-large ${warning ? "" : "text-primary"}`}>{t.overline}</span>
-          <h3 className={`text-title-medium mt-0.5 ${warning ? "" : "text-ink"}`}>{t.title}</h3>
-          <p className={`text-body-medium mt-1 ${warning ? "" : "text-ink-muted"}`}>{t.description}</p>
-          {t.meta && <p className={`mt-2 text-title-small ${warning ? "" : "text-ink"}`}>{t.meta}</p>}
+          <h3 className={`text-title-medium mt-0.5 ${warning ? "" : "text-ink"}`}>
+            <Phrases text={t.title} />
+          </h3>
+          <p className={`text-body-medium leading-[1.6] mt-1 ${warning ? "" : "text-ink-muted"}`}>
+            <Phrases text={t.description} />
+          </p>
+          {t.meta && <p className={`mt-3 text-title-small ${warning ? "" : "text-ink"}`}>{t.meta}</p>}
           {t.details && (
-            <ul className={`mt-3 space-y-1 ${warning ? "" : "text-ink-muted"}`}>
+            <ul className={`mt-3 space-y-2 ${warning ? "" : "text-ink-muted"}`}>
               {t.details.map((d) => (
-                <li key={d.icon} className="icon-lead gap-2 text-body-medium">
+                <li key={d.icon} className="icon-lead gap-2 text-body-medium leading-[1.4]">
                   <span className={`icon icon--20 icon--w500 ${warning ? "" : "text-primary"}`} aria-hidden="true">{d.icon}</span>
-                  <span className="min-w-0">{d.text}</span>
+                  <span className="min-w-0">
+                    <Phrases text={d.text} by={d.text.includes(" · ") ? "dot" : "space"} />
+                  </span>
                 </li>
               ))}
             </ul>
@@ -107,7 +114,7 @@ export default async function Home() {
     icon: "event_note",
     overline: "การจองของฉัน",
     title: upcoming ? `กำลังจะมาถึง ${upcoming} รายการ` : "ยังไม่มีการประชุมที่จะมาถึง",
-    description: nextMeeting ? `ถัดไป: ${nextMeeting.title}` : "ดูประวัติการจองและติดตามสถานะคำขอของคุณ",
+    description: nextMeeting ? `ถัดไป: ${nextMeeting.title}` : "ดูประวัติการจอง และติดตามสถานะคำขอของคุณ",
     details: nextMeeting
       ? [
           { icon: "schedule", text: formatRange(nextMeeting.startTime, nextMeeting.endTime) },
@@ -125,7 +132,7 @@ export default async function Home() {
       icon: pending ? "pending_actions" : "fact_check",
       overline: "อนุมัติการจอง",
       title: pending ? `รออนุมัติ ${pending} รายการ` : "ไม่มีคำขอค้าง",
-      description: pending ? "ตรวจสอบและอนุมัติ/ปฏิเสธก่อนถึงเวลาประชุม" : "คำขอใหม่จะแจ้งเตือนที่กระดิ่งด้านบน",
+      description: pending ? "ตรวจสอบและอนุมัติ/ปฏิเสธ ก่อนถึงเวลาประชุม" : "คำขอใหม่จะแจ้งเตือน ที่กระดิ่งด้านบน",
       action: pending ? "ตรวจสอบคำขอ" : "ดูหน้าอนุมัติ",
       tone: pending ? "warning" : "default",
     },
@@ -136,7 +143,7 @@ export default async function Home() {
             icon: "edit_square",
             overline: "ห้องของฉัน",
             title: "จัดการห้องของฉัน",
-            description: "แก้ไขข้อมูล รูป และสิ่งอำนวยความสะดวกของห้อง",
+            description: "แก้ไขข้อมูล รูป และสิ่งอำนวยความสะดวก ของห้อง",
             meta: `ดูแลอยู่ ${myRooms} ห้อง`,
             action: "จัดการห้อง",
             tone: "default" as Tone,
@@ -150,7 +157,7 @@ export default async function Home() {
             icon: "monitoring",
             overline: "ภาพรวม",
             title: "แดชบอร์ด",
-            description: "สถิติการจองและการใช้ห้อง",
+            description: "สถิติการจอง และการใช้ห้อง",
             action: "เปิดแดชบอร์ด",
             tone: "default" as Tone,
           },
@@ -159,7 +166,7 @@ export default async function Home() {
             icon: "group",
             overline: "ผู้ใช้",
             title: "จัดการผู้ใช้",
-            description: "สร้างผู้ใช้และกำหนดบทบาทสิทธิ์",
+            description: "สร้างผู้ใช้ และกำหนดบทบาทสิทธิ์",
             meta: `ใช้งานอยู่ ${users} คน`,
             action: "จัดการผู้ใช้",
             tone: "default" as Tone,
@@ -169,7 +176,7 @@ export default async function Home() {
             icon: "domain",
             overline: "ห้องประชุม",
             title: "จัดการห้องทั้งหมด",
-            description: "เพิ่ม แก้ไข และเปิด/ปิดการจองห้อง",
+            description: "เพิ่ม แก้ไข และเปิด/ปิด การจองห้อง",
             meta: `เปิดให้จอง ${activeRooms} ห้อง`,
             action: "จัดการห้อง",
             tone: "default" as Tone,
@@ -208,9 +215,11 @@ export default async function Home() {
             <div className="relative flex flex-col justify-between gap-6 p-6 sm:p-8 max-w-xl">
               <div>
                 <span className="block text-label-large text-highlight">จองห้องประชุม</span>
-                <h3 className="text-headline-small text-on-primary mt-1">ค้นหาห้องที่ว่างและจองได้ทันที</h3>
-                <p className="text-body-medium text-primary-90 mt-2">
-                  เลือกวัน เวลา และจำนวนที่นั่ง ระบบจะแสดงเฉพาะห้องที่ว่างให้
+                <h3 className="text-headline-small text-on-primary mt-1">
+                  <Phrases text="ค้นหาห้องที่ว่าง และจองได้ทันที" />
+                </h3>
+                <p className="text-body-medium leading-[1.6] text-primary-90 mt-2">
+                  <Phrases text="เลือกวัน เวลา และจำนวนที่นั่ง ระบบจะแสดงเฉพาะห้องที่ว่างให้" />
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-4">

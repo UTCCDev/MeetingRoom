@@ -12,6 +12,7 @@
   --type-h3: 500 var(--h3-size)/1.2 var(--font-family);
   --type-nav-title: 500 1.5rem/1.35 var(--font-family);
   --type-body: 300 1.25rem/1.65 var(--font-family);
+  --type-body-large: 300 1.5rem/1.6 var(--font-family); /* body-large: 24px, Thai body line-height ≥ 1.6 */
   --type-body-small: 300 1.125rem/1.6 var(--font-family);
   --type-label: 500 1.125rem/1.4 var(--font-family);
   --type-caption: 300 1rem/1.45 var(--font-family);
@@ -50,12 +51,14 @@
   background: var(--color-surface); color: var(--color-ink); font: var(--type-body);
   word-break: normal;
 }
-/* Brand panel layers, back to front: primary fill → UTCC building photo (bottom-right)
-   → a primary fade from the left so the headline and body stay readable. */
+/* Brand panel layers, back to front: UTCC campus photo (cover, anchored bottom-right so
+   the tower and university sign stay in frame) → a primary fade from the left and a light
+   one from the bottom so the headline, body and legal line stay readable. */
 .login__brand {
   background:
-    linear-gradient(90deg, var(--color-primary) 0%, rgb(46 49 146 / .92) 30%, rgb(46 49 146 / .35) 60%, rgb(46 49 146 / 0) 80%),
-    url("/brand/utcc-building.png") right -6% bottom / auto 78% no-repeat,
+    linear-gradient(0deg, rgb(46 49 146 / .55) 0%, rgb(46 49 146 / 0) 25%),
+    linear-gradient(90deg, rgb(46 49 146 / .94) 0%, rgb(46 49 146 / .8) 35%, rgb(46 49 146 / .25) 70%, rgb(46 49 146 / 0) 100%),
+    url("/brand/utcc-campus.jpg") 78% 100% / cover no-repeat,
     var(--color-primary);
   color: var(--color-on-primary); padding: 48px;
   display: flex; flex-direction: column; justify-content: space-between; gap: 40px; }
@@ -63,7 +66,10 @@
 .login__logo img { display: block; width: auto; height: 96px; }
 .login__overline { font: var(--type-overline); letter-spacing: .14em; text-transform: uppercase; color: var(--color-highlight); }
 .login__headline { margin: 16px 0; font: var(--type-h2); color: var(--color-on-primary); text-wrap: pretty; }
-.login__lede { margin: 0; max-width: 26rem; font: var(--type-body); color: var(--color-on-primary-muted); text-wrap: pretty; }
+/* Thai has no spaces between words: wrap each phrase in .login__phrase so lines
+   only break between phrases, never inside one. */
+.login__phrase { white-space: nowrap; }
+.login__lede { margin: 0; max-width: 30rem; font: var(--type-body-large); color: var(--color-on-primary-muted); text-wrap: pretty; }
 .login__legal { font: var(--type-caption); color: var(--color-on-primary-muted); }
 
 .login__main { display: flex; align-items: center; justify-content: center; padding: 56px 48px; }
