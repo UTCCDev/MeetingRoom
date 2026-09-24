@@ -1,61 +1,304 @@
-@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap');
+/* Heavent DS v0.1.4 — see design.md. DB Heavent is served from public/fonts;
+   Prompt is only the fallback while it loads. */
+@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;500;700&family=Noto+Sans+Thai:wght@300;500;700&display=swap');
+
+@font-face { font-family: "DB Heavent"; src: url("/fonts/DBHeavent-Light.ttf") format("truetype"); font-weight: 300; font-display: swap; }
+@font-face { font-family: "DB Heavent"; src: url("/fonts/DBHeavent-Med.ttf") format("truetype"); font-weight: 500; font-display: swap; }
+@font-face { font-family: "DB Heavent"; src: url("/fonts/DBHeavent-Bold.ttf") format("truetype"); font-weight: 700; font-display: swap; }
+
+/* Line height of the row, resolved on the row itself (not on the icon) so a
+   leading icon can be centred on the first line of wrapping text. */
+@property --lead-lh {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --color-primary: #2E3192;
+    --color-primary-hover: #232670;
+    --color-primary-pressed: #1B1E5C;
+    --color-primary-container: #E8E9F6;
+    --color-accent: #00B1EB;
+    --color-highlight: #FFC709;
+    --color-ink: #12142E;
+    --color-ink-muted: #3D4160;
+    --color-ink-subtle: #6A6F91;
+    --color-outline: #C6C9DC;
+    --color-line: #E2E4EE;
+    --color-canvas: #FAFBFD;
+    --color-disabled-bg: #E4E5EC;
+    --color-disabled-fg: #8B8FA8;
+    --color-error: #B42318;
+    --color-success: #146C3A;
+    --focus-ring: 2px solid var(--color-accent);
+  }
+
   html {
-    font-family: 'Prompt', 'Noto Sans Thai', system-ui, sans-serif;
+    font-family: "DB Heavent", "Prompt", "Noto Sans Thai", system-ui, sans-serif;
+    font-synthesis: none; /* no faux bold / italic */
   }
-  
-  h1 {
-    @apply text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800;
-  }
-  
-  h2 {
-    @apply text-xl md:text-2xl font-semibold text-gray-800;
-  }
-  
+
   body {
-    @apply text-base text-gray-700 bg-white;
+    @apply text-base font-normal text-ink-muted bg-white;
+  }
+
+  /* Only Display/Headline shrink per breakpoint. */
+  h1 {
+    @apply text-2xl md:text-3xl lg:text-4xl font-bold text-ink;
+  }
+
+  h2 {
+    @apply text-xl md:text-2xl font-medium text-ink;
+  }
+
+  :focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  input[type="checkbox"],
+  input[type="radio"] {
+    accent-color: var(--color-primary);
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  table td, table th {
+    font-variant-numeric: tabular-nums;
   }
 }
 
 @layer components {
-  .btn-primary {
-    @apply px-6 py-3 bg-blue-700 text-white font-semibold rounded-lg hover:bg-blue-800 transition-all duration-200 hover:shadow-md;
+  /* Buttons — size m (44px, 28px padding, label-large), radius xs. */
+  .btn-primary,
+  .btn-secondary,
+  .btn-success,
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 h-11 px-7 rounded-xs text-label-large transition-colors duration-100
+      disabled:bg-disabled-bg disabled:text-disabled-fg disabled:border-transparent disabled:cursor-not-allowed;
   }
 
+  /* filled */
+  .btn-primary {
+    @apply bg-primary text-white hover:bg-primary-hover active:bg-primary-pressed;
+  }
+
+  /* outlined */
   .btn-secondary {
-    @apply px-6 py-3 bg-gray-50 border-2 border-blue-700 text-blue-700 font-semibold rounded-lg hover:bg-blue-50 transition-all duration-200;
+    @apply bg-transparent border border-outline text-primary hover:border-primary hover:bg-canvas active:bg-primary-container;
+  }
+
+  .btn-tonal,
+  .btn-text {
+    @apply inline-flex items-center justify-center gap-2 h-11 px-7 rounded-xs text-label-large transition-colors duration-100
+      disabled:bg-transparent disabled:text-disabled-fg disabled:cursor-not-allowed;
+  }
+
+  /* tonal */
+  .btn-tonal {
+    @apply bg-primary-container text-primary hover:bg-[#D5D7F2] active:bg-[#C6C9EA] disabled:bg-disabled-bg;
+  }
+
+  /* text */
+  .btn-text {
+    @apply px-3 text-primary hover:bg-primary-container active:bg-[#D5D7F2];
+  }
+
+  /* size s (40px) — in cards and dense rows */
+  .btn--s {
+    @apply h-10 px-5 text-label-medium;
+  }
+
+  /* Icon button — 44×44 touch target, 24px icon. */
+  .icon-button {
+    @apply inline-flex items-center justify-center w-11 h-11 rounded-full text-ink-muted hover:bg-primary-container hover:text-primary
+      active:bg-[#D5D7F2] transition-colors duration-100 disabled:text-disabled-fg disabled:bg-transparent disabled:cursor-not-allowed;
   }
 
   .btn-success {
-    @apply px-6 py-3 bg-emerald-500 text-white font-semibold rounded-lg hover:bg-emerald-600 transition-all duration-200 hover:shadow-md;
+    @apply bg-success text-white hover:brightness-90;
   }
 
   .btn-danger {
-    @apply px-6 py-3 bg-rose-500 text-white font-semibold rounded-lg hover:bg-rose-600 transition-all duration-200 hover:shadow-md;
+    @apply bg-error text-white hover:brightness-90;
   }
 
-  .card {
-    @apply p-6 bg-gray-50 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200;
+  .field-label {
+    @apply block text-label-large text-ink mb-2;
   }
+
+  .field-hint {
+    @apply mt-1 text-label-medium font-normal text-ink-subtle;
+  }
+
+  .field-error {
+    @apply mt-1 text-label-medium text-error;
+  }
+
+  .input-field[aria-invalid="true"] {
+    @apply border-error;
+  }
+
+  /* Alerts — error / success / info, icon + message. */
+  .alert {
+    @apply flex items-start gap-3 px-5 py-4 border rounded-xs text-body-small;
+    --lead-lh: 1lh;
+  }
+
+  /* Icon + text that may wrap: icon sits on the centre of the first line.
+     Single-line rows just use `flex items-center`. */
+  .icon-lead {
+    @apply flex items-start;
+    --lead-lh: 1lh;
+  }
+
+  .icon-lead > .icon,
+  .alert > .icon {
+    margin-top: max(0px, calc((var(--lead-lh) - 1em) / 2));
+  }
+
+  .alert--error {
+    @apply font-medium bg-[#FDF1F1] border-[#F1B8B8] text-[#8A1C12];
+  }
+
+  .alert--success {
+    @apply bg-[#EEF9F2] border-[#B9E6C9] text-success;
+  }
+
+  .alert--info {
+    @apply bg-primary-container border-[#D5D7F2] text-ink;
+  }
+
+  /* Data table — header label-medium, rows separated by line. */
+  .table {
+    @apply w-full text-left text-body-small;
+  }
+
+  .table thead th {
+    @apply px-4 py-3 bg-canvas border-b border-line text-label-medium text-ink-subtle whitespace-nowrap;
+  }
+
+  .table tbody td {
+    @apply px-4 py-3 border-b border-line text-ink-muted align-middle;
+  }
+
+  .table tbody tr:last-child td {
+    @apply border-b-0;
+  }
+
+  .table tbody tr:hover td {
+    @apply bg-canvas;
+  }
+
+  .empty-state {
+    @apply flex flex-col items-center text-center py-16 gap-3 text-body-large text-ink-muted;
+  }
+
+  /* Cards — outlined by default; radius m, padding 24 (16 on mobile). */
+  .card {
+    @apply p-4 sm:p-6 bg-white rounded-m border border-line;
+  }
+
+  .card--elevated {
+    @apply border-transparent shadow-[0_1px_3px_rgba(18,20,46,0.08),0_4px_12px_rgba(18,20,46,0.06)];
+  }
+
+  .card--filled {
+    @apply bg-primary-container border-transparent;
+  }
+
+  /* Whole card is the link — no buttons or links nested inside. */
+  .card--interactive {
+    @apply block cursor-pointer transition-[border-color,background-color,box-shadow] duration-100
+      hover:border-primary hover:shadow-[0_4px_12px_rgba(18,20,46,0.08)] active:bg-primary-container;
+  }
+
+  .card__title {
+    @apply text-title-medium text-ink;
+  }
+
+  .card__body {
+    @apply text-body-small text-ink-muted;
+  }
+
+  /* Icons — Material Symbols Outlined (loaded in app/layout.tsx). */
+  .icon {
+    font-family: "Material Symbols Outlined";
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    vertical-align: middle; /* if an icon ends up in plain inline text, don't sit it on the baseline */
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    flex-shrink: 0;
+    user-select: none;
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: "liga";
+    --icon-wght: 400;
+    --icon-fill: 0;
+    --icon-opsz: 24;
+    font-variation-settings: "FILL" var(--icon-fill), "wght" var(--icon-wght), "GRAD" 0, "opsz" var(--icon-opsz);
+  }
+
+  .icon--20 { font-size: 20px; --icon-opsz: 20; }
+  .icon--24 { font-size: 24px; --icon-opsz: 24; }
+  .icon--32 { font-size: 32px; --icon-opsz: 32; }
+  .icon--40 { font-size: 40px; --icon-opsz: 40; }
+  .icon--w300 { --icon-wght: 300; }
+  .icon--w400 { --icon-wght: 400; }
+  .icon--w500 { --icon-wght: 500; }
+  .icon--w600 { --icon-wght: 600; }
+  .icon--fill { --icon-fill: 1; }
+  .icon--primary { color: var(--color-primary); }
+  .icon--error { color: var(--color-error); }
+  .icon--success { color: var(--color-success); }
 
   .input-field {
-    @apply w-full px-4 py-3 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-transparent transition-all duration-200;
+    @apply w-full px-4 py-2.5 border border-outline rounded-xs bg-white text-body-medium text-ink placeholder:text-ink-subtle
+      focus:border-primary focus:outline focus:outline-2 focus:outline-offset-1 focus:outline-accent transition-colors duration-100;
+  }
+
+  input.input-field,
+  select.input-field {
+    @apply h-12 py-0;
+  }
+
+  .badge-available,
+  .badge-booked,
+  .badge-pending,
+  .badge-neutral,
+  .badge-primary {
+    @apply inline-flex items-center gap-1 px-3 py-0.5 text-label-medium rounded-full whitespace-nowrap;
+  }
+
+  .badge-neutral {
+    @apply bg-gray-100 text-ink-muted;
+  }
+
+  .badge-primary {
+    @apply bg-primary-container text-primary;
   }
 
   .badge-available {
-    @apply inline-block px-3 py-1 bg-emerald-100 text-emerald-700 text-sm font-semibold rounded-full;
+    @apply bg-emerald-50 text-success;
   }
 
   .badge-booked {
-    @apply inline-block px-3 py-1 bg-rose-100 text-rose-700 text-sm font-semibold rounded-full;
+    @apply bg-red-50 text-error;
   }
 
   .badge-pending {
-    @apply inline-block px-3 py-1 bg-amber-100 text-amber-700 text-sm font-semibold rounded-full;
+    @apply bg-highlight/20 text-ink;
   }
 }

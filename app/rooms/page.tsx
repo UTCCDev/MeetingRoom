@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import AppHeader from "@/app/components/AppHeader";
+import { roomCover } from "@/app/components/RoomGallery";
 import { SkeletonCards } from "@/app/components/Skeleton";
 import { addMinutes, bangkokISO, roomLocation, TIME_SLOTS, todayKey } from "@/lib/format";
 
@@ -101,51 +102,67 @@ export default function RoomsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-canvas">
       <AppHeader title="ค้นหาห้องประชุม" breadcrumbs={[{ label: "ค้นหาห้อง" }]} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         {/* Search & Filter Section */}
-        <div className="mb-6 p-4 sm:p-6 bg-gray-50 rounded-lg border border-gray-200 space-y-4">
+        <section className="card mb-6 space-y-5" aria-label="ค้นหาและกรองห้อง">
           <div className="flex gap-4 flex-wrap">
             <div className="flex-1 min-w-[240px]">
-              <label htmlFor="room-search" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="room-search" className="block text-label-large text-ink mb-2">
                 คำค้นหา
               </label>
-              <input
-                id="room-search"
-                type="search"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="ชื่อห้อง, อาคาร, หน่วยงาน หรือผู้ดูแลห้อง"
-                className="input-field"
-              />
+              <div className="relative">
+                <span
+                  className="icon icon--20 icon--w300 absolute left-3 top-1/2 -translate-y-1/2 text-ink-subtle pointer-events-none"
+                  aria-hidden="true"
+                >
+                  search
+                </span>
+                <input
+                  id="room-search"
+                  type="search"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="ชื่อห้อง, อาคาร, หน่วยงาน หรือผู้ดูแลห้อง"
+                  className="input-field pl-10"
+                />
+              </div>
             </div>
             <div className="w-full sm:w-44">
-              <label htmlFor="room-min-capacity" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="room-min-capacity" className="block text-label-large text-ink mb-2">
                 ที่นั่งขั้นต่ำ
               </label>
-              <input
-                id="room-min-capacity"
-                type="number"
-                min="1"
-                inputMode="numeric"
-                value={minCapacity}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  // Negative or zero seat counts make no sense; clamp to 1.
-                  setMinCapacity(v === "" ? "" : String(Math.max(1, parseInt(v, 10) || 1)));
-                }}
-                placeholder="เช่น 10"
-                className="input-field"
-              />
+              <div className="relative">
+                <span
+                  className="icon icon--20 icon--w300 absolute left-3 top-1/2 -translate-y-1/2 text-ink-subtle pointer-events-none"
+                  aria-hidden="true"
+                >
+                  group
+                </span>
+                <input
+                  id="room-min-capacity"
+                  type="number"
+                  min="1"
+                  inputMode="numeric"
+                  value={minCapacity}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    // Negative or zero seat counts make no sense; clamp to 1.
+                    setMinCapacity(v === "" ? "" : String(Math.max(1, parseInt(v, 10) || 1)));
+                  }}
+                  placeholder="เช่น 10"
+                  className="input-field pl-10 tabular-nums"
+                />
+              </div>
             </div>
           </div>
 
-          <fieldset className="flex gap-4 flex-wrap items-end">
-            <legend className="text-sm font-medium text-gray-700 mb-1">ห้องที่ว่างในช่วงเวลา</legend>
+          <fieldset className="flex gap-4 flex-wrap items-end pt-5 border-t border-line">
+            <legend className="float-left w-full text-label-large text-ink mb-2">ห้องที่ว่างในช่วงเวลา</legend>
             <div className="w-full sm:w-48">
-              <label htmlFor="room-date" className="block text-xs text-gray-500 mb-1">วันที่</label>
+              <label htmlFor="room-date" className="block text-label-medium text-ink-subtle mb-1">วันที่</label>
               <input
                 id="room-date"
                 type="date"
@@ -156,7 +173,7 @@ export default function RoomsPage() {
               />
             </div>
             <div className="w-[calc(50%-0.5rem)] sm:w-36">
-              <label htmlFor="room-start" className="block text-xs text-gray-500 mb-1">ตั้งแต่</label>
+              <label htmlFor="room-start" className="block text-label-medium text-ink-subtle mb-1">ตั้งแต่</label>
               <select
                 id="room-start"
                 value={startTime}
@@ -165,7 +182,7 @@ export default function RoomsPage() {
                   setStartTime(v);
                   if (v && (!endTime || endTime <= v)) setEndTime(addMinutes(v, 60));
                 }}
-                className="input-field"
+                className="input-field tabular-nums"
               >
                 <option value="">--:--</option>
                 {TIME_SLOTS.map((t) => (
@@ -174,12 +191,12 @@ export default function RoomsPage() {
               </select>
             </div>
             <div className="w-[calc(50%-0.5rem)] sm:w-36">
-              <label htmlFor="room-end" className="block text-xs text-gray-500 mb-1">ถึง</label>
+              <label htmlFor="room-end" className="block text-label-medium text-ink-subtle mb-1">ถึง</label>
               <select
                 id="room-end"
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
-                className="input-field"
+                className="input-field tabular-nums"
               >
                 <option value="">--:--</option>
                 {END_SLOTS.filter((t) => !startTime || t > startTime).map((t) => (
@@ -188,73 +205,124 @@ export default function RoomsPage() {
               </select>
             </div>
             {(date || startTime) && !window_ && (
-              <p className="text-xs text-amber-700 w-full">เลือกวันที่ เวลาเริ่ม และเวลาสิ้นสุด เพื่อกรองเฉพาะห้องที่ว่าง</p>
+              <p className="w-full flex items-center gap-2 text-body-small text-ink-muted">
+                <span className="icon icon--20 icon--w300 text-primary" aria-hidden="true">info</span>
+                เลือกวันที่ เวลาเริ่ม และเวลาสิ้นสุด เพื่อกรองเฉพาะห้องที่ว่าง
+              </p>
             )}
           </fieldset>
 
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <p className="text-sm text-gray-600" aria-live="polite">
-              {!isLoading && <>พบ <strong>{filteredRooms.length}</strong> ห้อง{window_ && " ที่ว่างในช่วงเวลาที่เลือก"}</>}
+          <div className="flex items-center justify-between gap-4 flex-wrap pt-4 border-t border-line">
+            <p className="text-body-small text-ink-muted" aria-live="polite">
+              {!isLoading && (
+                <>
+                  พบ <strong className="font-bold text-ink tabular-nums">{filteredRooms.length}</strong> ห้อง
+                  {window_ && " ที่ว่างในช่วงเวลาที่เลือก"}
+                </>
+              )}
             </p>
             {hasFilters && (
-              <button type="button" onClick={clearFilters} className="text-sm font-medium text-blue-700 hover:underline">
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="inline-flex items-center gap-2 h-11 px-3 -mr-3 rounded-xs text-label-large text-primary hover:bg-primary-container"
+              >
+                <span className="icon icon--20 icon--w500" aria-hidden="true">filter_alt_off</span>
                 ล้างตัวกรอง
               </button>
             )}
           </div>
-        </div>
+        </section>
 
         {error && (
-          <div className="mb-6 p-4 bg-rose-100 text-rose-700 rounded-lg" role="alert">
-            ⚠️ {error}
+          <div
+            className="mb-6 flex items-center gap-3 px-5 py-4 border border-[#F1B8B8] bg-[#FDF1F1] text-[#8A1C12] text-body-small font-medium rounded-xs"
+            role="alert"
+          >
+            <span className="icon icon--24 icon--w500 icon--error" aria-hidden="true">error</span>
+            {error}
           </div>
         )}
 
         {isLoading ? (
-          <SkeletonCards count={6} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" />
+          <SkeletonCards count={6} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" />
         ) : rooms.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-600 text-lg">ยังไม่มีห้องประชุมในระบบ</p>
+          <div className="empty-state">
+            <span className="icon icon--40 icon--w300 text-ink-subtle" aria-hidden="true">meeting_room</span>
+            <p>ยังไม่มีห้องประชุมในระบบ</p>
           </div>
         ) : filteredRooms.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-600 text-lg mb-4">ไม่พบห้องที่ตรงกับเงื่อนไข</p>
+          <div className="empty-state">
+            <span className="icon icon--40 icon--w300 text-ink-subtle" aria-hidden="true">search_off</span>
+            <p className="mb-2">ไม่พบห้องที่ตรงกับเงื่อนไข</p>
             <button type="button" onClick={clearFilters} className="btn-secondary">
+              <span className="icon icon--20 icon--w500" aria-hidden="true">filter_alt_off</span>
               ล้างตัวกรอง
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {filteredRooms.map((room) => (
-              <Link key={room.id} href={bookingHref(room.id)}>
-                <div className="bg-gray-50 rounded-lg overflow-hidden border border-gray-200 hover:shadow-lg transition-all duration-200 cursor-pointer h-full flex flex-col">
-                  {room.image && (
-                    <div className="relative w-full h-40 bg-gray-200 overflow-hidden">
-                      <img
-                        src={room.image}
-                        alt={room.name}
-                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                  )}
-
-                  <div className="p-5 flex-1 flex flex-col">
-                    <h2 className="text-lg font-bold text-blue-700 mb-1 line-clamp-2">
-                      {room.name}
-                    </h2>
-                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                      {roomLocation(room.description)}
-                    </p>
-
-                    <div className="flex flex-wrap gap-x-5 gap-y-2 mb-5 text-sm text-gray-700">
-                      <span>👥 <span className="font-semibold">{room.capacity}</span> ที่นั่ง</span>
-                      <span>👤 {room.roomAdmin.name}</span>
-                    </div>
-
-                    <span className="btn-primary w-full mt-auto text-center">
-                      {window_ ? "จองช่วงเวลานี้ →" : "ดูรายละเอียด & จอง →"}
+              <Link
+                key={room.id}
+                href={bookingHref(room.id)}
+                className="card card--interactive group p-0 sm:p-0 overflow-hidden h-full flex flex-col"
+              >
+                <div className="relative aspect-video bg-primary-container overflow-hidden">
+                  <img
+                    src={roomCover(room)}
+                    alt=""
+                    loading="lazy"
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 motion-reduce:transition-none"
+                  />
+                  {!room.image && (
+                    <span className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-ink/60 text-white text-label-small font-normal">
+                      ภาพตัวอย่าง
                     </span>
-                  </div>
+                  )}
+                  {window_ && (
+                    <span className="absolute top-3 left-3 inline-flex items-center gap-1 px-3 py-0.5 rounded-full bg-white text-label-medium text-success shadow-sm">
+                      <span className="icon icon--20 icon--w500 icon--fill" aria-hidden="true">check_circle</span>
+                      ว่างช่วงนี้
+                    </span>
+                  )}
+                </div>
+
+                <div className="p-4 sm:p-6 flex-1 flex flex-col">
+                  <h2 className="card__title mb-1 line-clamp-2 group-hover:text-primary">{room.name}</h2>
+                  <p className="card__body icon-lead gap-2 mb-4 text-ink-subtle">
+                    <span className="icon icon--20 icon--w300" aria-hidden="true">location_on</span>
+                    <span className="line-clamp-2">{roomLocation(room.description)}</span>
+                  </p>
+
+                  <dl className="flex flex-wrap gap-x-5 gap-y-2 mb-5 text-body-small text-ink-muted">
+                    <div className="flex items-center gap-2">
+                      <dt className="flex">
+                        <span className="icon icon--20 icon--w300 text-ink-subtle" aria-hidden="true">group</span>
+                        <span className="sr-only">ความจุ</span>
+                      </dt>
+                      <dd>
+                        <span className="font-medium text-ink tabular-nums">{room.capacity}</span> ที่นั่ง
+                      </dd>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <dt className="flex">
+                        <span className="icon icon--20 icon--w300 text-ink-subtle" aria-hidden="true">person</span>
+                        <span className="sr-only">ผู้ดูแลห้อง</span>
+                      </dt>
+                      <dd>{room.roomAdmin.name}</dd>
+                    </div>
+                  </dl>
+
+                  <span className="mt-auto pt-4 border-t border-line flex items-center justify-between text-label-large text-primary">
+                    {window_ ? "จองช่วงเวลานี้" : "ดูรายละเอียดและจอง"}
+                    <span
+                      className="icon icon--20 icon--w500 transition-transform duration-100 group-hover:translate-x-1"
+                      aria-hidden="true"
+                    >
+                      arrow_forward
+                    </span>
+                  </span>
                 </div>
               </Link>
             ))}

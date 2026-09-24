@@ -28,9 +28,15 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 const ROLE_CLASS: Record<string, string> = {
-  SYSTEM_ADMIN: "bg-red-100 text-red-800",
-  ROOM_ADMIN: "bg-blue-100 text-blue-800",
-  USER: "bg-gray-100 text-gray-800",
+  SYSTEM_ADMIN: "bg-primary text-white",
+  ROOM_ADMIN: "bg-primary-container text-primary",
+  USER: "bg-gray-100 text-ink-muted",
+};
+
+const ROLE_ICONS: Record<string, string> = {
+  SYSTEM_ADMIN: "shield_person",
+  ROOM_ADMIN: "manage_accounts",
+  USER: "person",
 };
 
 type FormState = { name: string; email: string; password: string; role: string; active: boolean };
@@ -170,30 +176,39 @@ export default function UsersPage() {
   const isSelf = editing !== null && editing !== "new" && editing.id === myId;
 
   const fieldClass = (key: keyof FormState) =>
-    `input-field ${formErrors[key] ? "border-red-500 focus:ring-red-500" : ""}`;
+    `input-field ${formErrors[key] ? "border-error" : ""}`;
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-canvas">
       <AppHeader
         title="จัดการผู้ใช้"
         breadcrumbs={[{ label: "จัดการผู้ใช้" }]}
         actions={
           <button onClick={openCreate} className="btn-primary">
-            + เพิ่มผู้ใช้ใหม่
+            <span className="icon icon--20 icon--w500" aria-hidden="true">person_add</span>
+            เพิ่มผู้ใช้ใหม่
           </button>
         }
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         {error && (
-          <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg" role="alert">
+          <div className="alert alert--error mb-4" role="alert">
+            <span className="icon icon--24 icon--w500 icon--error" aria-hidden="true">error</span>
             {error}
           </div>
         )}
 
-        <div className="mb-4 flex flex-wrap gap-4 items-end">
+        <div className="card mb-5 flex flex-wrap gap-4 items-end">
           <div className="flex-1 min-w-[240px]">
-            <label htmlFor="user-search" className="block text-sm font-medium text-gray-700 mb-1">ค้นหา</label>
+            <label htmlFor="user-search" className="field-label">ค้นหา</label>
+            <div className="relative">
+            <span
+              className="icon icon--20 icon--w300 absolute left-3 top-1/2 -translate-y-1/2 text-ink-subtle pointer-events-none"
+              aria-hidden="true"
+            >
+              search
+            </span>
             <input
               id="user-search"
               type="search"
@@ -203,11 +218,12 @@ export default function UsersPage() {
                 setPage(1);
               }}
               placeholder="ชื่อหรืออีเมล"
-              className="input-field"
+              className="input-field pl-10"
             />
+            </div>
           </div>
           <div className="w-full sm:w-48">
-            <label htmlFor="user-role-filter" className="block text-sm font-medium text-gray-700 mb-1">บทบาท</label>
+            <label htmlFor="user-role-filter" className="field-label">บทบาท</label>
             <select
               id="user-role-filter"
               value={roleFilter}
@@ -223,56 +239,66 @@ export default function UsersPage() {
               ))}
             </select>
           </div>
-          <p className="text-sm text-gray-600 py-3">พบ {filtered.length} คน</p>
+          <p className="text-body-small text-ink-muted h-12 flex items-center">พบ <strong className="font-bold text-ink tabular-nums mx-1">{filtered.length}</strong> คน</p>
         </div>
 
         {isLoading ? (
           <SkeletonCards count={3} />
         ) : filtered.length === 0 ? (
-          <div className="card text-center">
-            <p className="text-gray-500">ไม่พบผู้ใช้</p>
+          <div className="card empty-state">
+            <span className="icon icon--40 icon--w300 text-ink-subtle" aria-hidden="true">person_search</span>
+            <p>ไม่พบผู้ใช้</p>
           </div>
         ) : (
           <>
-            <div className="card overflow-x-auto p-0">
-              <table className="w-full">
-                <thead className="border-b bg-gray-100 text-sm">
+            <div className="card overflow-x-auto p-0 sm:p-0">
+              <table className="table">
+                <thead>
                   <tr>
-                    <th className="text-left py-3 px-4">ชื่อ-สกุล</th>
-                    <th className="text-left py-3 px-4">อีเมล</th>
-                    <th className="text-left py-3 px-4">บทบาท</th>
-                    <th className="text-left py-3 px-4">สถานะ</th>
-                    <th className="text-left py-3 px-4">วันที่สร้าง</th>
-                    <th className="text-left py-3 px-4"><span className="sr-only">การจัดการ</span></th>
+                    <th>ชื่อ-สกุล</th>
+                    <th>อีเมล</th>
+                    <th>บทบาท</th>
+                    <th>สถานะ</th>
+                    <th>วันที่สร้าง</th>
+                    <th><span className="sr-only">การจัดการ</span></th>
                   </tr>
                 </thead>
                 <tbody>
                   {pageUsers.map((user) => (
-                    <tr key={user.id} className={`border-b hover:bg-white ${user.active ? "" : "text-gray-400"}`}>
-                      <td className="py-3 px-4">
-                        {user.name}
-                        {user.id === myId && <span className="ml-2 text-xs text-gray-400">(คุณ)</span>}
+                    <tr key={user.id} className={user.active ? "" : "opacity-60"}>
+                      <td>
+                        <span className="text-label-large text-ink">{user.name}</span>
+                        {user.id === myId && <span className="ml-2 text-label-small font-normal text-ink-subtle">(คุณ)</span>}
                       </td>
-                      <td className="py-3 px-4 break-all">{user.email}</td>
-                      <td className="py-3 px-4">
-                        <span className={`px-2 py-1 rounded text-sm font-medium ${ROLE_CLASS[user.role]}`}>
+                      <td className="break-all">{user.email}</td>
+                      <td>
+                        <span className={`inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-label-medium whitespace-nowrap ${ROLE_CLASS[user.role]}`}>
+                          <span className="icon icon--20 icon--w500" aria-hidden="true">{ROLE_ICONS[user.role] || "person"}</span>
                           {ROLE_LABELS[user.role] || user.role}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-sm">
+                      <td>
                         {user.active ? (
-                          <span className="text-emerald-700">ใช้งาน</span>
+                          <span className="badge-available">
+                            <span className="icon icon--20 icon--w500" aria-hidden="true">check_circle</span>
+                            ใช้งาน
+                          </span>
                         ) : (
-                          <span className="text-gray-500">ปิดบัญชี</span>
+                          <span className="badge-neutral">
+                            <span className="icon icon--20 icon--w500" aria-hidden="true">block</span>
+                            ปิดบัญชี
+                          </span>
                         )}
                       </td>
-                      <td className="py-3 px-4 text-sm whitespace-nowrap">{formatDate(user.createdAt)}</td>
-                      <td className="py-3 px-4">
+                      <td className="whitespace-nowrap tabular-nums">{formatDate(user.createdAt)}</td>
+                      <td className="text-right">
                         <button
                           onClick={() => openEdit(user)}
-                          className="text-blue-700 hover:underline text-sm font-medium"
+                          className="icon-button"
+                          aria-label={`แก้ไข ${user.name}`}
+                          title="แก้ไข"
                         >
-                          แก้ไข
+                          <span className="icon icon--24 icon--w300" aria-hidden="true">edit</span>
                         </button>
                       </td>
                     </tr>
@@ -282,23 +308,25 @@ export default function UsersPage() {
             </div>
 
             {pageCount > 1 && (
-              <nav className="flex items-center justify-center gap-2 mt-4" aria-label="เลือกหน้า">
+              <nav className="flex items-center justify-center gap-3 mt-5" aria-label="เลือกหน้า">
                 <button
-                  className="px-3 py-1 rounded border border-gray-300 disabled:opacity-40"
+                  className="btn-secondary btn--s"
                   onClick={() => setPage(currentPage - 1)}
                   disabled={currentPage === 1}
                 >
-                  ‹ ก่อนหน้า
+                  <span className="icon icon--20 icon--w500" aria-hidden="true">chevron_left</span>
+                  ก่อนหน้า
                 </button>
-                <span className="text-sm text-gray-600">
+                <span className="text-label-large text-ink-muted tabular-nums">
                   หน้า {currentPage} / {pageCount}
                 </span>
                 <button
-                  className="px-3 py-1 rounded border border-gray-300 disabled:opacity-40"
+                  className="btn-secondary btn--s"
                   onClick={() => setPage(currentPage + 1)}
                   disabled={currentPage === pageCount}
                 >
-                  ถัดไป ›
+                  ถัดไป
+                  <span className="icon icon--20 icon--w500" aria-hidden="true">chevron_right</span>
                 </button>
               </nav>
             )}
@@ -307,25 +335,31 @@ export default function UsersPage() {
       </div>
 
       {editing && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4" onClick={() => !isSaving && setEditing(null)}>
+        <div className="fixed inset-0 bg-ink/50 flex items-center justify-center z-50 px-4" onClick={() => !isSaving && setEditing(null)}>
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="user-form-title"
-            className="bg-white rounded-lg shadow-xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-l shadow-xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 id="user-form-title" className="text-xl font-bold mb-4 text-blue-700">
+            <h2 id="user-form-title" className="flex items-center gap-2 text-title-large text-ink mb-5">
+              <span className="icon icon--24 icon--w500 text-primary" aria-hidden="true">
+                {editing === "new" ? "person_add" : "manage_accounts"}
+              </span>
               {editing === "new" ? "สร้างผู้ใช้ใหม่" : "แก้ไขผู้ใช้"}
             </h2>
 
             {formError && (
-              <div className="mb-4 p-3 bg-red-100 text-red-700 rounded text-sm" role="alert">{formError}</div>
+              <div className="alert alert--error mb-4" role="alert">
+                <span className="icon icon--24 icon--w500 icon--error" aria-hidden="true">error</span>
+                {formError}
+              </div>
             )}
 
             <form onSubmit={handleSave} className="space-y-3" noValidate>
               <div>
-                <label htmlFor="user-name" className="block text-sm font-medium text-gray-700 mb-1">ชื่อ-สกุล *</label>
+                <label htmlFor="user-name" className="field-label">ชื่อ-สกุล *</label>
                 <input
                   id="user-name"
                   type="text"
@@ -335,11 +369,11 @@ export default function UsersPage() {
                   className={fieldClass("name")}
                   aria-invalid={!!formErrors.name}
                 />
-                <p className="text-xs text-red-600 mt-1 min-h-[1rem]">{formErrors.name}</p>
+                <p className="field-error min-h-[1.4rem]">{formErrors.name}</p>
               </div>
 
               <div>
-                <label htmlFor="user-email" className="block text-sm font-medium text-gray-700 mb-1">อีเมล *</label>
+                <label htmlFor="user-email" className="field-label">อีเมล *</label>
                 <input
                   id="user-email"
                   type="email"
@@ -349,11 +383,11 @@ export default function UsersPage() {
                   className={fieldClass("email")}
                   aria-invalid={!!formErrors.email}
                 />
-                <p className="text-xs text-red-600 mt-1 min-h-[1rem]">{formErrors.email}</p>
+                <p className="field-error min-h-[1.4rem]">{formErrors.email}</p>
               </div>
 
               <div>
-                <label htmlFor="user-password" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="user-password" className="field-label">
                   {editing === "new" ? "รหัสผ่าน *" : "รีเซ็ตรหัสผ่าน"}
                 </label>
                 <input
@@ -366,15 +400,15 @@ export default function UsersPage() {
                   aria-invalid={!!formErrors.password}
                   placeholder={editing === "new" ? "" : "เว้นว่างไว้หากไม่เปลี่ยน"}
                 />
-                <p className="text-xs mt-1 min-h-[1rem] text-red-600">
+                <p className="field-error min-h-[1.4rem]">
                   {formErrors.password || (
-                    <span className="text-gray-500">อย่างน้อย {PASSWORD_MIN_LENGTH} ตัวอักษร</span>
+                    <span className="font-normal text-ink-subtle">อย่างน้อย {PASSWORD_MIN_LENGTH} ตัวอักษร</span>
                   )}
                 </p>
               </div>
 
               <div>
-                <label htmlFor="user-role" className="block text-sm font-medium text-gray-700 mb-1">บทบาท</label>
+                <label htmlFor="user-role" className="field-label">บทบาท</label>
                 <select
                   id="user-role"
                   value={form.role}
@@ -386,11 +420,11 @@ export default function UsersPage() {
                     <option key={v} value={v}>{l}</option>
                   ))}
                 </select>
-                {isSelf && <p className="text-xs text-gray-500 mt-1">แก้ไขบทบาทตัวเองไม่ได้</p>}
+                {isSelf && <p className="field-hint">แก้ไขบทบาทตัวเองไม่ได้</p>}
               </div>
 
               {editing !== "new" && (
-                <label className="flex items-center gap-2 text-sm pt-2">
+                <label className="flex items-center gap-3 text-body-small text-ink pt-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={form.active}
@@ -401,11 +435,12 @@ export default function UsersPage() {
                 </label>
               )}
 
-              <div className="flex justify-end gap-2 pt-4">
-                <button type="button" onClick={() => setEditing(null)} className="btn-secondary" disabled={isSaving}>
+              <div className="flex justify-end gap-3 pt-4">
+                <button type="button" onClick={() => setEditing(null)} className="btn-text" disabled={isSaving}>
                   ยกเลิก
                 </button>
-                <button type="submit" className="btn-success disabled:opacity-50" disabled={isSaving}>
+                <button type="submit" className="btn-primary" disabled={isSaving}>
+                  <span className="icon icon--20 icon--w500" aria-hidden="true">save</span>
                   {isSaving ? "กำลังบันทึก..." : editing === "new" ? "สร้างผู้ใช้" : "บันทึก"}
                 </button>
               </div>

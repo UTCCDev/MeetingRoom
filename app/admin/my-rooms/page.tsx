@@ -106,12 +106,13 @@ export default function MyRoomsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-canvas">
       <AppHeader title="ห้องที่ฉันดูแล" breadcrumbs={[{ label: "ห้องของฉัน" }]} />
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         {error && (
-          <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
+          <div className="alert alert--error mb-4" role="alert">
+            <span className="icon icon--24 icon--w500 icon--error" aria-hidden="true">error</span>
             {error}
           </div>
         )}
@@ -119,23 +120,27 @@ export default function MyRoomsPage() {
         {isLoading ? (
           <SkeletonCards count={2} />
         ) : rooms.length === 0 ? (
-          <div className="card text-center">
-            <p className="text-gray-500">
+          <div className="card empty-state">
+            <span className="icon icon--40 icon--w300 text-ink-subtle" aria-hidden="true">meeting_room</span>
+            <p>
               ยังไม่มีห้องที่คุณดูแล
             </p>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             {rooms.map((room) => (
-              <div key={room.id} className="card">
+              <div key={room.id} className={`card ${editingRoomId === room.id ? "lg:col-span-2 card--elevated" : "p-0 sm:p-0 overflow-hidden flex flex-col"}`}>
                 {editingRoomId === room.id ? (
                   // Edit Mode
                   <div className="space-y-4">
-                    <h2 className="text-xl font-bold mb-4 text-blue-700">แก้ไขห้อง</h2>
+                    <h2 className="flex items-center gap-2 text-title-large text-ink mb-4">
+                      <span className="icon icon--24 icon--w500 text-primary" aria-hidden="true">edit_square</span>
+                      แก้ไขห้อง
+                    </h2>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="field-label">
                           ชื่อห้อง
                         </label>
                         <input
@@ -149,7 +154,7 @@ export default function MyRoomsPage() {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="field-label">
                           จำนวนที่นั่ง
                         </label>
                         <input
@@ -168,7 +173,7 @@ export default function MyRoomsPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="field-label">
                         รายละเอียด
                       </label>
                       <textarea
@@ -185,7 +190,7 @@ export default function MyRoomsPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="field-label">
                         URL รูปภาพ
                       </label>
                       <input
@@ -199,7 +204,7 @@ export default function MyRoomsPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="field-label">
                         สิ่งอำนวยความสะดวก (คั่นด้วยเครื่องหมายจุลภาค)
                       </label>
                       <input
@@ -221,50 +226,58 @@ export default function MyRoomsPage() {
                       />
                     </div>
 
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handleSaveRoom}
-                        className="btn-success"
-                      >
-                        บันทึกการเปลี่ยนแปลง
-                      </button>
+                    <div className="flex justify-end gap-3 pt-2">
                       <button
                         onClick={() => setEditingRoomId(null)}
-                        className="btn-secondary"
+                        className="btn-text"
                       >
                         ยกเลิก
+                      </button>
+                      <button
+                        onClick={handleSaveRoom}
+                        className="btn-primary"
+                      >
+                        <span className="icon icon--20 icon--w500" aria-hidden="true">save</span>
+                        บันทึกการเปลี่ยนแปลง
                       </button>
                     </div>
                   </div>
                 ) : (
                   // View Mode
                   <>
-                    {room.image && (
-                      <img
-                        src={room.image}
-                        alt={room.name}
-                        className="w-full h-48 object-cover rounded-lg mb-4"
-                      />
-                    )}
-                    <h3 className="text-2xl font-bold mb-2 text-blue-700">
+                    <div className="relative aspect-video bg-primary-container">
+                      {room.image ? (
+                        <img src={room.image} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="absolute inset-0 flex items-center justify-center text-primary/40" aria-hidden="true">
+                          <span className="icon icon--40 icon--w300">meeting_room</span>
+                        </span>
+                      )}
+                      {room.status === false && (
+                        <span className="badge-neutral absolute top-3 left-3 bg-white shadow-sm">
+                          <span className="icon icon--20 icon--w500" aria-hidden="true">block</span>
+                          ปิดใช้งาน
+                        </span>
+                      )}
+                    </div>
+                    <div className="p-4 sm:p-6 flex-1 flex flex-col">
+                    <h3 className="card__title mb-1">
                       {room.name}
                     </h3>
-                    <p className="text-gray-600 mb-4">{roomLocation(room.description)}</p>
-                    {room.status === false && (
-                      <p className="mb-4 inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-200 text-gray-600">ปิดใช้งาน</p>
-                    )}
+                    <p className="icon-lead gap-2 card__body text-ink-subtle mb-4">
+                      <span className="icon icon--20 icon--w300" aria-hidden="true">location_on</span>
+                      {roomLocation(room.description)}
+                    </p>
 
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                      <div>
-                        <p className="text-sm text-gray-600">จำนวนที่นั่ง</p>
-                        <p className="font-bold">{room.capacity} คน</p>
-                      </div>
-                    </div>
+                    <p className="flex items-center gap-2 text-body-small text-ink-muted mb-4">
+                      <span className="icon icon--20 icon--w300 text-ink-subtle" aria-hidden="true">group</span>
+                      <span className="font-medium text-ink tabular-nums">{room.capacity}</span> ที่นั่ง
+                    </p>
 
                     {room.amenities && (
-                      <div className="mb-4">
-                        <p className="text-sm font-medium text-gray-600 mb-2">
-                          สิ่งอำนวยความสะดวก:
+                      <div className="mb-5">
+                        <p className="text-label-medium font-normal text-ink-subtle mb-2">
+                          สิ่งอำนวยความสะดวก
                         </p>
                         <div className="flex flex-wrap gap-2">
                           {(Array.isArray(room.amenities)
@@ -279,7 +292,7 @@ export default function MyRoomsPage() {
                             .map((amenity: string) => (
                               <span
                                 key={amenity}
-                                className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+                                className="badge-primary"
                               >
                                 {amenity}
                               </span>
@@ -288,13 +301,15 @@ export default function MyRoomsPage() {
                       </div>
                     )}
 
-                    <div className="flex gap-2">
+                    <div className="mt-auto pt-4 border-t border-line">
                       <button
                         onClick={() => handleEditRoom(room)}
-                        className="btn-primary"
+                        className="btn-tonal btn--s"
                       >
+                        <span className="icon icon--20 icon--w500" aria-hidden="true">edit</span>
                         แก้ไขห้อง
                       </button>
+                    </div>
                     </div>
                   </>
                 )}

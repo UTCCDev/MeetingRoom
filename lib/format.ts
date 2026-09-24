@@ -118,3 +118,31 @@ export const STATUS_LABELS: Record<string, string> = {
   REJECTED: "ปฏิเสธแล้ว",
   CANCELLED: "ยกเลิกแล้ว",
 };
+
+/** Heavent DS badge class and Material Symbols icon per booking status. */
+export const STATUS_BADGE: Record<string, string> = {
+  PENDING: "badge-pending",
+  APPROVED: "badge-available",
+  REJECTED: "badge-booked",
+  CANCELLED: "badge-neutral",
+};
+
+export const STATUS_ICONS: Record<string, string> = {
+  PENDING: "hourglass_top",
+  APPROVED: "check_circle",
+  REJECTED: "cancel",
+  CANCELLED: "block",
+};
+
+/** Amenities arrive as an array, a JSON string or a comma list — always return a clean array. */
+export function amenityList(value: unknown): string[] {
+  if (Array.isArray(value)) return value.map(String).map((s) => s.trim()).filter(Boolean);
+  if (typeof value !== "string") return [];
+  try {
+    const parsed = JSON.parse(value);
+    if (Array.isArray(parsed)) return amenityList(parsed);
+  } catch {
+    // not JSON — fall through to a comma list
+  }
+  return value.split(",").map((s) => s.trim()).filter(Boolean);
+}

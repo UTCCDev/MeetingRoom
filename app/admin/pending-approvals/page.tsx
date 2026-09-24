@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import AppHeader from "@/app/components/AppHeader";
 import ConfirmDialog from "@/app/components/ConfirmDialog";
+import { BOOKING_DECIDED_EVENT } from "@/app/components/NotificationBell";
 import { SkeletonCards } from "@/app/components/Skeleton";
 import { useToast } from "@/app/components/Toast";
 import { formatRange, roomLabel, toDateKey } from "@/lib/format";
@@ -80,6 +81,14 @@ export default function PendingApprovalsPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
+
+  // Refetch when a request is decided from the notification bell.
+  useEffect(() => {
+    const onDecided = () => fetchBookings();
+    window.addEventListener(BOOKING_DECIDED_EVENT, onDecided);
+    return () => window.removeEventListener(BOOKING_DECIDED_EVENT, onDecided);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Send queued approvals right away if the admin leaves the page.
   useEffect(() => {
@@ -227,20 +236,21 @@ export default function PendingApprovalsPage() {
     });
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-canvas">
       <AppHeader title="คำขอจองที่รอการตัดสินใจ" breadcrumbs={[{ label: "อนุมัติการจอง" }]} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         {error && (
-          <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg" role="alert">
-            ⚠️ {error}
+          <div className="alert alert--error mb-4" role="alert">
+            <span className="icon icon--24 icon--w500 icon--error" aria-hidden="true">error</span>
+            {error}
           </div>
         )}
 
         {!isLoading && bookings.length > 0 && (
-          <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200 flex flex-wrap items-end gap-4">
+          <div className="card mb-6 flex flex-wrap items-end gap-4">
             <div className="w-full sm:w-auto sm:min-w-[280px]">
-              <label htmlFor="filter-room" className="block text-sm font-medium text-gray-700 mb-1">ห้อง</label>
+              <label htmlFor="filter-room" className="field-label">ห้อง</label>
               <select
                 id="filter-room"
                 value={roomFilter}
@@ -254,7 +264,7 @@ export default function PendingApprovalsPage() {
               </select>
             </div>
             <div className="w-full sm:w-48">
-              <label htmlFor="filter-date" className="block text-sm font-medium text-gray-700 mb-1">วันที่ประชุม</label>
+              <label htmlFor="filter-date" className="field-label">วันที่ประชุม</label>
               <input
                 id="filter-date"
                 type="date"
@@ -270,13 +280,14 @@ export default function PendingApprovalsPage() {
                   setRoomFilter("");
                   setDateFilter("");
                 }}
-                className="text-sm font-medium text-blue-700 hover:underline py-3"
+                className="btn-text"
               >
+                <span className="icon icon--20 icon--w500" aria-hidden="true">filter_alt_off</span>
                 ล้างตัวกรอง
               </button>
             )}
             <div className="ml-auto flex items-center gap-4">
-              <label className="flex items-center gap-2 text-sm">
+              <label className="flex items-center gap-2 h-11 text-label-large text-ink cursor-pointer">
                 <input
                   type="checkbox"
                   checked={allSelected}
@@ -289,10 +300,11 @@ export default function PendingApprovalsPage() {
               </label>
               <button
                 type="button"
-                className="btn-success text-sm px-4 py-2 disabled:opacity-50"
+                className="btn-primary"
                 disabled={selected.size === 0}
                 onClick={() => setBulkOpen(true)}
               >
+                <span className="icon icon--20 icon--w500" aria-hidden="true">done_all</span>
                 อนุมัติที่เลือก ({selected.size})
               </button>
             </div>
@@ -302,8 +314,9 @@ export default function PendingApprovalsPage() {
         {isLoading ? (
           <SkeletonCards count={3} />
         ) : visible.length === 0 ? (
-          <div className="card text-center">
-            <p className="text-gray-500">
+          <div className="card empty-state">
+            <span className="icon icon--40 icon--w300 text-ink-subtle" aria-hidden="true">task_alt</span>
+            <p>
               {bookings.length === 0
                 ? "ไม่มีคำขอที่รอการตัดสินใจ"
                 : visible.length === 0 && expired.length > 0 && !roomFilter && !dateFilter
@@ -321,7 +334,7 @@ export default function PendingApprovalsPage() {
                   <div className="flex gap-3 items-start mb-4">
                     <input
                       type="checkbox"
-                      className="mt-2"
+                      className="mt-1.5"
                       checked={selected.has(booking.id)}
                       onChange={() => toggle(booking.id)}
                       disabled={isOwn}
@@ -329,48 +342,59 @@ export default function PendingApprovalsPage() {
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap justify-between items-start gap-2">
-                        <h3 className="text-xl font-bold text-blue-700">{booking.title}</h3>
-                        <span className="badge-pending">รอการตัดสินใจ</span>
+                        <h3 className="card__title">{booking.title}</h3>
+                        <span className="badge-pending">
+                          <span className="icon icon--20 icon--w500" aria-hidden="true">hourglass_top</span>
+                          รอการตัดสินใจ
+                        </span>
                       </div>
-                      <p className="text-gray-800 font-medium mt-1">🕘 {formatRange(booking.startTime, booking.endTime)}</p>
-                      <p className="text-gray-600 text-sm mt-1">📍 {roomLabel(booking.room)}</p>
+                      <p className="flex items-center gap-2 text-label-large text-ink tabular-nums mt-2">
+                        <span className="icon icon--20 icon--w300 text-primary" aria-hidden="true">schedule</span>
+                        {formatRange(booking.startTime, booking.endTime)}
+                      </p>
+                      <p className="flex items-center gap-2 card__body mt-1">
+                        <span className="icon icon--20 icon--w300 text-ink-subtle" aria-hidden="true">location_on</span>
+                        {roomLabel(booking.room)}
+                      </p>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 sm:pl-7">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 sm:pl-8">
                     <div>
-                      <p className="text-sm text-gray-600">ผู้ขอ</p>
-                      <p className="font-medium">{booking.user.name}</p>
-                      <p className="text-sm text-gray-500">{booking.user.email}</p>
+                      <p className="text-label-medium font-normal text-ink-subtle">ผู้ขอ</p>
+                      <p className="text-label-large text-ink">{booking.user.name}</p>
+                      <p className="text-body-small text-ink-subtle break-all">{booking.user.email}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">จำนวนผู้เข้าร่วม</p>
-                      <p className="font-medium">
+                      <p className="text-label-medium font-normal text-ink-subtle">จำนวนผู้เข้าร่วม</p>
+                      <p className="text-label-large text-ink tabular-nums">
                         {booking.attendees} คน{" "}
-                        <span className="text-gray-500 font-normal">/ ความจุ {booking.room.capacity}</span>
+                        <span className="text-ink-subtle font-normal">/ ความจุ {booking.room.capacity}</span>
                       </p>
                       {overCapacity && (
-                        <span className="inline-block mt-1 px-2 py-0.5 rounded text-xs font-semibold bg-rose-100 text-rose-700">
-                          ⚠️ เกินความจุห้อง {booking.attendees - booking.room.capacity} คน
+                        <span className="badge-booked mt-1">
+                          <span className="icon icon--20 icon--w500" aria-hidden="true">warning</span>
+                          เกินความจุห้อง {booking.attendees - booking.room.capacity} คน
                         </span>
                       )}
                     </div>
                   </div>
 
                   {booking.description && (
-                    <div className="mb-4 p-3 bg-gray-100 rounded sm:ml-7 text-sm">
-                      <span className="text-gray-600">หมายเหตุ: </span>
+                    <div className="mb-4 px-4 py-3 bg-canvas border border-line rounded-s sm:ml-8 text-body-small text-ink-muted">
+                      <span className="text-ink-subtle">หมายเหตุ: </span>
                       {booking.description}
                     </div>
                   )}
 
                   {isOwn ? (
-                    <p className="text-sm text-gray-500 sm:pl-7">
+                    <p className="flex items-center gap-2 text-body-small text-ink-subtle sm:pl-8">
+                      <span className="icon icon--20 icon--w300" aria-hidden="true">info</span>
                       คำขอของคุณเอง — ต้องให้ผู้ดูแลท่านอื่นเป็นผู้อนุมัติ
                     </p>
                   ) : rejectingId === booking.id ? (
-                    <div className="p-4 bg-red-50 border border-red-200 rounded sm:ml-7">
-                      <label htmlFor={`reason-${booking.id}`} className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="p-4 bg-[#FDF1F1] border border-[#F1B8B8] rounded-s sm:ml-8">
+                      <label htmlFor={`reason-${booking.id}`} className="field-label">
                         เหตุผลในการปฏิเสธ *
                       </label>
                       <textarea
@@ -380,7 +404,7 @@ export default function PendingApprovalsPage() {
                           setRejectionReason(e.target.value);
                           setRejectError("");
                         }}
-                        className={`input-field ${rejectError ? "border-red-500" : ""}`}
+                        className={`input-field ${rejectError ? "border-error" : ""}`}
                         aria-invalid={!!rejectError}
                         aria-describedby={`reason-error-${booking.id}`}
                         placeholder="อธิบายว่าทำไมจึงปฏิเสธการจองนี้..."
@@ -388,33 +412,36 @@ export default function PendingApprovalsPage() {
                         rows={3}
                         autoFocus
                       />
-                      <p id={`reason-error-${booking.id}`} className="text-xs text-red-600 mt-1 min-h-[1rem]">
+                      <p id={`reason-error-${booking.id}`} className="field-error min-h-[1.4rem]">
                         {rejectError}
                       </p>
-                      <div className="flex gap-2 mt-2">
-                        <button
-                          onClick={() => handleReject(booking)}
-                          disabled={isRejecting}
-                          className="btn-danger disabled:opacity-50"
-                        >
-                          {isRejecting ? "กำลังปฏิเสธ..." : "ยืนยันการปฏิเสธ"}
-                        </button>
+                      {/* Primary action on the right, 12px apart. */}
+                      <div className="flex justify-end gap-3 mt-2">
                         <button
                           onClick={() => {
                             setRejectingId(null);
                             setRejectionReason("");
                             setRejectError("");
                           }}
-                          className="btn-secondary"
+                          className="btn-text btn--s"
                         >
                           ยกเลิก
+                        </button>
+                        <button
+                          onClick={() => handleReject(booking)}
+                          disabled={isRejecting}
+                          className="btn-danger btn--s"
+                        >
+                          <span className="icon icon--20 icon--w500" aria-hidden="true">block</span>
+                          {isRejecting ? "กำลังปฏิเสธ..." : "ยืนยันการปฏิเสธ"}
                         </button>
                       </div>
                     </div>
                   ) : (
-                    <div className="flex gap-2 sm:pl-7">
-                      <button onClick={() => handleApprove(booking)} className="btn-success">
-                        ✓ อนุมัติ
+                    <div className="flex gap-3 sm:pl-8">
+                      <button onClick={() => handleApprove(booking)} className="btn-primary btn--s">
+                        <span className="icon icon--20 icon--w500" aria-hidden="true">check</span>
+                        อนุมัติ
                       </button>
                       <button
                         onClick={() => {
@@ -422,9 +449,10 @@ export default function PendingApprovalsPage() {
                           setRejectionReason("");
                           setRejectError("");
                         }}
-                        className="btn-danger"
+                        className="btn-secondary btn--s text-error hover:border-error hover:bg-[#FDF1F1]"
                       >
-                        ✗ ปฏิเสธ
+                        <span className="icon icon--20 icon--w500" aria-hidden="true">close</span>
+                        ปฏิเสธ
                       </button>
                     </div>
                   )}
@@ -437,16 +465,22 @@ export default function PendingApprovalsPage() {
 
       {!isLoading && expired.length > 0 && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-12">
-          <details className="card bg-white">
-            <summary className="cursor-pointer font-semibold text-gray-700">
+          <details className="card">
+            <summary className="cursor-pointer text-label-large text-ink-muted">
               คำขอที่เลยเวลาเริ่มประชุมแล้ว ({expired.length}) — อนุมัติไม่ได้
             </summary>
-            <ul className="mt-4 divide-y divide-gray-200">
+            <ul className="mt-4 divide-y divide-line">
               {expired.map((b) => (
-                <li key={b.id} className="py-3 text-sm">
-                  <p className="font-medium text-gray-800">{b.title}</p>
-                  <p className="text-gray-600">🕘 {formatRange(b.startTime, b.endTime)}</p>
-                  <p className="text-gray-600">📍 {roomLabel(b.room)} · ผู้ขอ {b.user.name}</p>
+                <li key={b.id} className="py-3 text-body-small text-ink-subtle">
+                  <p className="text-label-large text-ink-muted">{b.title}</p>
+                  <p className="flex items-center gap-2 tabular-nums">
+                    <span className="icon icon--20 icon--w300" aria-hidden="true">schedule</span>
+                    {formatRange(b.startTime, b.endTime)}
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <span className="icon icon--20 icon--w300" aria-hidden="true">location_on</span>
+                    {roomLabel(b.room)} · ผู้ขอ {b.user.name}
+                  </p>
                 </li>
               ))}
             </ul>
@@ -465,7 +499,10 @@ export default function PendingApprovalsPage() {
       >
         ต้องการอนุมัติคำขอ {selected.size} รายการที่เลือกใช่หรือไม่?
         {bookings.some((b) => selected.has(b.id) && b.attendees > b.room.capacity) && (
-          <span className="block mt-2 text-sm text-rose-700">มีบางรายการที่จำนวนผู้เข้าร่วมเกินความจุห้อง</span>
+          <span className="flex items-center gap-2 mt-3 text-ink">
+            <span className="icon icon--20 icon--w500 text-error" aria-hidden="true">warning</span>
+            มีบางรายการที่จำนวนผู้เข้าร่วมเกินความจุห้อง
+          </span>
         )}
       </ConfirmDialog>
     </div>

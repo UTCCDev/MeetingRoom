@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 import LogoutButton from "./LogoutButton";
+import NotificationBell from "./NotificationBell";
 
 const ROLE_LABELS: Record<string, string> = {
   USER: "ผู้ใช้ทั่วไป",
@@ -12,14 +13,14 @@ const ROLE_LABELS: Record<string, string> = {
   SYSTEM_ADMIN: "ผู้ดูแลระบบ",
 };
 
-const NAV: { href: string; label: string; roles?: string[] }[] = [
-  { href: "/rooms", label: "ค้นหาห้อง" },
-  { href: "/my-bookings", label: "การจองของฉัน" },
-  { href: "/admin/pending-approvals", label: "อนุมัติการจอง", roles: ["ROOM_ADMIN", "SYSTEM_ADMIN"] },
-  { href: "/admin/my-rooms", label: "ห้องของฉัน", roles: ["ROOM_ADMIN"] },
-  { href: "/admin/dashboard", label: "แดชบอร์ด", roles: ["SYSTEM_ADMIN"] },
-  { href: "/admin/users", label: "ผู้ใช้", roles: ["SYSTEM_ADMIN"] },
-  { href: "/admin/rooms", label: "จัดการห้อง", roles: ["SYSTEM_ADMIN"] },
+const NAV: { href: string; label: string; icon: string; roles?: string[] }[] = [
+  { href: "/rooms", label: "ค้นหาห้อง", icon: "meeting_room" },
+  { href: "/my-bookings", label: "การจองของฉัน", icon: "event_note" },
+  { href: "/admin/pending-approvals", label: "อนุมัติการจอง", icon: "fact_check", roles: ["ROOM_ADMIN", "SYSTEM_ADMIN"] },
+  { href: "/admin/my-rooms", label: "ห้องของฉัน", icon: "edit_square", roles: ["ROOM_ADMIN"] },
+  { href: "/admin/dashboard", label: "แดชบอร์ด", icon: "monitoring", roles: ["SYSTEM_ADMIN"] },
+  { href: "/admin/users", label: "ผู้ใช้", icon: "group", roles: ["SYSTEM_ADMIN"] },
+  { href: "/admin/rooms", label: "จัดการห้อง", icon: "domain", roles: ["SYSTEM_ADMIN"] },
 ];
 
 export interface Crumb {
@@ -50,87 +51,122 @@ export default function AppHeader({
   const isActive = (href: string) => pathname === href || pathname?.startsWith(href + "/");
 
   return (
-    <header className="bg-white border-b border-gray-200 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-4">
-        <Link href="/" className="text-lg sm:text-xl font-bold text-blue-700 whitespace-nowrap">
-          ระบบจองห้องประชุม
+    <header className="bg-white border-b border-line">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-4">
+        <Link href="/" className="flex items-center gap-2 text-title-medium text-primary whitespace-nowrap">
+          <span
+            className="inline-flex items-center justify-center w-9 h-9 rounded-s bg-primary text-white"
+            aria-hidden="true"
+          >
+            <span className="icon icon--20 icon--w500 icon--fill">meeting_room</span>
+          </span>
+          <span className="hidden sm:inline">ระบบจองห้องประชุม</span>
         </Link>
 
-        <nav className="hidden lg:flex items-center gap-1 flex-1" aria-label="เมนูหลัก">
-          {items.map((n) => (
-            <Link
-              key={n.href}
-              href={n.href}
-              aria-current={isActive(n.href) ? "page" : undefined}
-              className={`px-3 py-2 rounded-lg text-sm font-medium ${
-                isActive(n.href) ? "bg-blue-50 text-blue-700" : "text-gray-600 hover:bg-gray-50"
-              }`}
-            >
-              {n.label}
-            </Link>
-          ))}
+        <nav className="hidden lg:flex items-center gap-1 flex-1 self-stretch" aria-label="เมนูหลัก">
+          {items.map((n) => {
+            const active = isActive(n.href);
+            return (
+              <Link
+                key={n.href}
+                href={n.href}
+                aria-current={active ? "page" : undefined}
+                className={`relative flex items-center gap-2 px-3 h-full text-label-large transition-colors ${
+                  active
+                    ? "text-primary after:absolute after:inset-x-3 after:bottom-0 after:h-[3px] after:rounded-t-xs after:bg-primary"
+                    : "text-ink-muted hover:text-primary"
+                }`}
+              >
+                <span className={`icon icon--20 ${active ? "icon--w500 icon--fill" : "icon--w300"}`} aria-hidden="true">
+                  {n.icon}
+                </span>
+                {n.label}
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="ml-auto flex items-center gap-3">
           {user && (
-            <div className="hidden sm:flex flex-col items-end leading-tight">
-              <span className="text-sm font-medium text-gray-800">{user.name}</span>
-              <span className="text-xs text-gray-500">{ROLE_LABELS[role || ""] || role}</span>
+            <div className="hidden sm:flex items-center gap-3">
+              <div className="flex flex-col items-end leading-tight">
+                <span className="text-label-large text-ink">{user.name}</span>
+                <span className="text-label-small font-normal text-ink-subtle">{ROLE_LABELS[role || ""] || role}</span>
+              </div>
+              <span
+                className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary-container text-primary"
+                aria-hidden="true"
+              >
+                <span className="icon icon--24 icon--w300">person</span>
+              </span>
             </div>
+          )}
+          {user?.id && (
+            <NotificationBell userId={user.id} isApprover={role === "ROOM_ADMIN" || role === "SYSTEM_ADMIN"} />
           )}
           <LogoutButton />
           <button
             type="button"
-            className="lg:hidden w-10 h-10 rounded-lg border border-gray-300 text-gray-700"
-            aria-label="เปิดเมนู"
+            className="icon-button lg:hidden"
+            aria-label={menuOpen ? "ปิดเมนู" : "เปิดเมนู"}
             aria-expanded={menuOpen}
+            aria-controls="mobile-nav"
             onClick={() => setMenuOpen((o) => !o)}
           >
-            ☰
+            <span className="icon icon--24" aria-hidden="true">{menuOpen ? "close" : "menu"}</span>
           </button>
         </div>
       </div>
 
       {menuOpen && (
-        <nav className="lg:hidden border-t border-gray-200 px-4 py-2 flex flex-col" aria-label="เมนูหลัก">
+        <nav id="mobile-nav" className="lg:hidden border-t border-line px-2 py-2 flex flex-col" aria-label="เมนูหลัก">
           {user && (
-            <span className="sm:hidden text-sm text-gray-500 py-2">
+            <span className="sm:hidden px-3 py-2 text-label-medium font-normal text-ink-subtle">
               {user.name} · {ROLE_LABELS[role || ""] || role}
             </span>
           )}
-          {items.map((n) => (
-            <Link
-              key={n.href}
-              href={n.href}
-              onClick={() => setMenuOpen(false)}
-              className={`py-2 text-sm font-medium ${isActive(n.href) ? "text-blue-700" : "text-gray-700"}`}
-            >
-              {n.label}
-            </Link>
-          ))}
+          {items.map((n) => {
+            const active = isActive(n.href);
+            return (
+              <Link
+                key={n.href}
+                href={n.href}
+                onClick={() => setMenuOpen(false)}
+                aria-current={active ? "page" : undefined}
+                className={`flex items-center gap-3 px-3 h-12 rounded-s text-label-large ${
+                  active ? "bg-primary-container text-primary" : "text-ink-muted hover:bg-canvas"
+                }`}
+              >
+                <span className={`icon icon--24 ${active ? "icon--w500 icon--fill" : "icon--w300"}`} aria-hidden="true">
+                  {n.icon}
+                </span>
+                {n.label}
+              </Link>
+            );
+          })}
         </nav>
       )}
 
       {title && (
-        <div className="bg-gray-50 border-t border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap items-end justify-between gap-3">
+        <div className="bg-canvas border-t border-line">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 flex flex-wrap items-end justify-between gap-3">
             <div>
-              <ol className="flex flex-wrap items-center gap-1 text-sm text-gray-500 mb-1" aria-label="breadcrumb">
+              <ol className="flex flex-wrap items-center gap-1 text-label-medium font-normal text-ink-subtle mb-1" aria-label="breadcrumb">
                 <li>
-                  <Link href="/" className="hover:text-blue-700 hover:underline">หน้าหลัก</Link>
+                  <Link href="/" className="hover:text-primary hover:underline">หน้าหลัก</Link>
                 </li>
                 {breadcrumbs.map((c, i) => (
                   <li key={i} className="flex items-center gap-1">
-                    <span aria-hidden="true">›</span>
+                    <span className="icon icon--20 icon--w300" aria-hidden="true">chevron_right</span>
                     {c.href ? (
-                      <Link href={c.href} className="hover:text-blue-700 hover:underline">{c.label}</Link>
+                      <Link href={c.href} className="hover:text-primary hover:underline">{c.label}</Link>
                     ) : (
-                      <span className="text-gray-700">{c.label}</span>
+                      <span className="text-ink-muted" aria-current="page">{c.label}</span>
                     )}
                   </li>
                 ))}
               </ol>
-              <h1 className="text-2xl md:text-3xl font-bold text-blue-700">{title}</h1>
+              <h1 className="text-headline-small md:text-headline-medium text-ink">{title}</h1>
             </div>
             {actions}
           </div>

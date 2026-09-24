@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import AppHeader from "@/app/components/AppHeader";
 import { SkeletonCards } from "@/app/components/Skeleton";
-import { roomLocation } from "@/lib/format";
+import { roomLocation, STATUS_BADGE, STATUS_ICONS, STATUS_LABELS } from "@/lib/format";
 
 interface DashboardStats {
   totalRooms: number;
@@ -63,15 +63,17 @@ export default function AdminDashboardPage() {
 
   if (isLoading || !stats) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-canvas">
         <AppHeader title="แดชบอร์ดระบบ" breadcrumbs={[{ label: "แดชบอร์ด" }]} />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
           {isLoading ? (
-            <SkeletonCards count={3} className="grid grid-cols-1 md:grid-cols-3 gap-4" />
+            <SkeletonCards count={3} className="grid grid-cols-1 md:grid-cols-3 gap-5" />
           ) : (
-            <div className="card text-center" role="alert">
-              <p className="text-rose-600 text-lg mb-4">{error || "ไม่สามารถโหลดสถิติได้"}</p>
+            <div className="card empty-state" role="alert">
+              <span className="icon icon--40 icon--w300 icon--error" aria-hidden="true">error</span>
+              <p>{error || "ไม่สามารถโหลดสถิติได้"}</p>
               <button type="button" onClick={fetchStats} className="btn-primary">
+                <span className="icon icon--20 icon--w500" aria-hidden="true">refresh</span>
                 ลองใหม่
               </button>
             </div>
@@ -81,130 +83,120 @@ export default function AdminDashboardPage() {
     );
   }
 
+  const STAT_TILES = [
+    { icon: "domain", label: "ห้องทั้งหมด", value: stats.totalRooms, tone: "bg-primary-container text-primary" },
+    { icon: "group", label: "ผู้ใช้ทั้งหมด", value: stats.totalUsers, tone: "bg-primary-container text-primary" },
+    { icon: "event_note", label: "การจองทั้งหมด", value: stats.totalBookings, tone: "bg-primary-container text-primary" },
+    { icon: STATUS_ICONS.PENDING, label: "รอการตัดสินใจ", value: stats.pendingBookings, tone: "bg-highlight/20 text-ink" },
+    { icon: STATUS_ICONS.APPROVED, label: "อนุมัติแล้ว", value: stats.approvedBookings, tone: "bg-[#EEF9F2] text-success" },
+  ];
+  const maxRoomBookings = Math.max(...stats.roomUtilization.map((r) => r.bookingCount), 1);
+
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-canvas">
       <AppHeader title="แดชบอร์ดระบบ" breadcrumbs={[{ label: "แดชบอร์ด" }]} />
 
-      <div className="max-w-7xl mx-auto px-6 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-6">
         {/* Main Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-12">
-          <div className="card bg-gradient-to-br from-blue-50 to-gray-50 border-l-4 border-blue-700">
-            <p className="text-gray-600 text-sm font-semibold mb-2">🏢 ห้องทั้งหมด</p>
-            <p className="text-4xl font-bold text-blue-700">{stats.totalRooms}</p>
-          </div>
-
-          <div className="card bg-gradient-to-br from-emerald-50 to-gray-50 border-l-4 border-emerald-500">
-            <p className="text-gray-600 text-sm font-semibold mb-2">👥 ผู้ใช้ทั้งหมด</p>
-            <p className="text-4xl font-bold text-emerald-600">{stats.totalUsers}</p>
-          </div>
-
-          <div className="card bg-gradient-to-br from-violet-50 to-gray-50 border-l-4 border-violet-500">
-            <p className="text-gray-600 text-sm font-semibold mb-2">📅 การจองทั้งหมด</p>
-            <p className="text-4xl font-bold text-violet-600">
-              {stats.totalBookings}
-            </p>
-          </div>
-
-          <div className="card bg-gradient-to-br from-amber-50 to-gray-50 border-l-4 border-amber-500">
-            <p className="text-gray-600 text-sm font-semibold mb-2">⏳ รอการตัดสินใจ</p>
-            <p className="text-4xl font-bold text-amber-600">
-              {stats.pendingBookings}
-            </p>
-          </div>
-
-          <div className="card bg-gradient-to-br from-emerald-50 to-gray-50 border-l-4 border-emerald-500">
-            <p className="text-gray-600 text-sm font-semibold mb-2">✓ อนุมัติแล้ว</p>
-            <p className="text-4xl font-bold text-emerald-600">
-              {stats.approvedBookings}
-            </p>
-          </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
+          {STAT_TILES.map((t) => (
+            <div key={t.label} className="card flex flex-col gap-3">
+              <span className={`inline-flex items-center justify-center w-10 h-10 rounded-s ${t.tone}`} aria-hidden="true">
+                <span className="icon icon--24 icon--w500">{t.icon}</span>
+              </span>
+              <div>
+                <p className="text-label-medium font-normal text-ink-subtle">{t.label}</p>
+                <p className="text-headline-medium text-ink tabular-nums">{t.value}</p>
+              </div>
+            </div>
+          ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Bookings by Status */}
-          <div className="card bg-gray-50">
-            <h2 className="text-2xl font-bold text-blue-700 mb-6">📊 การจองตามสถานะ</h2>
-            <div className="space-y-4">
+          <section className="card">
+            <h2 className="flex items-center gap-2 text-title-large text-ink mb-5">
+              <span className="icon icon--24 icon--w500 text-primary" aria-hidden="true">donut_small</span>
+              การจองตามสถานะ
+            </h2>
+            <ul className="divide-y divide-line">
               {Object.entries(stats.bookingsByStatus).map(([status, count]) => (
-                <div key={status} className="flex justify-between items-center p-4 bg-white rounded-lg hover:shadow-sm transition-shadow">
-                  <span className="font-semibold text-gray-700">
-                    {status === "APPROVED" ? "✓ อนุมัติแล้ว" :
-                     status === "PENDING" ? "⏳ รอการตัดสินใจ" :
-                     status === "REJECTED" ? "✕ ปฏิเสธแล้ว" :
-                     status === "CANCELLED" ? "🚫 ยกเลิกแล้ว" : status}
+                <li key={status} className="flex justify-between items-center py-3">
+                  <span className={STATUS_BADGE[status] || "badge-neutral"}>
+                    <span className="icon icon--20 icon--w500" aria-hidden="true">{STATUS_ICONS[status] || "info"}</span>
+                    {STATUS_LABELS[status] || status}
                   </span>
-                  <span className="text-3xl font-bold text-blue-700">
-                    {count}
-                  </span>
-                </div>
+                  <span className="text-title-large text-ink tabular-nums">{count}</span>
+                </li>
               ))}
-            </div>
-          </div>
+            </ul>
+          </section>
 
           {/* Room Utilization */}
-          <div className="card bg-gray-50">
-            <h2 className="text-2xl font-bold text-blue-700 mb-1">📈 การใช้ห้อง</h2>
-            <p className="text-sm text-gray-500 mb-6">จำนวนการจองที่อนุมัติแล้ว เรียงจากมากไปน้อย</p>
-            <div className="space-y-4 max-h-96 overflow-y-auto">
+          <section className="card">
+            <h2 className="flex items-center gap-2 text-title-large text-ink mb-1">
+              <span className="icon icon--24 icon--w500 text-primary" aria-hidden="true">bar_chart</span>
+              การใช้ห้อง
+            </h2>
+            <p className="text-body-small text-ink-subtle mb-5">จำนวนการจองที่อนุมัติแล้ว เรียงจากมากไปน้อย</p>
+            <div className="space-y-4 max-h-96 overflow-y-auto pr-1">
               {stats.roomUtilization.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">ยังไม่มีห้องที่มีการจอง</p>
+                <p className="empty-state py-8 text-body-small">ยังไม่มีห้องที่มีการจอง</p>
               ) : (
                 stats.roomUtilization.map((room) => (
-                  <div key={room.roomId} className="p-4 bg-white rounded-lg hover:shadow-sm transition-shadow">
-                    <div className="flex justify-between items-start gap-3 mb-3">
+                  <div key={room.roomId}>
+                    <div className="flex justify-between items-baseline gap-3 mb-2">
                       <div className="min-w-0">
-                        <p className="font-semibold text-gray-800">{room.roomName}</p>
+                        <p className="text-label-large text-ink truncate">{room.roomName}</p>
                         {room.roomDescription && (
-                          <p className="text-xs text-gray-500">{roomLocation(room.roomDescription)}</p>
+                          <p className="text-label-small font-normal text-ink-subtle truncate">
+                            {roomLocation(room.roomDescription)}
+                          </p>
                         )}
                       </div>
-                      <span className="text-white px-3 py-1 rounded-full text-sm font-semibold bg-emerald-600 whitespace-nowrap">
-                        อนุมัติแล้ว {room.bookingCount}
+                      <span className="text-label-large text-ink tabular-nums whitespace-nowrap">
+                        {room.bookingCount} <span className="font-normal text-ink-subtle">ครั้ง</span>
                       </span>
                     </div>
-                    <div className="w-full bg-gray-300 rounded-full h-2 overflow-hidden">
+                    <div className="w-full bg-line rounded-full h-2 overflow-hidden">
                       <div
-                        className="bg-gradient-to-r from-blue-500 to-blue-700 h-full rounded-full"
-                        style={{ width: `${(room.bookingCount / Math.max(...stats.roomUtilization.map(r => r.bookingCount), 1)) * 100}%` }}
+                        className="bg-primary h-full rounded-full"
+                        style={{ width: `${(room.bookingCount / maxRoomBookings) * 100}%` }}
                       ></div>
                     </div>
                   </div>
                 ))
               )}
             </div>
-          </div>
+          </section>
         </div>
 
         {/* Quick Actions */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Link href="/admin/users">
-            <div className="card hover:shadow-lg transition-shadow cursor-pointer">
-              <h3 className="font-bold text-blue-700 mb-2">👥 จัดการผู้ใช้</h3>
-              <p className="text-sm text-gray-600">
-                สร้างและจัดการบัญชีผู้ใช้
-              </p>
-            </div>
-          </Link>
-
-          <Link href="/admin/rooms">
-            <div className="card hover:shadow-lg transition-shadow cursor-pointer">
-              <h3 className="font-bold text-blue-700 mb-2">🏠 จัดการห้อง</h3>
-              <p className="text-sm text-gray-600">
-                สร้างและจัดการห้องประชุม
-              </p>
-            </div>
-          </Link>
-
-          <Link href="/admin/pending-approvals">
-            <div className="card hover:shadow-lg transition-shadow cursor-pointer">
-              <h3 className="font-bold text-blue-700 mb-2">
-                ✓ ตรวจสอบการจอง
-              </h3>
-              <p className="text-sm text-gray-600">
-                อนุมัติหรือปฏิเสธการจองที่รอการตัดสินใจ
-              </p>
-            </div>
-          </Link>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {[
+            { href: "/admin/users", icon: "group", title: "จัดการผู้ใช้", body: "สร้างและจัดการบัญชีผู้ใช้" },
+            { href: "/admin/rooms", icon: "domain", title: "จัดการห้อง", body: "สร้างและจัดการห้องประชุม" },
+            { href: "/admin/pending-approvals", icon: "fact_check", title: "ตรวจสอบการจอง", body: "อนุมัติหรือปฏิเสธการจองที่รอการตัดสินใจ" },
+          ].map((a) => (
+            <Link key={a.href} href={a.href} className="card card--interactive group flex items-center gap-4">
+              <span
+                className="inline-flex items-center justify-center w-12 h-12 rounded-m bg-primary-container text-primary"
+                aria-hidden="true"
+              >
+                <span className="icon icon--24 icon--w500">{a.icon}</span>
+              </span>
+              <div className="flex-1 min-w-0">
+                <h3 className="card__title">{a.title}</h3>
+                <p className="card__body">{a.body}</p>
+              </div>
+              <span
+                className="icon icon--24 icon--w300 text-ink-subtle transition-transform group-hover:translate-x-1 group-hover:text-primary"
+                aria-hidden="true"
+              >
+                arrow_forward
+              </span>
+            </Link>
+          ))}
         </div>
       </div>
     </div>

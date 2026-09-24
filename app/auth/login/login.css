@@ -1,10 +1,6 @@
-/* Heavent DS v0.1 — login page (dev-kit tokens.css + buttons.css + login.css).
-   Tokens are scoped to .login so the rest of the app keeps its current theme.
-   Font files go in public/fonts; until they are there the page falls back to Prompt. */
-@font-face { font-family: "DB Heavent"; src: url("/fonts/DBHeavent-Light.ttf") format("truetype"); font-weight: 300; font-display: swap; }
-@font-face { font-family: "DB Heavent"; src: url("/fonts/DBHeavent-Med.ttf") format("truetype"); font-weight: 500; font-display: swap; }
-@font-face { font-family: "DB Heavent"; src: url("/fonts/DBHeavent-Bold.ttf") format("truetype"); font-weight: 700; font-display: swap; }
-
+/* Heavent DS v0.1 — login page (dev-kit login.css). The font faces and the
+   app-wide tokens live in app/globals.css; the variables below are the
+   login-only type scale plus local aliases. */
 .login {
   --font-family: "DB Heavent", "Prompt", "Noto Sans Thai", sans-serif;
 
@@ -108,6 +104,7 @@
   width: 100%; box-sizing: border-box; height: 48px; padding: 0 16px;
   border: 1px solid var(--color-outline); border-radius: var(--radius-control); background: var(--color-surface);
 }
+.login .field__hint { margin: 0; font: var(--type-caption); color: var(--color-ink-subtle); }
 .login .field__input--with-toggle { padding-right: 72px; }
 .login .field__input::placeholder { color: var(--color-ink-subtle); }
 .login .field__input:focus { border-color: var(--color-primary); outline: var(--focus-ring); outline-offset: 1px; }

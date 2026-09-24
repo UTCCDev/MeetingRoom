@@ -22,9 +22,11 @@ export default function LogoutButton() {
       type="button"
       onClick={handleLogout}
       disabled={isSigningOut}
-      className="btn-secondary text-sm px-4 py-2 disabled:opacity-60"
+      className="btn-secondary btn--s px-3 sm:px-4"
+      aria-label="ออกจากระบบ"
     >
-      {isSigningOut ? "กำลังออก…" : "ออกจากระบบ"}
+      <span className="icon icon--20 icon--w500" aria-hidden="true">logout</span>
+      <span className="hidden sm:inline">{isSigningOut ? "กำลังออก…" : "ออกจากระบบ"}</span>
     </button>
   );
 }

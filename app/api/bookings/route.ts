@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sendApprovalRequest } from "@/lib/email";
 import { createBookingSchema, firstError } from "@/lib/validation";
 
 const USER_PUBLIC = { select: { id: true, name: true, email: true } } as const;
@@ -60,6 +61,7 @@ export async function POST(request: NextRequest) {
 
     const room = await prisma.room.findUnique({
       where: { id: data.roomId },
+      include: { roomAdmin: { select: { id: true, email: true } } },
     });
 
     if (!room || !room.status) {
@@ -107,6 +109,14 @@ export async function POST(request: NextRequest) {
         user: USER_PUBLIC,
       },
     });
+
+    // Let the room admin know (in-app via /api/notifications; here by email).
+    // Not awaited: a slow or unconfigured mail server must not delay the booking.
+    if (room.roomAdmin.id !== booking.userId) {
+      sendApprovalRequest(room.roomAdmin.email, booking, room.name, booking.user.name).catch((err) =>
+        console.error("Approval request email failed:", err)
+      );
+    }
 
     return NextResponse.json(booking, { status: 201 });
   } catch (error) {

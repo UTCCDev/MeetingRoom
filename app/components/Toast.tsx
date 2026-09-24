@@ -22,9 +22,15 @@ export function useToast() {
 }
 
 const STYLES: Record<ToastType, string> = {
-  success: "bg-emerald-600",
-  error: "bg-rose-600",
-  info: "bg-gray-800",
+  success: "bg-success",
+  error: "bg-error",
+  info: "bg-ink",
+};
+
+const ICONS: Record<ToastType, string> = {
+  success: "check_circle",
+  error: "error",
+  info: "info",
 };
 
 export function ToastProvider({ children }: { children: ReactNode }) {
@@ -55,9 +61,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`${STYLES[t.type || "info"]} text-white rounded-lg shadow-lg px-4 py-3 flex items-center gap-3`}
+            className={`${STYLES[t.type || "info"]} text-white rounded-s shadow-lg pl-4 pr-1 py-1 min-h-[3.5rem] flex items-center gap-3`}
           >
-            <span className="flex-1 text-sm">{t.message}</span>
+            <span className="icon icon--24 icon--w500 icon--fill" aria-hidden="true">
+              {ICONS[t.type || "info"]}
+            </span>
+            <span className="flex-1 text-body-small py-2">{t.message}</span>
             {t.action && (
               <button
                 type="button"
@@ -65,7 +74,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                   t.action!.onClick();
                   dismiss(t.id);
                 }}
-                className="text-sm font-semibold underline underline-offset-2 hover:opacity-80"
+                className="h-11 px-3 rounded-xs text-label-large text-highlight hover:bg-white/10"
               >
                 {t.action.label}
               </button>
@@ -74,9 +83,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               type="button"
               onClick={() => dismiss(t.id)}
               aria-label="ปิดการแจ้งเตือน"
-              className="text-white/80 hover:text-white"
+              className="inline-flex items-center justify-center w-11 h-11 rounded-full text-white/80 hover:text-white hover:bg-white/10"
             >
-              ✕
+              <span className="icon icon--20" aria-hidden="true">close</span>
             </button>
           </div>
         ))}

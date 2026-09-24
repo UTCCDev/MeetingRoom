@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import "../login/login.css";
 
 const PASSWORD_MIN_LENGTH = 8;
 
@@ -63,27 +64,35 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-white p-4">
-      <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full border-t-4 border-blue-700">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-blue-700 mb-2">
-            ลงทะเบียน
-          </h1>
-          <p className="text-gray-600">
-            สร้างบัญชีผู้ใช้ใหม่เพื่อจองห้องประชุม
+    <div className="login">
+      <aside className="login__brand">
+        <div className="login__logo">ระบบจองห้องประชุม</div>
+        <div>
+          <div className="login__overline">ระบบงานภายใน</div>
+          <h1 className="login__headline">เริ่มต้นใช้งาน</h1>
+          <p className="login__lede">
+            สร้างบัญชีด้วยอีเมลมหาวิทยาลัย แล้วจองห้องประชุมส่วนกลางได้ทันที
           </p>
         </div>
+        <div className="login__legal">© {new Date().getFullYear()} ระบบจองห้องประชุมส่วนกลาง</div>
+      </aside>
 
-        {error && (
-          <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg" role="alert">
-            ⚠️ {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+      <main className="login__main">
+        <form className="login__form" onSubmit={handleSubmit} noValidate>
           <div>
-            <label htmlFor="register-name" className="block text-sm font-medium text-gray-700 mb-1">
-              ชื่อ-สกุล
+            <h2 className="login__title">ลงทะเบียน</h2>
+            <p className="login__subtitle">สร้างบัญชีผู้ใช้ใหม่เพื่อจองห้องประชุม</p>
+          </div>
+
+          {error && (
+            <div className="alert alert--error" role="alert">
+              {error}
+            </div>
+          )}
+
+          <div className="field">
+            <label className="field__label" htmlFor="register-name">
+              <span>ชื่อ-สกุล</span>
             </label>
             <input
               id="register-name"
@@ -94,36 +103,37 @@ export default function RegisterPage() {
                 setName(e.target.value);
                 setError("");
               }}
-              className="input-field"
+              className="field__input"
               placeholder="นาย/นาง/นางสาว... (ชื่อ นามสกุล)"
             />
           </div>
 
-          <div>
-            <label htmlFor="register-email" className="block text-sm font-medium text-gray-700 mb-1">
-              อีเมล
+          <div className="field">
+            <label className="field__label" htmlFor="register-email">
+              <span>อีเมล</span>
             </label>
             <input
               id="register-email"
               type="email"
               autoComplete="email"
+              inputMode="email"
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
                 setError("");
               }}
-              className="input-field"
+              className="field__input"
               placeholder="example@utcc.ac.th"
               aria-describedby="register-email-hint"
             />
-            <p id="register-email-hint" className="text-xs text-gray-500 mt-1">
+            <p id="register-email-hint" className="field__hint">
               ใช้อีเมลของมหาวิทยาลัย (@utcc.ac.th)
             </p>
           </div>
 
-          <div>
-            <label htmlFor="register-password" className="block text-sm font-medium text-gray-700 mb-1">
-              รหัสผ่าน
+          <div className="field">
+            <label className="field__label" htmlFor="register-password">
+              <span>รหัสผ่าน</span>
             </label>
             <input
               id="register-password"
@@ -134,18 +144,18 @@ export default function RegisterPage() {
                 setPassword(e.target.value);
                 setError("");
               }}
-              className="input-field"
+              className="field__input"
               placeholder="••••••••"
               aria-describedby="register-password-hint"
             />
-            <p id="register-password-hint" className="text-xs text-gray-500 mt-1">
+            <p id="register-password-hint" className="field__hint">
               อย่างน้อย {PASSWORD_MIN_LENGTH} ตัวอักษร
             </p>
           </div>
 
-          <div>
-            <label htmlFor="register-confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-              ยืนยันรหัสผ่าน
+          <div className="field">
+            <label className="field__label" htmlFor="register-confirmPassword">
+              <span>ยืนยันรหัสผ่าน</span>
             </label>
             <input
               id="register-confirmPassword"
@@ -156,7 +166,7 @@ export default function RegisterPage() {
                 setConfirmPassword(e.target.value);
                 setError("");
               }}
-              className="input-field"
+              className="field__input"
               placeholder="••••••••"
             />
           </div>
@@ -164,21 +174,19 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full btn-primary disabled:opacity-50"
+            aria-busy={isLoading || undefined}
+            className="btn btn--filled btn--l btn--block"
           >
             {isLoading ? "กำลังสร้างบัญชี..." : "ลงทะเบียน"}
           </button>
-        </form>
 
-        <div className="mt-6 text-center">
-          <p className="text-gray-600">
-            มีบัญชีแล้ว?{" "}
-            <Link href="/auth/login" className="font-semibold text-blue-700 hover:text-blue-800 hover:underline">
-              เข้าสู่ระบบที่นี่
-            </Link>
-          </p>
-        </div>
-      </div>
+          <div className="divider">มีบัญชีแล้ว?</div>
+
+          <Link href="/auth/login" className="btn btn--outlined btn--l btn--block">
+            เข้าสู่ระบบ
+          </Link>
+        </form>
+      </main>
     </div>
   );
 }

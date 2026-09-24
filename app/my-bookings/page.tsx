@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import AppHeader from "@/app/components/AppHeader";
+import BookingProgress from "@/app/components/BookingProgress";
 import ConfirmDialog from "@/app/components/ConfirmDialog";
 import { SkeletonCards } from "@/app/components/Skeleton";
 import { useToast } from "@/app/components/Toast";
-import { formatRange, roomLabel, STATUS_LABELS } from "@/lib/format";
+import { formatRange, roomLabel, STATUS_BADGE, STATUS_ICONS, STATUS_LABELS } from "@/lib/format";
 
 interface Booking {
   id: string;
@@ -22,14 +23,15 @@ interface Booking {
   status: string;
   attendees: number;
   rejectionReason?: string | null;
+  createdAt?: string;
 }
 
 // Left colour strip per status, so the list can be scanned at a glance.
 const STATUS_STRIP: Record<string, string> = {
-  APPROVED: "border-l-emerald-500",
-  PENDING: "border-l-amber-400",
-  REJECTED: "border-l-rose-500",
-  CANCELLED: "border-l-gray-400",
+  APPROVED: "border-l-success",
+  PENDING: "border-l-highlight",
+  REJECTED: "border-l-error",
+  CANCELLED: "border-l-outline",
 };
 
 const ACTIVE_STATUSES = ["PENDING", "APPROVED"];
@@ -49,12 +51,7 @@ function timeUntil(start: Date, end: Date, now: Date): { label: string; urgent: 
   return { label: days === 1 ? "พรุ่งนี้" : `อีก ${days} วัน`, urgent: false };
 }
 
-const STATUS_CLASS: Record<string, string> = {
-  APPROVED: "badge-available",
-  PENDING: "badge-pending",
-  REJECTED: "badge-booked",
-  CANCELLED: "inline-block px-3 py-1 bg-gray-200 text-gray-700 text-sm font-semibold rounded-full",
-};
+const STATUS_CLASS = STATUS_BADGE;
 
 export default function MyBookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -119,26 +116,26 @@ export default function MyBookingsPage() {
   const tabStatuses =
     tab === "upcoming" ? ["PENDING", "APPROVED"] : ["APPROVED", "PENDING", "REJECTED", "CANCELLED"];
 
-  // Upcoming: soonest meeting first. History: most recent first.
+  // Newest booking first (by when it was made); meeting time breaks ties.
   const visible = bookings
     .filter((b) => (tab === "upcoming" ? isUpcoming(b) : !isUpcoming(b)))
     .filter((b) => filter === "ALL" || b.status === filter)
     .sort((a, b) => {
-      const diff = new Date(a.startTime).getTime() - new Date(b.startTime).getTime();
-      return tab === "upcoming" ? diff : -diff;
+      const created = new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime();
+      return created || new Date(b.startTime).getTime() - new Date(a.startTime).getTime();
     });
 
   const upcomingCount = bookings.filter(isUpcoming).length;
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-canvas">
       <AppHeader title="การจองของฉัน" breadcrumbs={[{ label: "การจองของฉัน" }]} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        <div className="flex border-b border-gray-200 mb-6" role="tablist">
+        <div className="flex border-b border-line mb-6" role="tablist">
           {[
-            { value: "upcoming" as const, label: `กำลังจะมาถึง (${upcomingCount})` },
-            { value: "history" as const, label: `ประวัติ (${bookings.length - upcomingCount})` },
+            { value: "upcoming" as const, icon: "upcoming", label: "กำลังจะมาถึง", count: upcomingCount },
+            { value: "history" as const, icon: "history", label: "ประวัติ", count: bookings.length - upcomingCount },
           ].map((t) => (
             <button
               key={t.value}
@@ -148,11 +145,21 @@ export default function MyBookingsPage() {
                 setTab(t.value);
                 setFilter("ALL");
               }}
-              className={`px-4 py-3 font-medium -mb-px border-b-2 ${
-                tab === t.value ? "border-blue-700 text-blue-700" : "border-transparent text-gray-500 hover:text-gray-700"
+              className={`flex items-center gap-2 px-4 h-12 text-label-large -mb-px border-b-[3px] transition-colors ${
+                tab === t.value ? "border-primary text-primary" : "border-transparent text-ink-subtle hover:text-ink"
               }`}
             >
+              <span className={`icon icon--20 ${tab === t.value ? "icon--w500 icon--fill" : "icon--w300"}`} aria-hidden="true">
+                {t.icon}
+              </span>
               {t.label}
+              <span
+                className={`min-w-[1.5rem] px-1.5 rounded-full text-label-small tabular-nums ${
+                  tab === t.value ? "bg-primary text-white" : "bg-gray-100 text-ink-subtle"
+                }`}
+              >
+                {t.count}
+              </span>
             </button>
           ))}
         </div>
@@ -163,28 +170,31 @@ export default function MyBookingsPage() {
               key={value}
               onClick={() => setFilter(value)}
               aria-pressed={filter === value}
-              className={`px-4 py-2 rounded-full text-sm font-medium border ${
+              className={`inline-flex items-center gap-2 h-10 px-4 rounded-s text-label-medium border transition-colors ${
                 filter === value
-                  ? "bg-blue-700 text-white border-blue-700"
-                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                  ? "bg-primary-container text-primary border-primary-container"
+                  : "bg-white text-ink-muted border-outline hover:bg-canvas"
               }`}
             >
+              {filter === value && <span className="icon icon--20 icon--w500" aria-hidden="true">check</span>}
               {value === "ALL" ? "ทั้งหมด" : STATUS_LABELS[value]}
             </button>
           ))}
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-rose-100 text-rose-700 rounded-lg" role="alert">
-            ⚠️ {error}
+          <div className="alert alert--error mb-6" role="alert">
+            <span className="icon icon--24 icon--w500 icon--error" aria-hidden="true">error</span>
+            {error}
           </div>
         )}
 
         {isLoading ? (
           <SkeletonCards count={3} />
         ) : visible.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-600 text-lg mb-6">
+          <div className="empty-state">
+            <span className="icon icon--40 icon--w300 text-ink-subtle" aria-hidden="true">event_busy</span>
+            <p className="mb-2">
               {bookings.length === 0
                 ? "คุณยังไม่มีการจองใดๆ"
                 : filter !== "ALL"
@@ -193,8 +203,9 @@ export default function MyBookingsPage() {
                 ? "ไม่มีการประชุมที่กำลังจะมาถึง"
                 : "ยังไม่มีประวัติการจอง"}
             </p>
-            <Link href="/rooms" className="btn-primary inline-block">
-              ค้นหาห้องประชุม →
+            <Link href="/rooms" className="btn-primary">
+              <span className="icon icon--20 icon--w500" aria-hidden="true">search</span>
+              ค้นหาห้องประชุม
             </Link>
           </div>
         ) : (
@@ -208,45 +219,65 @@ export default function MyBookingsPage() {
               return (
                 <div
                   key={booking.id}
-                  className={`card border-l-4 ${STATUS_STRIP[booking.status] || "border-l-gray-300"} ${
-                    muted ? "bg-white" : "bg-gray-50"
+                  className={`card border-l-4 ${STATUS_STRIP[booking.status] || "border-l-outline"} ${
+                    muted ? "bg-canvas" : "bg-white"
                   }`}
                 >
                   <div className="flex flex-wrap justify-between items-start gap-3 mb-3">
                     <div className="flex-1 min-w-0">
-                      <h3 className={`text-xl font-bold mb-1 ${muted ? "text-gray-600" : "text-blue-700"}`}>
+                      <h3 className={`card__title mb-2 ${muted ? "text-ink-muted" : "text-ink"}`}>
                         {booking.title}
                       </h3>
-                      <p className="text-gray-800 font-medium">🕘 {formatRange(booking.startTime, booking.endTime)}</p>
-                      <p className="text-gray-600 text-sm mt-1">📍 {roomLabel(booking.room)}</p>
-                      <p className="text-gray-600 text-sm">👥 {booking.attendees} คน</p>
+                      <p className="flex items-center gap-2 text-label-large text-ink tabular-nums">
+                        <span className="icon icon--20 icon--w300 text-primary" aria-hidden="true">schedule</span>
+                        {formatRange(booking.startTime, booking.endTime)}
+                      </p>
+                      <p className="flex items-center gap-2 card__body mt-1">
+                        <span className="icon icon--20 icon--w300 text-ink-subtle" aria-hidden="true">location_on</span>
+                        {roomLabel(booking.room)}
+                      </p>
+                      <p className="flex items-center gap-2 card__body">
+                        <span className="icon icon--20 icon--w300 text-ink-subtle" aria-hidden="true">group</span>
+                        <span className="tabular-nums">{booking.attendees}</span> คน
+                      </p>
                     </div>
                     <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                      <span className={STATUS_CLASS[booking.status] || "badge-booked"}>
+                      <span className={STATUS_CLASS[booking.status] || "badge-neutral"}>
+                        <span className="icon icon--20 icon--w500" aria-hidden="true">
+                          {STATUS_ICONS[booking.status] || "info"}
+                        </span>
                         {STATUS_LABELS[booking.status] || booking.status}
                       </span>
                       {countdown && (
                         <span
-                          className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                            countdown.urgent ? "bg-blue-700 text-white" : "bg-blue-50 text-blue-700"
+                          className={`inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-label-medium ${
+                            countdown.urgent ? "bg-primary text-white" : "bg-primary-container text-primary"
                           }`}
                         >
-                          ⏱ {countdown.label}
+                          <span className="icon icon--20 icon--w500" aria-hidden="true">timer</span>
+                          {countdown.label}
                         </span>
                       )}
                     </div>
                   </div>
 
+                  <div className="my-5 py-4 border-y border-line">
+                    <BookingProgress booking={booking} now={now} />
+                  </div>
+
                   {booking.status === "REJECTED" && booking.rejectionReason && (
-                    <div className="mb-3 p-3 bg-rose-50 border border-rose-200 rounded text-sm">
-                      <span className="font-medium text-rose-700">เหตุผลที่ถูกปฏิเสธ: </span>
-                      {booking.rejectionReason}
+                    <div className="alert alert--error font-normal mb-3">
+                      <span className="icon icon--20 icon--w500 icon--error" aria-hidden="true">feedback</span>
+                      <p>
+                        <span className="font-medium">เหตุผลที่ถูกปฏิเสธ: </span>
+                        {booking.rejectionReason}
+                      </p>
                     </div>
                   )}
 
                   {booking.description && (
-                    <div className="mb-3 p-3 bg-gray-100 rounded text-sm">
-                      <span className="text-gray-600">หมายเหตุ: </span>
+                    <div className="mb-3 px-4 py-3 bg-canvas border border-line rounded-s text-body-small text-ink-muted">
+                      <span className="text-ink-subtle">หมายเหตุ: </span>
                       {booking.description}
                     </div>
                   )}
@@ -254,8 +285,9 @@ export default function MyBookingsPage() {
                   {cancellable && (
                     <button
                       onClick={() => setPendingCancel(booking)}
-                      className="btn-danger text-sm px-4 py-2"
+                      className="btn-secondary btn--s text-error hover:border-error hover:bg-[#FDF1F1]"
                     >
+                      <span className="icon icon--20 icon--w500" aria-hidden="true">event_busy</span>
                       ยกเลิกการจอง
                     </button>
                   )}
@@ -278,11 +310,14 @@ export default function MyBookingsPage() {
       >
         {pendingCancel && (
           <>
-            ต้องการยกเลิก <span className="font-semibold">"{pendingCancel.title}"</span>
+            ต้องการยกเลิก <span className="font-medium text-ink">"{pendingCancel.title}"</span>
             <br />
             {formatRange(pendingCancel.startTime, pendingCancel.endTime)} ใช่หรือไม่?
             {pendingCancel.status === "APPROVED" && (
-              <span className="block mt-2 text-sm text-amber-700">การจองนี้อนุมัติแล้ว หากยกเลิกต้องจองใหม่</span>
+              <span className="flex items-center gap-2 mt-3 text-ink">
+                <span className="icon icon--20 icon--w500 text-error" aria-hidden="true">warning</span>
+                การจองนี้อนุมัติแล้ว หากยกเลิกต้องจองใหม่
+              </span>
             )}
           </>
         )}
