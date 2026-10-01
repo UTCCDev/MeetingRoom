@@ -1,74 +1,88 @@
-# Heavent DS — design.md
+# UTCC Design System — design.md
 
-ระบบออกแบบองค์กร v0.1.8 สำหรับเว็บและแอปพลิเคชัน ใช้ได้ทั้งภาษาไทยและอังกฤษ บุคลิก: ทางการ องค์กร ความหนาแน่นระดับกลาง
+ระบบออกแบบองค์กร v0.1.13 สำหรับเว็บและแอปพลิเคชัน ใช้ได้ทั้งภาษาไทยและอังกฤษ บุคลิก: ทางการ องค์กร ความหนาแน่นระดับกลาง
 
 ## Logo — เว็บไซต์ Design System
 
-โลโก้ UTCC Material Design ใช้ที่หัว sidebar ของเว็บไซต์เอกสารนี้
+โลโก้ UTCC ใช้ที่หัว sidebar ของเว็บไซต์เอกสารนี้ สีในไฟล์คือ #2E3192 ตรงกับ --color-primary
 
 | ไฟล์ (assets/logo/) | ใช้กับ |
 |---|---|
-| utcc-material-design.svg | สีน้ำเงิน #34328F บนพื้นขาว / canvas |
-| utcc-material-design-white.svg | บนพื้น primary หรือพื้นเข้ม |
+| utcc-ds.svg | สี primary บนพื้นขาว / canvas |
+| utcc-ds-white.svg | บนพื้น primary หรือพื้นเข้ม |
 
-- ขนาดใน sidebar: กว้าง 110px สูงอัตโนมัติ ระยะห่างใต้โลโก้ 4px
-- ใต้โลโก้แสดงชื่อระบบ "Heavent DS" และเลขเวอร์ชัน
-- alt="UTCC Material Design"
+- ขนาดใน sidebar: กว้าง 110px สูงอัตโนมัติ (สัดส่วน 137:69) ระยะห่างใต้โลโก้ 4px
+- ใต้โลโก้แสดงเลขเวอร์ชัน
+- alt="UTCC"
 
 ```html
-<img src="assets/logo/utcc-material-design.svg" alt="UTCC Material Design" width="110">
+<img src="assets/logo/utcc-ds.svg" alt="UTCC" width="110">
 ```
 
-## Logo — ROOM Sync
+## ขนาดโลโก้ผลิตภัณฑ์
 
-ประกอบด้วยสัญลักษณ์ประตู (mark) + ชื่อ UTCC / ROOM / Sync ใช้ไฟล์ SVG ต้นฉบับเสมอ
+โลโก้ผลิตภัณฑ์ทุกตัว (UTCC Meeting Room, UTCC Store) กำหนดขนาดด้วย **ความสูง** ไม่ใช่ความกว้าง เพื่อให้ดูเท่ากันเมื่อวางคู่กัน ความกว้างปล่อยตามสัดส่วนของแต่ละไฟล์
+
+| ใช้ที่ | ความสูง | Meeting Room กว้าง | Store กว้าง |
+|---|---|---|---|
+| Header | 40px | ~113px | ~100px |
+| หน้าปก / hero | 160px | ~452px | ~402px |
+| การ์ด / เอกสาร | 80px | ~226px | ~201px |
+| ต่ำสุด | 40px (10 มม.) | ~113px | ~100px |
+
+สัดส่วนไฟล์: Meeting Room 288:102 · Store 251:100 — ความกว้างต่างกันได้ ความสูงต้องเท่ากันเสมอ
+
+- วางหลายโลโก้เรียงกัน: จัดกึ่งกลางแนวตั้ง ระยะห่างระหว่างโลโก้เท่ากับความสูงโลโก้
+- ห้ามปรับความกว้างให้เท่ากัน โลโก้ที่สัดส่วนยาวกว่าจะดูเล็กลง
+- ในโค้ดใส่ `height` อย่างเดียว ไม่ใส่ `width`
+
+```css
+.brand img { height: 40px; width: auto; }
+```
+
+## Logo — UTCC Meeting Room
+
+โลโก้ UTCC Meeting Room ใช้สองสีจากระบบโดยตรง: น้ำเงิน #2E3192 (--color-primary) · เหลือง #FFC709 (--color-highlight) · สัดส่วน 288:102
 
 | ไฟล์ (assets/logo/) | ใช้กับ |
 |---|---|
-| room-sync.svg | ค่าตั้งต้น บนพื้นขาวหรืออ่อน |
-| room-sync-white.svg | บนพื้น primary หรือภาพเข้ม |
-| room-sync-primary.svg | งานพิมพ์สีเดียว |
-| room-sync-black.svg | เอกสารขาวดำ |
-| room-sync-mark.svg | favicon, app icon, avatar |
-| room-sync-mark-white.svg / -mark-primary.svg | mark บนพื้นเข้ม / สีเดียว |
+| utcc-meetingroom.svg | ค่าตั้งต้น บนพื้นขาวหรืออ่อน |
+| utcc-meetingroom-white.svg | บนพื้น primary หรือภาพเข้ม (ขาว + เหลือง) |
+| utcc-meetingroom-primary.svg | งานพิมพ์สีเดียว |
+| utcc-meetingroom-black.svg | เอกสารขาวดำ |
 
-สีในโลโก้: น้ำเงิน #34328F · ฟ้า #29ABE2 · ประตูไล่สี #00AEEF → #00FFFF — ใช้เฉพาะในตัวโลโก้ ส่วนอื่นของ UI ใช้สีจาก Color
-
-- พื้นที่ว่างรอบโลโก้อย่างน้อยเท่าความสูงคำว่า "UTCC" (~15% ของความสูงโลโก้)
-- ขนาดต่ำสุด: โลโก้เต็ม 120px (30 มม. สิ่งพิมพ์) · mark 24px — เล็กกว่า 120px ให้ใช้ mark
-- Header 64px ใช้โลโก้สูง 40px · มือถือใช้ mark 32px · ลิงก์กลับหน้าแรก alt="ROOM Sync"
+- พื้นที่ว่างรอบโลโก้อย่างน้อย 20% ของความสูงโลโก้
+- ขนาดต่ำสุด สูง 40px (10 มม. สิ่งพิมพ์)
+- Header 64px ใช้โลโก้สูง 40px · alt="UTCC Meeting Room"
 - ห้าม: ยืด/บีบ, หมุน, ใส่เงาหรือเอฟเฟกต์, เปลี่ยนสี, ใช้สีเต็มบนพื้นเข้ม, วางบนพื้นลายหรือภาพที่ไม่ชัด
+- ใช้ `<img>` อ้างไฟล์ SVG และใส่ height เสมอ (ความกว้างอัตโนมัติ)
 
-เลือกไฟล์ตามพื้นหลัง
-
-| พื้นหลัง | ไฟล์ |
-|---|---|
-| ขาว / canvas / surface-variant | room-sync.svg |
-| primary (#2E3192) / ภาพเข้ม | room-sync-white.svg |
-| พิมพ์สีเดียว | room-sync-primary.svg หรือ room-sync-black.svg |
-| พื้นที่เล็กกว่า 120px | room-sync-mark*.svg |
-
-โค้ด
 ```html
-<a href="/" class="brand" aria-label="ROOM Sync — หน้าแรก">
-  <img src="/assets/logo/room-sync.svg" alt="ROOM Sync" height="40">
+<a href="/" class="brand" aria-label="UTCC Meeting Room — หน้าแรก">
+  <img src="/assets/logo/utcc-meetingroom.svg" alt="UTCC Meeting Room" height="40">
 </a>
-
-<link rel="icon" type="image/svg+xml" href="/assets/logo/room-sync-mark.svg">
-
-<style>
-  .brand { display: inline-flex; padding: 6px; }
-  .brand img { height: 40px; width: auto; }
-  @media (max-width: 599px) {
-    .brand img { content: url(/assets/logo/room-sync-mark.svg); height: 32px; }
-  }
-</style>
 ```
 
-หมายเหตุสำหรับ dev
-- ใช้ `<img>` อ้างไฟล์ SVG ไม่ inline SVG ลงในหน้า (ไฟล์มี gradient id ที่อาจชนกันถ้าวางซ้ำ)
-- ใส่ `width` หรือ `height` เสมอเพื่อกันเลย์เอาต์กระโดด
-- ไฟล์ต้นฉบับถูกลบ metadata ออกแล้ว ขนาดประมาณ 16 KB
+
+## Logo — UTCC Store
+
+ใช้สองสีจากระบบโดยตรง: น้ำเงิน #2E3192 (--color-primary) · เหลือง #FFC709 (--color-highlight) · สัดส่วน 251:100
+
+| ไฟล์ (assets/logo/) | ใช้กับ |
+|---|---|
+| utcc-store.svg | ค่าตั้งต้น บนพื้นขาวหรืออ่อน |
+| utcc-store-white.svg | บนพื้น primary หรือภาพเข้ม (ขาว + เหลือง) |
+| utcc-store-primary.svg | งานพิมพ์สีเดียว |
+| utcc-store-black.svg | เอกสารขาวดำ |
+
+- พื้นที่ว่างรอบโลโก้อย่างน้อย 20% ของความสูงโลโก้
+- ขนาดต่ำสุด สูง 40px (10 มม. สิ่งพิมพ์)
+- Header 64px ใช้โลโก้สูง 40px (เท่ากับ UTCC Meeting Room) · alt="UTCC Store"
+- ข้อห้ามเหมือน UTCC Meeting Room
+
+```html
+<img src="/assets/logo/utcc-store.svg" alt="UTCC Store" height="40">
+```
 
 ## Typography
 
@@ -299,8 +313,8 @@ Badge: `.badge--warning / --success / --error` ใช้คู่สี containe
 
 ## ไฟล์ที่เกี่ยวข้อง
 
-- `assets/logo/utcc-material-design.svg` (+ `-white.svg`) — โลโก้ของเว็บไซต์ Design System นี้
-- `assets/logo/` — โลโก้ ROOM Sync 7 ไฟล์ (SVG)
+- `assets/logo/utcc-ds.svg` (+ `-white.svg`) — โลโก้ของเว็บไซต์ Design System นี้
+- `assets/logo/` — โลโก้ UTCC Meeting Room 4 ไฟล์ และ UTCC Store 4 ไฟล์ (SVG)
 - `dev-kit/` — tokens.css, colors.css, buttons.css, cards.css, icons.css, login.css, Button.jsx, Login.jsx, login.html
 - `figma/typography.tokens.json`, `figma/colors.tokens.json` — นำเข้าผ่าน Tokens Studio
 - `figma-plugin/` — สร้าง component Buttons + Login + Cards (รวม Card / Tone) ใน Figma
@@ -329,8 +343,13 @@ Badge: `.badge--warning / --success / --error` ใช้คู่สี containe
 
 ## Changelog
 
+- 0.1.13 — ปรับข้อความโลโก้ UTCC Meeting Room, เปลี่ยนชื่อเอกสารเป็น UTCC Design System
+- 0.1.12 — โลโก้ผลิตภัณฑ์กำหนดขนาดด้วยความสูงเท่ากัน (40 / 80 / 160px)
+- 0.1.11 — โลโก้ UTCC Meeting Room (4 รูปแบบ, สีตรงกับระบบ)
+- 0.1.10 — Logo UTCC Store: 4 รูปแบบ, แท็บสลับแบรนด์ในหน้า Logo
+- 0.1.9 — เปลี่ยนโลโก้เว็บไซต์เป็น utcc-ds.svg (สี #2E3192 ตรงกับระบบ)
 - 0.1.8 — โลโก้เว็บไซต์ UTCC Material Design ที่หัว sidebar (110px) + แบบสีขาว
-- 0.1.7 — Logo ROOM Sync: 7 รูปแบบ, พื้นที่ว่าง, ขนาดต่ำสุด, ข้อห้าม, ตารางเลือกไฟล์ตามพื้นหลัง, โค้ด
+- 0.1.7 — หน้า Logo: รูปแบบ, พื้นที่ว่าง, ขนาดต่ำสุด, ข้อห้าม, โค้ด
 - 0.1.6 — Cards อ้างบทบาทสี, เพิ่มการ์ดสื่อความหมาย 5 โทน (เว็บ, CSS, Figma)
 - 0.1.5 — Color: ชุดโทน 6 ชุด, บทบาท, เกณฑ์ความต่าง, colors.css, colors.tokens.json
 - 0.1.4 — Icons: Material Symbols, icons.css, ไลบรารีค้นหาและคัดลอกโค้ด

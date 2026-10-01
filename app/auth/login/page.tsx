@@ -116,8 +116,8 @@ export default function LoginPage() {
     <div className="login">
       <aside className="login__brand">
         <div className="login__logo">
-          {/* UTCC RoomSync logo, all-white variant for the primary brand panel. */}
-          <img src="/brand/roomsync-logo-on-primary.svg" alt="UTCC RoomSync ระบบจองห้องประชุม" width={635} height={241} />
+          {/* UTCC Meeting Room logo, white + yellow variant for the primary brand panel. */}
+          <img src="/brand/utcc-meetingroom-white.svg" alt="UTCC Meeting Room" width={288} height={102} />
         </div>
         <div>
           <div className="login__overline">ระบบงานภายใน</div>
