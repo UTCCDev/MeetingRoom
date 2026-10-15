@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ROOM_PHOTOS, type PhotoTopic, type RoomPhoto } from "@/lib/room-photos";
+import { AMENITIES, PHOTO_SHOTS, ROOM_PHOTOS, SHOT_INFO, type PhotoTopic, type RoomPhoto, type RoomPhotos } from "@/lib/room-photos";
 
 interface GalleryRoom {
   id: string;
@@ -9,6 +9,7 @@ interface GalleryRoom {
   capacity: number;
   amenities: string[];
   image?: string | null;
+  photos?: RoomPhotos;
 }
 
 interface Slide {
@@ -43,25 +44,30 @@ export function roomCover(room: { id: string; capacity: number; image?: string |
   return room.image || pick(layoutTopic(room.capacity).topic, hash(room.id)).src;
 }
 
-/** Up to six slides, each a different topic; the room's own photo leads when it has one. */
+/**
+ * One slide per topic: the room's own photo where it has one, else a sample.
+ * Equipment topics show when the room lists that amenity or has a real photo of it.
+ */
 function slidesFor(room: GalleryRoom): Slide[] {
   const seed = hash(room.id);
+  const photos = room.photos || {};
   const has = (a: string) => room.amenities.includes(a);
-  const topics: { topic: PhotoTopic; title: string }[] = [
-    { topic: layoutTopic(room.capacity).topic, title: layoutTopic(room.capacity).label },
-    { topic: "seating", title: "ที่นั่ง" },
+  const layout = layoutTopic(room.capacity);
+  const topics: { topic: PhotoTopic; title: string; own?: string | null }[] = [
+    { topic: layout.topic, title: layout.label, own: room.image },
   ];
-  if (has("projector") || has("tv")) topics.push({ topic: "presentation", title: "จอนำเสนอ" });
-  if (has("whiteboard")) topics.push({ topic: "whiteboard", title: "กระดานไวท์บอร์ด" });
-  if (has("videoconference")) topics.push({ topic: "video", title: "ระบบประชุมออนไลน์" });
-  topics.push({ topic: "entrance", title: "หน้าห้อง" });
+  for (const shot of PHOTO_SHOTS) {
+    const isAmenity = (AMENITIES as readonly string[]).includes(shot);
+    if (!isAmenity || has(shot) || photos[shot]) {
+      topics.push({ topic: SHOT_INFO[shot].topic, title: SHOT_INFO[shot].title, own: photos[shot] });
+    }
+  }
 
-  const samples: Slide[] = topics.map(({ topic, title }, i) => {
+  return topics.map(({ topic, title, own }, i) => {
+    if (own) return { src: own, title, sample: false };
     const photo = pick(topic, seed + i);
     return { src: photo.src, title, sample: true, credit: photo };
   });
-  const own: Slide[] = room.image ? [{ src: room.image, title: "ภาพห้องจริง", sample: false }] : [];
-  return [...own, ...samples].slice(0, 6);
 }
 
 function Credit({ photo }: { photo: RoomPhoto }) {

@@ -42,6 +42,7 @@ model Room {
   capacity    Int
   image       String?
   amenities   Json? // JSON array of amenities
+  photos      Json? // { [shot]: url } real photos of seating, screen, whiteboard, etc.
   roomAdminId String
   status      Boolean  @default(true) // true = active, false = inactive
   createdAt   DateTime @default(now())

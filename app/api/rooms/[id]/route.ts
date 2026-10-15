@@ -94,7 +94,7 @@ export async function PUT(
       return NextResponse.json({ error: firstError(parsed.error) }, { status: 400 });
     }
 
-    const { name, description, capacity, image, amenities, status, roomAdminId } = parsed.data;
+    const { name, description, capacity, image, amenities, photos, status, roomAdminId } = parsed.data;
 
     // Only system admins can hand a room to another admin.
     if (roomAdminId !== undefined && roomAdminId !== room.roomAdminId) {
@@ -118,6 +118,7 @@ export async function PUT(
         ...(capacity && { capacity }),
         ...(image !== undefined && { image: image || null }),
         ...(amenities && { amenities }),
+        ...(photos && { photos }),
         ...(status !== undefined && { status }),
         ...(roomAdminId && { roomAdminId }),
       },

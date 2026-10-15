@@ -50,3 +50,6 @@ prisma/dev.db-journal
 # Build output
 dist/
 build/
+
+# uploaded room photos
+/uploads

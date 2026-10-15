@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import AppHeader from "@/app/components/AppHeader";
 import RoomGallery from "@/app/components/RoomGallery";
+import { parseRoomPhotos } from "@/lib/room-photos";
 import { SkeletonCards } from "@/app/components/Skeleton";
 import { useToast } from "@/app/components/Toast";
 import {
@@ -27,6 +28,7 @@ interface Room {
   capacity: number;
   image?: string;
   amenities?: string;
+  photos?: unknown;
   status: boolean;
   roomAdmin: {
     name: string;
@@ -307,7 +309,7 @@ export default function RoomDetailPage() {
           <div className="lg:col-span-2 space-y-6">
             <div className="card p-0 sm:p-0 overflow-hidden">
               <RoomGallery
-                room={{ id: room.id, name: room.name, capacity: room.capacity, amenities: amenitiesList, image: room.image }}
+                room={{ id: room.id, name: room.name, capacity: room.capacity, amenities: amenitiesList, image: room.image, photos: parseRoomPhotos(room.photos) }}
               />
               <div className="p-4 sm:p-6">
                 {location && (

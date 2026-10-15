@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import AppHeader from "@/app/components/AppHeader";
+import PhotoGuide from "@/app/components/PhotoGuide";
+import { PHOTO_SHOTS, PHOTO_URL_ERROR, amenityKeys, isPhotoUrl, parseRoomPhotos, type RoomPhotos } from "@/lib/room-photos";
 import { SkeletonCards } from "@/app/components/Skeleton";
 import { useToast } from "@/app/components/Toast";
 import { roomLocation } from "@/lib/format";
@@ -15,6 +17,7 @@ interface Room {
   capacity: number;
   image?: string;
   amenities?: string | string[];
+  photos?: unknown;
   status?: boolean;
 }
 
@@ -25,6 +28,7 @@ export default function MyRoomsPage() {
   const [error, setError] = useState("");
   const [editingRoomId, setEditingRoomId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Partial<Room>>({});
+  const [editPhotos, setEditPhotos] = useState<RoomPhotos>({});
 
   const router = useRouter();
   const pathname = usePathname();
@@ -65,10 +69,15 @@ export default function MyRoomsPage() {
   const handleEditRoom = (room: Room) => {
     setEditingRoomId(room.id);
     setEditData(room);
+    setEditPhotos(parseRoomPhotos(room.photos));
   };
 
   const handleSaveRoom = async () => {
     if (!editingRoomId) return;
+    if (!isPhotoUrl(editData.image || "") || PHOTO_SHOTS.some((shot) => !isPhotoUrl(editPhotos[shot] || ""))) {
+      toast(`รูปห้องและอุปกรณ์${PHOTO_URL_ERROR}`, { type: "error" });
+      return;
+    }
 
     try {
       const amenitiesArray = editData.amenities
@@ -89,6 +98,7 @@ export default function MyRoomsPage() {
           capacity: editData.capacity,
           image: editData.image,
           amenities: amenitiesArray,
+          photos: editPhotos,
         }),
       });
 
@@ -191,20 +201,6 @@ export default function MyRoomsPage() {
 
                     <div>
                       <label className="field-label">
-                        URL รูปภาพ
-                      </label>
-                      <input
-                        type="text"
-                        value={editData.image || ""}
-                        onChange={(e) =>
-                          setEditData({ ...editData, image: e.target.value })
-                        }
-                        className="input-field"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="field-label">
                         สิ่งอำนวยความสะดวก (คั่นด้วยเครื่องหมายจุลภาค)
                       </label>
                       <input
@@ -225,6 +221,15 @@ export default function MyRoomsPage() {
                         className="input-field"
                       />
                     </div>
+
+                    <PhotoGuide
+                      capacity={Number(editData.capacity) || 10}
+                      amenities={amenityKeys(editData.amenities)}
+                      cover={editData.image || ""}
+                      onCoverChange={(url) => setEditData((d) => ({ ...d, image: url }))}
+                      photos={editPhotos}
+                      onPhotoChange={(shot, url) => setEditPhotos((p) => ({ ...p, [shot]: url }))}
+                    />
 
                     <div className="flex justify-end gap-3 pt-2">
                       <button

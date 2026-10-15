@@ -12,7 +12,9 @@ export interface RoomPhoto {
   source: string;
 }
 
-export type PhotoTopic = "round" | "board" | "ushape" | "theater" | "seating" | "presentation" | "whiteboard" | "video" | "entrance";
+export type PhotoTopic =
+  | "round" | "board" | "ushape" | "theater" | "seating" | "presentation" | "whiteboard" | "video" | "entrance"
+  | "tv" | "printer" | "microphone";
 
 export const ROOM_PHOTOS: Record<PhotoTopic, RoomPhoto[]> = {
   round: [
@@ -53,9 +55,68 @@ export const ROOM_PHOTOS: Record<PhotoTopic, RoomPhoto[]> = {
     { src: "/room-photos/video-1.jpg", title: "Video conference room (3570807285)", creator: "Mike Beltzner", license: "CC BY-SA 2.0", source: "https://commons.wikimedia.org/w/index.php?curid=62268008" },
     { src: "/room-photos/video-2.jpg", title: "Polycom VSX 7000 with 2 video conferencing screens", creator: "BrokenSphere", license: "CC BY-SA 3.0", source: "https://commons.wikimedia.org/w/index.php?curid=4234466" },
   ],
+  tv: [
+    { src: "/room-photos/tv-1.jpg", title: "Round Table, chairs, TV monitor, conference room", creator: "Wonderlane", license: "CC0", source: "https://www.flickr.com/photos/71401718@N00/5526839767" },
+  ],
+  printer: [
+    { src: "/room-photos/printer-1.jpg", title: "Brother HL-2070N Network Laser Printer", creator: "liewcf", license: "CC BY-SA 2.0", source: "https://www.flickr.com/photos/34353636@N00/449602815" },
+    { src: "/room-photos/printer-2.jpg", title: "Kyocera Office Printer Maschine", creator: "Mr.ちゅらさん", license: "CC BY-SA 4.0", source: "https://commons.wikimedia.org/w/index.php?curid=111210259" },
+  ],
+  microphone: [
+    { src: "/room-photos/microphone-1.jpg", title: "GONSIN TL-4200 Conference Microphone", creator: "LiPeihua91", license: "CC BY-SA 4.0", source: "https://commons.wikimedia.org/w/index.php?curid=51910728" },
+    { src: "/room-photos/microphone-2.jpg", title: "MXL AC404 USB Conference Microphone", creator: "shop8447", license: "CC0", source: "https://www.flickr.com/photos/185514373@N06/49060722517" },
+  ],
   entrance: [
     { src: "/room-photos/entrance-1.jpg", title: "Small Meeting Room 101, Light Cube Utsunomiya", creator: "Miyuki Meinaka", license: "CC BY-SA 4.0", source: "https://commons.wikimedia.org/w/index.php?curid=154418453" },
     { src: "/room-photos/entrance-2.jpg", title: "Meeting Room sign (3619639831)", creator: "Bonner Springs Library", license: "CC BY 2.0", source: "https://commons.wikimedia.org/w/index.php?curid=109253868" },
     { src: "/room-photos/entrance-3.jpg", title: "477 Richmond - small meeting rooms (5277779245)", creator: "Mike Beltzner", license: "CC BY-SA 2.0", source: "https://commons.wikimedia.org/w/index.php?curid=62268007" },
   ],
 };
+
+/** Room amenities, in form order; each one also has a photo slot of the same key. */
+export const AMENITIES = ["projector", "whiteboard", "videoconference", "printer", "tv", "microphone"] as const;
+export type Amenity = (typeof AMENITIES)[number];
+
+/**
+ * Detail shots a room can have its own photo for (the whole-room shot is Room.image):
+ * seating and entrance for every room, plus one per amenity.
+ */
+export const PHOTO_SHOTS = ["seating", ...AMENITIES, "entrance"] as const;
+export type PhotoShot = (typeof PHOTO_SHOTS)[number];
+export type RoomPhotos = Partial<Record<PhotoShot, string>>;
+
+export const SHOT_INFO: Record<PhotoShot, { title: string; tip: string; topic: PhotoTopic }> = {
+  seating: { title: "ที่นั่ง", tip: "ถ่ายระดับสายตาคนนั่ง ให้เห็นเก้าอี้และโต๊ะชัด ๆ", topic: "seating" },
+  projector: { title: "โปรเจกเตอร์", tip: "เปิดโปรเจกเตอร์ให้มีภาพบนจอ แล้วถ่ายจากที่นั่งแถวหลัง", topic: "presentation" },
+  whiteboard: { title: "กระดานไวท์บอร์ด", tip: "ลบกระดานให้สะอาด ถ่ายเฉียงเล็กน้อยเพื่อเลี่ยงแสงสะท้อน", topic: "whiteboard" },
+  videoconference: { title: "ระบบวิดีโอคอนเฟอเรนซ์", tip: "ให้เห็นกล้อง ลำโพง และจอในภาพเดียว", topic: "video" },
+  printer: { title: "เครื่องพิมพ์", tip: "ถ่ายเครื่องพิมพ์ทั้งเครื่อง ให้เห็นตำแหน่งที่ตั้งในห้อง", topic: "printer" },
+  tv: { title: "โทรทัศน์ / จอมอนิเตอร์", tip: "เปิดจอให้มีภาพ ถ่ายให้เห็นขนาดจอเทียบกับโต๊ะ", topic: "tv" },
+  microphone: { title: "ไมโครโฟน", tip: "ถ่ายไมโครโฟนบนโต๊ะประชุม ให้เห็นจำนวนและตำแหน่งที่วาง", topic: "microphone" },
+  entrance: { title: "หน้าห้อง", tip: "ถ่ายป้ายชื่อหรือเลขห้อง ช่วยให้ผู้จองหาห้องเจอ", topic: "entrance" },
+};
+
+// Photos saved before each amenity had its own slot.
+const LEGACY_SHOTS: Record<string, PhotoShot> = { presentation: "projector", video: "videoconference" };
+
+/** Room.photos comes back from the API as untyped JSON; keep only non-empty known shots. */
+export function parseRoomPhotos(value: unknown): RoomPhotos {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const out: RoomPhotos = {};
+  for (const [key, url] of Object.entries(value as Record<string, unknown>)) {
+    const shot = (PHOTO_SHOTS as readonly string[]).includes(key) ? (key as PhotoShot) : LEGACY_SHOTS[key];
+    if (shot && typeof url === "string" && url.trim() && !out[shot]) out[shot] = url.trim();
+  }
+  return out;
+}
+
+/** A room photo is empty, an http(s) URL, or a file uploaded through /api/uploads. */
+export const isPhotoUrl = (s: string) =>
+  s.trim() === "" || /^https?:\/\//i.test(s.trim()) || /^\/api\/uploads\/[\w.-]+$/.test(s.trim());
+export const PHOTO_URL_ERROR = "ต้องเป็นไฟล์ที่อัปโหลด หรือ URL ที่ขึ้นต้นด้วย http:// หรือ https://";
+
+/** Amenities as stored (array) or typed in the room admin's comma-separated field. */
+export function amenityKeys(value: unknown): string[] {
+  const list = Array.isArray(value) ? value : typeof value === "string" ? value.split(",") : [];
+  return list.map((a) => String(a).trim()).filter(Boolean);
+}

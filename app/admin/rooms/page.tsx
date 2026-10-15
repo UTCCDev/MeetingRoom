@@ -5,7 +5,10 @@ import { usePathname, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import AppHeader from "@/app/components/AppHeader";
 import ConfirmDialog from "@/app/components/ConfirmDialog";
+import RoomGuideDialog from "@/app/components/RoomGuideDialog";
 import { roomCover } from "@/app/components/RoomGallery";
+import PhotoGuide from "@/app/components/PhotoGuide";
+import { PHOTO_SHOTS, PHOTO_URL_ERROR, isPhotoUrl, parseRoomPhotos, type RoomPhotos } from "@/lib/room-photos";
 import { SkeletonCards } from "@/app/components/Skeleton";
 import { useToast } from "@/app/components/Toast";
 import { roomLocation } from "@/lib/format";
@@ -17,6 +20,7 @@ interface Room {
   capacity: number;
   image?: string;
   amenities?: string[];
+  photos?: unknown;
   status: boolean;
   roomAdmin: {
     id: string;
@@ -49,6 +53,7 @@ type RoomForm = {
   capacity: string;
   image: string;
   amenities: string[];
+  photos: RoomPhotos;
   roomAdminId: string;
   status: boolean;
 };
@@ -61,6 +66,7 @@ const EMPTY_FORM: RoomForm = {
   capacity: "10",
   image: "",
   amenities: [],
+  photos: {},
   roomAdminId: "",
   status: true,
 };
@@ -131,6 +137,7 @@ export default function RoomsManagementPage() {
   const [formError, setFormError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [roomPendingDelete, setRoomPendingDelete] = useState<Room | null>(null);
+  const [guideOpen, setGuideOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
@@ -205,6 +212,7 @@ export default function RoomsManagementPage() {
       capacity: String(room.capacity),
       image: room.image || "",
       amenities: Array.isArray(room.amenities) ? room.amenities : [],
+      photos: parseRoomPhotos(room.photos),
       roomAdminId: room.roomAdmin.id,
       status: room.status,
     });
@@ -227,8 +235,11 @@ export default function RoomsManagementPage() {
     if (!form.name.trim()) errors.name = "กรุณากรอกชื่อห้อง";
     if (!Number.isInteger(capacity) || capacity < 1) errors.capacity = "จำนวนที่นั่งต้องเป็นจำนวนเต็มตั้งแต่ 1";
     if (!form.roomAdminId) errors.roomAdminId = "กรุณาเลือกผู้ดูแลห้อง";
-    if (form.image && !/^https?:\/\//i.test(form.image.trim())) {
-      errors.image = "URL ต้องขึ้นต้นด้วย http:// หรือ https://";
+    if (!isPhotoUrl(form.image)) {
+      errors.image = PHOTO_URL_ERROR;
+    }
+    if (PHOTO_SHOTS.some((shot) => !isPhotoUrl(form.photos[shot] || ""))) {
+      errors.photos = `รูปห้องและอุปกรณ์${PHOTO_URL_ERROR}`;
     }
     setFormErrors(errors);
     if (Object.keys(errors).length > 0) return;
@@ -245,6 +256,7 @@ export default function RoomsManagementPage() {
           capacity,
           image: form.image.trim(),
           amenities: form.amenities,
+          photos: form.photos,
           roomAdminId: form.roomAdminId,
           status: form.status,
         }),
@@ -317,10 +329,16 @@ export default function RoomsManagementPage() {
         title="จัดการห้องทั้งหมด"
         breadcrumbs={[{ label: "จัดการห้อง" }]}
         actions={
-          <button onClick={openCreate} className="btn-primary">
-            <span className="icon icon--20 icon--w500" aria-hidden="true">add</span>
-            เพิ่มห้องใหม่
-          </button>
+          <div className="flex flex-wrap items-center gap-3">
+            <button type="button" onClick={() => setGuideOpen(true)} className="btn-secondary">
+              <span className="icon icon--20 icon--w500" aria-hidden="true">menu_book</span>
+              คู่มือ
+            </button>
+            <button onClick={openCreate} className="btn-primary">
+              <span className="icon icon--20 icon--w500" aria-hidden="true">add</span>
+              เพิ่มห้องใหม่
+            </button>
+          </div>
         }
       />
 
@@ -471,162 +489,149 @@ export default function RoomsManagementPage() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="room-form-title"
-            className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto"
+            // Only the body scrolls, so the scrollbar stays inside the rounded corners
+            // and the title and buttons stay in view.
+            className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 id="room-form-title" className="flex items-center gap-2 text-title-large text-ink mb-5">
+            <h2 id="room-form-title" className="flex-none flex items-center gap-2 px-6 py-4 border-b border-line text-title-large text-ink">
               <span className="icon icon--24 icon--w500 text-primary" aria-hidden="true">
                 {editing === "new" ? "add_business" : "edit_square"}
               </span>
               {editing === "new" ? "สร้างห้องใหม่" : `แก้ไขห้อง "${editing.name}"`}
             </h2>
 
-            {formError && (
-              <div className="alert alert--error mb-4" role="alert">
-                <span className="icon icon--24 icon--w500 icon--error" aria-hidden="true">error</span>
-                {formError}
+            <form onSubmit={handleSave} className="flex-1 min-h-0 flex flex-col" noValidate>
+              <div className="flex-1 min-h-0 overflow-y-auto px-6 pt-5 pb-2 space-y-2">
+                {formError && (
+                  <div className="alert alert--error mb-4" role="alert">
+                    <span className="icon icon--24 icon--w500 icon--error" aria-hidden="true">error</span>
+                    {formError}
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-6 gap-x-4">
+                  <div className="md:col-span-4">
+                    <label htmlFor="room-name" className="field-label">ชื่อห้อง *</label>
+                    <input
+                      id="room-name"
+                      type="text"
+                      value={form.name}
+                      onChange={(e) => updateField("name", e.target.value)}
+                      className={fieldClass("name")}
+                      aria-invalid={!!formErrors.name}
+                    />
+                    {errorText("name")}
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label htmlFor="room-capacity" className="field-label">จำนวนที่นั่ง (คน) *</label>
+                    <input
+                      id="room-capacity"
+                      type="number"
+                      min="1"
+                      inputMode="numeric"
+                      value={form.capacity}
+                      onChange={(e) => updateField("capacity", e.target.value)}
+                      className={fieldClass("capacity")}
+                      aria-invalid={!!formErrors.capacity}
+                    />
+                    {errorText("capacity")}
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label htmlFor="room-department" className="field-label">หน่วยงาน</label>
+                    <input
+                      id="room-department"
+                      type="text"
+                      value={form.department}
+                      onChange={(e) => updateField("department", e.target.value)}
+                      className="input-field"
+                      placeholder="เช่น สำนักทะเบียนและประมวลผล"
+                    />
+                    {errorText("department")}
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label htmlFor="room-building" className="field-label">อาคาร</label>
+                    <input
+                      id="room-building"
+                      type="text"
+                      value={form.building}
+                      onChange={(e) => updateField("building", e.target.value)}
+                      className="input-field"
+                      placeholder="เช่น 1"
+                    />
+                    {errorText("building")}
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label htmlFor="room-floor" className="field-label">ชั้น</label>
+                    <input
+                      id="room-floor"
+                      type="text"
+                      value={form.floor}
+                      onChange={(e) => updateField("floor", e.target.value)}
+                      className="input-field"
+                      placeholder="เช่น 2"
+                    />
+                    {errorText("floor")}
+                  </div>
+
+                  <div className="md:col-span-6">
+                    <label htmlFor="room-admin" className="field-label">ผู้ดูแลห้อง *</label>
+                    <select
+                      id="room-admin"
+                      value={form.roomAdminId}
+                      onChange={(e) => updateField("roomAdminId", e.target.value)}
+                      className={fieldClass("roomAdminId")}
+                      aria-invalid={!!formErrors.roomAdminId}
+                    >
+                      <option value="">เลือกผู้ดูแลห้อง</option>
+                      {users.map((user) => (
+                        <option key={user.id} value={user.id}>
+                          {user.name} ({user.email})
+                        </option>
+                      ))}
+                    </select>
+                    {errorText("roomAdminId")}
+                  </div>
+
+                  <fieldset className="md:col-span-6 mb-4">
+                    <legend className="field-label">สิ่งอำนวยความสะดวก</legend>
+                    <AmenityCheckboxes
+                      selected={form.amenities}
+                      onChange={(next) => updateField("amenities", next)}
+                    />
+                  </fieldset>
+
+                  <div className="md:col-span-6 mb-2">
+                    <PhotoGuide
+                      capacity={Number(form.capacity) || 10}
+                      amenities={form.amenities}
+                      cover={form.image}
+                      onCoverChange={(url) => updateField("image", url)}
+                      photos={form.photos}
+                      onPhotoChange={(shot, url) => {
+                        setForm((f) => ({ ...f, photos: { ...f.photos, [shot]: url } }));
+                        setFormErrors((e) => ({ ...e, photos: undefined }));
+                      }}
+                    />
+                    {errorText(formErrors.image ? "image" : "photos")}
+                  </div>
+                </div>
+
+                <label className="flex items-center gap-3 text-body-small text-ink pt-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form.status}
+                    onChange={(e) => updateField("status", e.target.checked)}
+                  />
+                  เปิดให้จอง (ปิดแล้วห้องจะไม่แสดงในหน้าค้นหา)
+                </label>
               </div>
-            )}
 
-            <form onSubmit={handleSave} className="space-y-2" noValidate>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
-                <div>
-                  <label htmlFor="room-name" className="field-label">ชื่อห้อง *</label>
-                  <input
-                    id="room-name"
-                    type="text"
-                    value={form.name}
-                    onChange={(e) => updateField("name", e.target.value)}
-                    className={fieldClass("name")}
-                    aria-invalid={!!formErrors.name}
-                  />
-                  {errorText("name")}
-                </div>
-
-                <div>
-                  <label htmlFor="room-capacity" className="field-label">จำนวนที่นั่ง (คน) *</label>
-                  <input
-                    id="room-capacity"
-                    type="number"
-                    min="1"
-                    inputMode="numeric"
-                    value={form.capacity}
-                    onChange={(e) => updateField("capacity", e.target.value)}
-                    className={fieldClass("capacity")}
-                    aria-invalid={!!formErrors.capacity}
-                  />
-                  {errorText("capacity")}
-                </div>
-
-                <div className="md:col-span-2">
-                  <label htmlFor="room-department" className="field-label">หน่วยงาน</label>
-                  <input
-                    id="room-department"
-                    type="text"
-                    value={form.department}
-                    onChange={(e) => updateField("department", e.target.value)}
-                    className="input-field"
-                    placeholder="เช่น สำนักทะเบียนและประมวลผล"
-                  />
-                  {errorText("department")}
-                </div>
-
-                <div>
-                  <label htmlFor="room-building" className="field-label">อาคาร</label>
-                  <input
-                    id="room-building"
-                    type="text"
-                    value={form.building}
-                    onChange={(e) => updateField("building", e.target.value)}
-                    className="input-field"
-                    placeholder="เช่น 1"
-                  />
-                  {errorText("building")}
-                </div>
-
-                <div>
-                  <label htmlFor="room-floor" className="field-label">ชั้น</label>
-                  <input
-                    id="room-floor"
-                    type="text"
-                    value={form.floor}
-                    onChange={(e) => updateField("floor", e.target.value)}
-                    className="input-field"
-                    placeholder="เช่น 2"
-                  />
-                  {errorText("floor")}
-                </div>
-
-                <div>
-                  <label htmlFor="room-admin" className="field-label">ผู้ดูแลห้อง *</label>
-                  <select
-                    id="room-admin"
-                    value={form.roomAdminId}
-                    onChange={(e) => updateField("roomAdminId", e.target.value)}
-                    className={fieldClass("roomAdminId")}
-                    aria-invalid={!!formErrors.roomAdminId}
-                  >
-                    <option value="">เลือกผู้ดูแลห้อง</option>
-                    {users.map((user) => (
-                      <option key={user.id} value={user.id}>
-                        {user.name} ({user.email})
-                      </option>
-                    ))}
-                  </select>
-                  {errorText("roomAdminId")}
-                </div>
-
-                <div>
-                  <label htmlFor="room-image" className="field-label">URL รูปภาพ</label>
-                  <input
-                    id="room-image"
-                    type="url"
-                    value={form.image}
-                    onChange={(e) => updateField("image", e.target.value)}
-                    className={fieldClass("image")}
-                    placeholder="https://example.com/image.jpg"
-                    aria-invalid={!!formErrors.image}
-                    aria-describedby="room-image-hint"
-                  />
-                  {errorText("image")}
-                </div>
-
-                {/* What the room card and gallery will show. */}
-                <div className="md:col-span-2 flex items-center gap-4 p-3 mb-2 rounded-sm border border-line bg-canvas">
-                  <img
-                    src={
-                      form.image.trim() ||
-                      roomCover({ id: editing === "new" ? "new" : editing.id, capacity: Number(form.capacity) || 10 })
-                    }
-                    alt=""
-                    className="w-32 aspect-video flex-none rounded-xs object-cover bg-surface-variant"
-                  />
-                  <p id="room-image-hint" className="text-body-small text-ink-muted">
-                    {form.image.trim()
-                      ? "ตัวอย่างรูปที่จะแสดงบนการ์ดห้องและหน้ารายละเอียด"
-                      : "ยังไม่ได้ใส่รูป — ระบบจะแสดงภาพตัวอย่างตามขนาดห้อง (ติดป้าย \"ภาพตัวอย่าง\")"}
-                  </p>
-                </div>
-              </div>
-
-              <fieldset>
-                <legend className="field-label">สิ่งอำนวยความสะดวก</legend>
-                <AmenityCheckboxes
-                  selected={form.amenities}
-                  onChange={(next) => updateField("amenities", next)}
-                />
-              </fieldset>
-
-              <label className="flex items-center gap-3 text-body-small text-ink pt-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={form.status}
-                  onChange={(e) => updateField("status", e.target.checked)}
-                />
-                เปิดให้จอง (ปิดแล้วห้องจะไม่แสดงในหน้าค้นหา)
-              </label>
-
-              <div className="flex justify-end gap-3 pt-4">
+              <div className="flex-none flex justify-end gap-3 px-6 py-4 border-t border-line">
                 <button type="button" onClick={() => setEditing(null)} className="btn-text" disabled={isSaving}>
                   ยกเลิก
                 </button>
@@ -639,6 +644,8 @@ export default function RoomsManagementPage() {
           </div>
         </div>
       )}
+
+      <RoomGuideDialog open={guideOpen} onClose={() => setGuideOpen(false)} />
 
       <ConfirmDialog
         open={!!roomPendingDelete}

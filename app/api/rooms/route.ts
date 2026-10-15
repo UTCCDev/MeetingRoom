@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: firstError(parsed.error) }, { status: 400 });
     }
 
-    const { name, description, capacity, image, amenities, roomAdminId, status } = parsed.data;
+    const { name, description, capacity, image, amenities, photos, roomAdminId, status } = parsed.data;
 
     // Verify room admin exists
     const roomAdmin = await prisma.user.findUnique({
@@ -96,6 +96,7 @@ export async function POST(request: NextRequest) {
         capacity,
         image: image || null,
         amenities: amenities ?? undefined,
+        photos: photos ?? undefined,
         roomAdminId,
         status: status ?? true,
       },
