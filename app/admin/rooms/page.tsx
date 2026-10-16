@@ -5,13 +5,16 @@ import { usePathname, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import AppHeader from "@/app/components/AppHeader";
 import ConfirmDialog from "@/app/components/ConfirmDialog";
+import Dropdown from "@/app/components/Dropdown";
 import RoomGuideDialog from "@/app/components/RoomGuideDialog";
 import { roomCover } from "@/app/components/RoomGallery";
 import PhotoGuide from "@/app/components/PhotoGuide";
+import AmenityCheckboxes from "@/app/components/AmenityCheckboxes";
 import { PHOTO_SHOTS, PHOTO_URL_ERROR, isPhotoUrl, parseRoomPhotos, type RoomPhotos } from "@/lib/room-photos";
 import { SkeletonCards } from "@/app/components/Skeleton";
 import { useToast } from "@/app/components/Toast";
 import { roomLocation } from "@/lib/format";
+import Pagination, { usePagination } from "@/app/components/Pagination";
 
 interface Room {
   id: string;
@@ -36,14 +39,6 @@ interface User {
   active: boolean;
 }
 
-const AMENITY_OPTIONS = [
-  { value: "projector", label: "โปรเจกเตอร์" },
-  { value: "whiteboard", label: "กระดานไวท์บอร์ด" },
-  { value: "videoconference", label: "ระบบวิดีโอคอนเฟอเรนซ์" },
-  { value: "printer", label: "เครื่องพิมพ์" },
-  { value: "tv", label: "โทรทัศน์ / จอมอนิเตอร์" },
-  { value: "microphone", label: "ไมโครโฟน" },
-];
 
 type RoomForm = {
   name: string;
@@ -87,39 +82,6 @@ function composeDescription(f: RoomForm) {
   return [f.department.trim(), location].filter(Boolean).join(" - ");
 }
 
-function AmenityCheckboxes({
-  selected,
-  onChange,
-}: {
-  selected: string[];
-  onChange: (next: string[]) => void;
-}) {
-  return (
-    <div className="grid grid-cols-2 gap-2">
-      {AMENITY_OPTIONS.map((opt) => (
-        <label
-          key={opt.value}
-          htmlFor={`room-amenity-${opt.value}`}
-          className="flex items-center gap-3 h-11 text-body-small text-ink cursor-pointer"
-        >
-          <input
-            id={`room-amenity-${opt.value}`}
-            type="checkbox"
-            checked={selected.includes(opt.value)}
-            onChange={(e) =>
-              onChange(
-                e.target.checked
-                  ? [...selected, opt.value]
-                  : selected.filter((a) => a !== opt.value)
-              )
-            }
-          />
-          {opt.label}
-        </label>
-      ))}
-    </div>
-  );
-}
 
 export default function RoomsManagementPage() {
   const { data: session, status } = useSession();
@@ -195,6 +157,7 @@ export default function RoomsManagementPage() {
         (!statusFilter || (statusFilter === "active" ? r.status : !r.status))
     );
   }, [rooms, search, statusFilter]);
+  const paged = usePagination(filteredRooms, 12, `${search}|${statusFilter}`);
 
   const openCreate = () => {
     setEditing("new");
@@ -319,9 +282,8 @@ export default function RoomsManagementPage() {
   const fieldClass = (key: keyof RoomForm) =>
     `input-field ${formErrors[key] ? "border-error" : ""}`;
 
-  const errorText = (key: keyof RoomForm) => (
-    <p className="field-error min-h-[1.4rem]">{formErrors[key]}</p>
-  );
+  const errorText = (key: keyof RoomForm) =>
+    formErrors[key] ? <p className="field-error">{formErrors[key]}</p> : null;
 
   return (
     <div className="min-h-screen bg-canvas">
@@ -331,21 +293,21 @@ export default function RoomsManagementPage() {
         actions={
           <div className="flex flex-wrap items-center gap-3">
             <button type="button" onClick={() => setGuideOpen(true)} className="btn-secondary">
-              <span className="icon icon--20 icon--w500" aria-hidden="true">menu_book</span>
+              <span className="icon icon--20" aria-hidden="true">menu_book</span>
               คู่มือ
             </button>
             <button onClick={openCreate} className="btn-primary">
-              <span className="icon icon--20 icon--w500" aria-hidden="true">add</span>
+              <span className="icon icon--20" aria-hidden="true">add</span>
               เพิ่มห้องใหม่
             </button>
           </div>
         }
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <div className="max-w-[75rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {error && (
           <div className="alert alert--error mb-4" role="alert">
-            <span className="icon icon--24 icon--w500 icon--error" aria-hidden="true">error</span>
+            <span className="icon icon--24 icon--error" aria-hidden="true">error</span>
             {error}
           </div>
         )}
@@ -355,7 +317,7 @@ export default function RoomsManagementPage() {
             <label htmlFor="admin-room-search" className="field-label">ค้นหา</label>
             <div className="relative">
             <span
-              className="icon icon--20 icon--w300 absolute left-3 top-1/2 -translate-y-1/2 text-ink-subtle pointer-events-none"
+              className="icon icon--20 absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-subtle pointer-events-none"
               aria-hidden="true"
             >
               search
@@ -366,22 +328,22 @@ export default function RoomsManagementPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="ชื่อห้อง, หน่วยงาน, อาคาร หรือผู้ดูแล"
-              className="input-field pl-10"
+              className="input-field pl-11"
             />
             </div>
           </div>
           <div className="w-full sm:w-44">
             <label htmlFor="admin-room-status" className="field-label">สถานะ</label>
-            <select
+            <Dropdown
               id="admin-room-status"
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
-              className="input-field"
-            >
-              <option value="">ทั้งหมด</option>
-              <option value="active">เปิดใช้งาน</option>
-              <option value="inactive">ปิดใช้งาน</option>
-            </select>
+              onChange={(v) => setStatusFilter(v as typeof statusFilter)}
+              options={[
+                { value: "", label: "ทั้งหมด" },
+                { value: "active", label: "เปิดใช้งาน" },
+                { value: "inactive", label: "ปิดใช้งาน" },
+              ]}
+            />
           </div>
           <p className="text-body-small text-ink-muted h-12 flex items-center">พบ <strong className="font-bold text-ink tabular-nums mx-1">{filteredRooms.length}</strong> ห้อง</p>
         </div>
@@ -390,94 +352,102 @@ export default function RoomsManagementPage() {
           <SkeletonCards count={6} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" />
         ) : filteredRooms.length === 0 ? (
           <div className="card empty-state">
-            <span className="icon icon--40 icon--w300 text-ink-subtle" aria-hidden="true">search_off</span>
+            <span className="icon icon--40 text-ink-subtle" aria-hidden="true">search_off</span>
             <p>ไม่พบห้อง</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filteredRooms.map((room) => (
-              <div key={room.id} className="card relative p-0 sm:p-0 flex flex-col">
-                <div className={`relative aspect-video card__media rounded-t-md overflow-hidden ${room.status ? "" : "grayscale opacity-60"}`}>
-                  <img src={roomCover(room)} alt="" loading="lazy" className="w-full h-full object-cover" />
-                  {!room.image && (
-                    <span className="absolute top-3 left-3 px-3 py-2 rounded-full bg-ink/70 text-white text-label-medium">
-                      ภาพตัวอย่าง
-                    </span>
-                  )}
-                </div>
-
-                <div className="p-4 sm:p-6 flex-1 flex flex-col">
-                <div className="flex justify-between items-start gap-2 mb-1">
-                  <h3 className="card__title">{room.name}</h3>
-
-                  <div className="relative">
-                    <button
-                      type="button"
-                      onClick={() => setOpenMenuRoomId(openMenuRoomId === room.id ? null : room.id)}
-                      aria-label="ตัวเลือกเพิ่มเติม"
-                      aria-expanded={openMenuRoomId === room.id}
-                      className="icon-button -mr-2 -mt-2"
-                    >
-                      <span className="icon icon--24" aria-hidden="true">more_vert</span>
-                    </button>
-                    {openMenuRoomId === room.id && (
-                      <div className="absolute right-0 mt-1 w-48 py-1 bg-white border border-line rounded-sm shadow-lg z-10 overflow-hidden">
-                        <button
-                          type="button"
-                          onClick={() => openEdit(room)}
-                          className="w-full flex items-center gap-3 px-4 h-11 text-left text-body-small text-ink hover:bg-canvas"
-                        >
-                          <span className="icon icon--20 icon--w300 text-ink-subtle" aria-hidden="true">edit</span>
-                          แก้ไข
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => toggleStatus(room)}
-                          className="w-full flex items-center gap-3 px-4 h-11 text-left text-body-small text-ink hover:bg-canvas"
-                        >
-                          <span className="icon icon--20 icon--w300 text-ink-subtle" aria-hidden="true">
-                            {room.status ? "toggle_off" : "toggle_on"}
-                          </span>
-                          {room.status ? "ปิดใช้งาน" : "เปิดใช้งาน"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setOpenMenuRoomId(null);
-                            setRoomPendingDelete(room);
-                          }}
-                          className="w-full flex items-center gap-3 px-4 h-11 text-left text-body-small text-error border-t border-line hover:bg-error-container"
-                        >
-                          <span className="icon icon--20 icon--w300" aria-hidden="true">delete</span>
-                          ลบ
-                        </button>
-                      </div>
+          <div ref={paged.listRef} className="scroll-mt-24">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {paged.pageItems.map((room) => (
+                <div key={room.id} className="card relative p-0 sm:p-0 flex flex-col">
+                  <div className={`relative aspect-video card__media rounded-t-md overflow-hidden ${room.status ? "" : "grayscale opacity-60"}`}>
+                    <img src={roomCover(room)} alt="" loading="lazy" className="w-full h-full object-cover" />
+                    {!room.image && (
+                      <span className="absolute top-3 left-3 badge-neutral !bg-ink/70 !text-white">
+                        ภาพจำลอง
+                      </span>
                     )}
                   </div>
+  
+                  <div className="p-4 sm:p-6 flex-1 flex flex-col">
+                  <div className="flex justify-between items-start gap-2 mb-1">
+                    <h3 className="card__title">{room.name}</h3>
+  
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setOpenMenuRoomId(openMenuRoomId === room.id ? null : room.id)}
+                        aria-label="ตัวเลือกเพิ่มเติม"
+                        aria-expanded={openMenuRoomId === room.id}
+                        className="icon-button -mr-2 -mt-2"
+                      >
+                        <span className="icon icon--24" aria-hidden="true">more_vert</span>
+                      </button>
+                      {openMenuRoomId === room.id && (
+                        <div className="absolute right-0 mt-2 min-w-[13rem] py-2 bg-white border border-line rounded-md shadow-[var(--shadow-2)] z-10 overflow-hidden">
+                          <button
+                            type="button"
+                            onClick={() => openEdit(room)}
+                            className="w-full flex items-center gap-3 px-5 min-h-[52px] text-left text-body-medium text-ink hover:bg-surface-variant"
+                          >
+                            <span className="icon icon--20 text-ink-subtle" aria-hidden="true">edit</span>
+                            แก้ไข
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setOpenMenuRoomId(null);
+                              setRoomPendingDelete(room);
+                            }}
+                            className="w-full flex items-center gap-3 px-5 min-h-[52px] mt-2 text-left text-body-medium text-error border-t border-line hover:bg-error-container"
+                          >
+                            <span className="icon icon--20" aria-hidden="true">delete</span>
+                            ลบ
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+  
+                  <p className="icon-lead gap-2 card__body text-ink-subtle mb-4">
+                    <span className="icon icon--20" aria-hidden="true">location_on</span>
+                    {roomLocation(room.description)}
+                  </p>
+  
+                  <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-2 text-body-small text-ink-muted">
+                    <span className="flex items-center gap-2">
+                      <span className="icon icon--20 text-ink-subtle" aria-hidden="true">group</span>
+                      <span className="tabular-nums">{room.capacity}</span> ที่นั่ง
+                    </span>
+                    <span className="flex items-center gap-2">
+                      <span className="icon icon--20 text-ink-subtle" aria-hidden="true">person</span>
+                      {room.roomAdmin.name}
+                    </span>
+                  </div>
+  
+                  {/* Applies immediately, so a switch (design.md › Switch); a failed save keeps the old value. */}
+                  <label className="switch mt-4 pt-4 border-t border-line">
+                    <input
+                      type="checkbox"
+                      role="switch"
+                      checked={room.status}
+                      onChange={() => toggleStatus(room)}
+                    />
+                    เปิดให้จอง
+                  </label>
+                  </div>
                 </div>
-
-                <p className="icon-lead gap-2 card__body text-ink-subtle mb-4">
-                  <span className="icon icon--20 icon--w300" aria-hidden="true">location_on</span>
-                  {roomLocation(room.description)}
-                </p>
-
-                <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-2 text-body-small text-ink-muted">
-                  <span className="flex items-center gap-2">
-                    <span className="icon icon--20 icon--w300 text-ink-subtle" aria-hidden="true">group</span>
-                    <span className="tabular-nums">{room.capacity}</span> ที่นั่ง
-                  </span>
-                  <span className="flex items-center gap-2">
-                    <span className="icon icon--20 icon--w300 text-ink-subtle" aria-hidden="true">person</span>
-                    {room.roomAdmin.name}
-                  </span>
-                  <span className={room.status ? "badge-available" : "badge-neutral"}>
-                    <span className="icon icon--20 icon--w500" aria-hidden="true">{room.status ? "check_circle" : "block"}</span>
-                    {room.status ? "เปิดใช้งาน" : "ปิดใช้งาน"}
-                  </span>
-                </div>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
+            <Pagination
+              page={paged.page}
+              pageCount={paged.pageCount}
+              onChange={paged.setPage}
+              from={paged.from}
+              to={paged.to}
+              total={filteredRooms.length}
+              unit="ห้อง"
+            />
           </div>
         )}
       </div>
@@ -491,26 +461,26 @@ export default function RoomsManagementPage() {
             aria-labelledby="room-form-title"
             // Only the body scrolls, so the scrollbar stays inside the rounded corners
             // and the title and buttons stay in view.
-            className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+            className="bg-white rounded-xl shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 id="room-form-title" className="flex-none flex items-center gap-2 px-6 py-4 border-b border-line text-title-large text-ink">
-              <span className="icon icon--24 icon--w500 text-primary" aria-hidden="true">
+              <span className="icon icon--24 text-primary" aria-hidden="true">
                 {editing === "new" ? "add_business" : "edit_square"}
               </span>
               {editing === "new" ? "สร้างห้องใหม่" : `แก้ไขห้อง "${editing.name}"`}
             </h2>
 
             <form onSubmit={handleSave} className="flex-1 min-h-0 flex flex-col" noValidate>
-              <div className="flex-1 min-h-0 overflow-y-auto px-6 pt-5 pb-2 space-y-2">
+              <div className="flex-1 min-h-0 overflow-y-auto px-6 py-6 space-y-6">
                 {formError && (
                   <div className="alert alert--error mb-4" role="alert">
-                    <span className="icon icon--24 icon--w500 icon--error" aria-hidden="true">error</span>
+                    <span className="icon icon--24 icon--error" aria-hidden="true">error</span>
                     {formError}
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 md:grid-cols-6 gap-x-4">
+                <div className="grid grid-cols-1 md:grid-cols-6 gap-x-4 gap-y-6">
                   <div className="md:col-span-4">
                     <label htmlFor="room-name" className="field-label">ชื่อห้อง *</label>
                     <input
@@ -580,24 +550,19 @@ export default function RoomsManagementPage() {
 
                   <div className="md:col-span-6">
                     <label htmlFor="room-admin" className="field-label">ผู้ดูแลห้อง *</label>
-                    <select
+                    <Dropdown
                       id="room-admin"
                       value={form.roomAdminId}
-                      onChange={(e) => updateField("roomAdminId", e.target.value)}
-                      className={fieldClass("roomAdminId")}
-                      aria-invalid={!!formErrors.roomAdminId}
-                    >
-                      <option value="">เลือกผู้ดูแลห้อง</option>
-                      {users.map((user) => (
-                        <option key={user.id} value={user.id}>
-                          {user.name} ({user.email})
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(v) => updateField("roomAdminId", v)}
+                      options={users.map((user) => ({ value: user.id, label: user.name, hint: user.email }))}
+                      placeholder="เลือกผู้ดูแลห้อง"
+                      searchPlaceholder="ค้นหาชื่อหรืออีเมล"
+                      invalid={!!formErrors.roomAdminId}
+                    />
                     {errorText("roomAdminId")}
                   </div>
 
-                  <fieldset className="md:col-span-6 mb-4">
+                  <fieldset className="md:col-span-6">
                     <legend className="field-label">สิ่งอำนวยความสะดวก</legend>
                     <AmenityCheckboxes
                       selected={form.amenities}
@@ -605,9 +570,8 @@ export default function RoomsManagementPage() {
                     />
                   </fieldset>
 
-                  <div className="md:col-span-6 mb-2">
+                  <div className="md:col-span-6">
                     <PhotoGuide
-                      capacity={Number(form.capacity) || 10}
                       amenities={form.amenities}
                       cover={form.image}
                       onCoverChange={(url) => updateField("image", url)}
@@ -621,7 +585,7 @@ export default function RoomsManagementPage() {
                   </div>
                 </div>
 
-                <label className="flex items-center gap-3 text-body-small text-ink pt-3 cursor-pointer">
+                <label className="checkbox pt-4">
                   <input
                     type="checkbox"
                     checked={form.status}
@@ -636,7 +600,7 @@ export default function RoomsManagementPage() {
                   ยกเลิก
                 </button>
                 <button type="submit" className="btn-primary" disabled={isSaving}>
-                  <span className="icon icon--20 icon--w500" aria-hidden="true">save</span>
+                  <span className="icon icon--20" aria-hidden="true">save</span>
                   {isSaving ? "กำลังบันทึก..." : editing === "new" ? "สร้างห้อง" : "บันทึก"}
                 </button>
               </div>

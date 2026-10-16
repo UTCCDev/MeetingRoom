@@ -36,11 +36,11 @@ function TileCard({ t }: { t: Tile }) {
           className={`icon-tile ${warning ? "bg-surface" : "bg-primary-container text-on-primary-container"}`}
           aria-hidden="true"
         >
-          <span className="icon icon--24 icon--w500">{t.icon}</span>
+          <span className="icon icon--24">{t.icon}</span>
         </span>
         <div className="min-w-0">
           <span className={`block text-label-large ${warning ? "" : "text-primary"}`}>{t.overline}</span>
-          <h3 className={`text-title-medium mt-0.5 ${warning ? "" : "text-ink"}`}>
+          <h3 className={`text-title-medium mt-1 ${warning ? "" : "text-ink"}`}>
             <Phrases text={t.title} />
           </h3>
           <p className={`text-body-medium leading-[1.6] mt-1 ${warning ? "" : "text-ink-muted"}`}>
@@ -51,7 +51,7 @@ function TileCard({ t }: { t: Tile }) {
             <ul className={`mt-3 space-y-2 ${warning ? "" : "text-ink-muted"}`}>
               {t.details.map((d) => (
                 <li key={d.icon} className="icon-lead gap-2 text-body-medium leading-[1.4]">
-                  <span className={`icon icon--20 icon--w500 ${warning ? "" : "text-primary"}`} aria-hidden="true">{d.icon}</span>
+                  <span className={`icon icon--20 ${warning ? "" : "text-primary"}`} aria-hidden="true">{d.icon}</span>
                   <span className="min-w-0">
                     <Phrases text={d.text} by={d.text.includes(" · ") ? "dot" : "space"} />
                   </span>
@@ -67,7 +67,7 @@ function TileCard({ t }: { t: Tile }) {
         }`}
       >
         {t.action}
-        <span className="icon icon--20 icon--w500 transition-transform duration-100 group-hover:translate-x-1" aria-hidden="true">
+        <span className="icon icon--20 transition-transform duration-100 group-hover:translate-x-1" aria-hidden="true">
           arrow_forward
         </span>
       </span>
@@ -189,7 +189,7 @@ export default async function Home() {
     <div className="min-h-screen flex flex-col bg-surface">
       <AppHeader />
 
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 pt-6 pb-10 sm:pt-8 sm:pb-12">
+      <main className="flex-1 w-full max-w-[75rem] mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-10 sm:pt-8 sm:pb-12">
         <div>
           <h1 className="text-title-large md:text-headline-small text-ink">
             สวัสดี, {session.user?.name}
@@ -224,7 +224,7 @@ export default async function Home() {
               </div>
               <div className="flex flex-wrap items-center gap-4">
                 <span className="inline-flex items-center gap-2 h-[52px] px-[34px] rounded-full bg-surface text-primary text-title-small transition-colors group-hover:bg-primary-95">
-                  <span className="icon icon--24 icon--w500" aria-hidden="true">search</span>
+                  <span className="icon icon--24" aria-hidden="true">search</span>
                   ค้นหาห้อง
                 </span>
                 <span className="text-body-small text-primary-90">
@@ -240,7 +240,7 @@ export default async function Home() {
         {isAdmin && (
           <section aria-labelledby="home-admin" className="mt-10">
             <h2 id="home-admin" className="flex items-center gap-2 text-title-medium text-ink mb-4">
-              <span className="icon icon--24 icon--w500 text-primary" aria-hidden="true">admin_panel_settings</span>
+              <span className="icon icon--24 text-primary" aria-hidden="true">admin_panel_settings</span>
               งานผู้ดูแล
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -251,13 +251,6 @@ export default async function Home() {
           </section>
         )}
       </main>
-
-      <footer className="py-8 border-t border-line bg-surface">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
-          <p className="text-label-large text-ink">ระบบจองห้องประชุมรวมศูนย์</p>
-          <p className="text-body-small text-ink-subtle mt-1">© {new Date().getFullYear()} - ทุกสิทธิ์สงวนไว้</p>
-        </div>
-      </footer>
     </div>
   );
 }

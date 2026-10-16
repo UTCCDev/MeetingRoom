@@ -126,9 +126,12 @@ const config: Config = {
           muted: '#3D4160',
           subtle: '#6A6F91',
         },
-        outline: '#C6C9DC',
+        outline: {
+          DEFAULT: '#C6C9DC',
+          strong: '#8B8FA8',
+        },
         line: '#E2E4EE',
-        focus: '#00B1EB',
+        focus: '#00709A',
         disabled: {
           bg: '#E4E5EC',
           fg: '#8B8FA8',

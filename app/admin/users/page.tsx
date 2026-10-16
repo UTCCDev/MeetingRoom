@@ -3,7 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import Pagination from "@/app/components/Pagination";
 import AppHeader from "@/app/components/AppHeader";
+import Dropdown from "@/app/components/Dropdown";
 import { SkeletonCards } from "@/app/components/Skeleton";
 import { useToast } from "@/app/components/Toast";
 import { formatDate } from "@/lib/format";
@@ -28,9 +30,15 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 const ROLE_CLASS: Record<string, string> = {
-  SYSTEM_ADMIN: "bg-primary text-white",
-  ROOM_ADMIN: "bg-primary-container text-on-primary-container",
-  USER: "bg-gray-100 text-ink-muted",
+  SYSTEM_ADMIN: "badge--info",
+  ROOM_ADMIN: "badge-primary",
+  USER: "badge-neutral",
+};
+
+const ROLE_HINTS: Record<string, string> = {
+  USER: "จองห้องได้",
+  ROOM_ADMIN: "อนุมัติการจองห้องที่ดูแล",
+  SYSTEM_ADMIN: "จัดการห้องและผู้ใช้ทั้งหมด",
 };
 
 const ROLE_ICONS: Record<string, string> = {
@@ -185,16 +193,16 @@ export default function UsersPage() {
         breadcrumbs={[{ label: "จัดการผู้ใช้" }]}
         actions={
           <button onClick={openCreate} className="btn-primary">
-            <span className="icon icon--20 icon--w500" aria-hidden="true">person_add</span>
+            <span className="icon icon--20" aria-hidden="true">person_add</span>
             เพิ่มผู้ใช้ใหม่
           </button>
         }
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <div className="max-w-[75rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {error && (
           <div className="alert alert--error mb-4" role="alert">
-            <span className="icon icon--24 icon--w500 icon--error" aria-hidden="true">error</span>
+            <span className="icon icon--24 icon--error" aria-hidden="true">error</span>
             {error}
           </div>
         )}
@@ -204,7 +212,7 @@ export default function UsersPage() {
             <label htmlFor="user-search" className="field-label">ค้นหา</label>
             <div className="relative">
             <span
-              className="icon icon--20 icon--w300 absolute left-3 top-1/2 -translate-y-1/2 text-ink-subtle pointer-events-none"
+              className="icon icon--20 absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-subtle pointer-events-none"
               aria-hidden="true"
             >
               search
@@ -218,26 +226,24 @@ export default function UsersPage() {
                 setPage(1);
               }}
               placeholder="ชื่อหรืออีเมล"
-              className="input-field pl-10"
+              className="input-field pl-11"
             />
             </div>
           </div>
           <div className="w-full sm:w-48">
             <label htmlFor="user-role-filter" className="field-label">บทบาท</label>
-            <select
+            <Dropdown
               id="user-role-filter"
               value={roleFilter}
-              onChange={(e) => {
-                setRoleFilter(e.target.value);
+              onChange={(v) => {
+                setRoleFilter(v);
                 setPage(1);
               }}
-              className="input-field"
-            >
-              <option value="">ทั้งหมด</option>
-              {Object.entries(ROLE_LABELS).map(([v, l]) => (
-                <option key={v} value={v}>{l}</option>
-              ))}
-            </select>
+              options={[
+                { value: "", label: "ทั้งหมด" },
+                ...Object.entries(ROLE_LABELS).map(([v, l]) => ({ value: v, label: l })),
+              ]}
+            />
           </div>
           <p className="text-body-small text-ink-muted h-12 flex items-center">พบ <strong className="font-bold text-ink tabular-nums mx-1">{filtered.length}</strong> คน</p>
         </div>
@@ -246,7 +252,7 @@ export default function UsersPage() {
           <SkeletonCards count={3} />
         ) : filtered.length === 0 ? (
           <div className="card empty-state">
-            <span className="icon icon--40 icon--w300 text-ink-subtle" aria-hidden="true">person_search</span>
+            <span className="icon icon--40 text-ink-subtle" aria-hidden="true">person_search</span>
             <p>ไม่พบผู้ใช้</p>
           </div>
         ) : (
@@ -272,20 +278,20 @@ export default function UsersPage() {
                       </td>
                       <td className="break-all">{user.email}</td>
                       <td>
-                        <span className={`inline-flex items-center gap-1.5 py-2 pl-2.5 pr-3.5 rounded-full text-label-medium whitespace-nowrap ${ROLE_CLASS[user.role]}`}>
-                          <span className="icon icon--20 icon--w500" aria-hidden="true">{ROLE_ICONS[user.role] || "person"}</span>
+                        <span className={ROLE_CLASS[user.role] || "badge-neutral"}>
+                          <span className="icon icon--20" aria-hidden="true">{ROLE_ICONS[user.role] || "person"}</span>
                           {ROLE_LABELS[user.role] || user.role}
                         </span>
                       </td>
                       <td>
                         {user.active ? (
                           <span className="badge-available">
-                            <span className="icon icon--20 icon--w500" aria-hidden="true">check_circle</span>
+                            <span className="icon icon--20" aria-hidden="true">check_circle</span>
                             ใช้งาน
                           </span>
                         ) : (
                           <span className="badge-neutral">
-                            <span className="icon icon--20 icon--w500" aria-hidden="true">block</span>
+                            <span className="icon icon--20" aria-hidden="true">block</span>
                             ปิดบัญชี
                           </span>
                         )}
@@ -298,7 +304,7 @@ export default function UsersPage() {
                           aria-label={`แก้ไข ${user.name}`}
                           title="แก้ไข"
                         >
-                          <span className="icon icon--24 icon--w300" aria-hidden="true">edit</span>
+                          <span className="icon icon--24" aria-hidden="true">edit</span>
                         </button>
                       </td>
                     </tr>
@@ -307,29 +313,18 @@ export default function UsersPage() {
               </table>
             </div>
 
-            {pageCount > 1 && (
-              <nav className="flex items-center justify-center gap-3 mt-5" aria-label="เลือกหน้า">
-                <button
-                  className="btn-secondary btn--s"
-                  onClick={() => setPage(currentPage - 1)}
-                  disabled={currentPage === 1}
-                >
-                  <span className="icon icon--20 icon--w500" aria-hidden="true">chevron_left</span>
-                  ก่อนหน้า
-                </button>
-                <span className="text-label-large text-ink-muted tabular-nums">
-                  หน้า {currentPage} / {pageCount}
-                </span>
-                <button
-                  className="btn-secondary btn--s"
-                  onClick={() => setPage(currentPage + 1)}
-                  disabled={currentPage === pageCount}
-                >
-                  ถัดไป
-                  <span className="icon icon--20 icon--w500" aria-hidden="true">chevron_right</span>
-                </button>
-              </nav>
-            )}
+            <Pagination
+              page={currentPage}
+              pageCount={pageCount}
+              onChange={(p) => {
+                setPage(p);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              from={(currentPage - 1) * PAGE_SIZE + 1}
+              to={Math.min(currentPage * PAGE_SIZE, filtered.length)}
+              total={filtered.length}
+              unit="คน"
+            />
           </>
         )}
       </div>
@@ -340,11 +335,11 @@ export default function UsersPage() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="user-form-title"
-            className="bg-white rounded-lg shadow-xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 id="user-form-title" className="flex items-center gap-2 text-title-large text-ink mb-5">
-              <span className="icon icon--24 icon--w500 text-primary" aria-hidden="true">
+              <span className="icon icon--24 text-primary" aria-hidden="true">
                 {editing === "new" ? "person_add" : "manage_accounts"}
               </span>
               {editing === "new" ? "สร้างผู้ใช้ใหม่" : "แก้ไขผู้ใช้"}
@@ -352,12 +347,12 @@ export default function UsersPage() {
 
             {formError && (
               <div className="alert alert--error mb-4" role="alert">
-                <span className="icon icon--24 icon--w500 icon--error" aria-hidden="true">error</span>
+                <span className="icon icon--24 icon--error" aria-hidden="true">error</span>
                 {formError}
               </div>
             )}
 
-            <form onSubmit={handleSave} className="space-y-3" noValidate>
+            <form onSubmit={handleSave} className="space-y-6" noValidate>
               <div>
                 <label htmlFor="user-name" className="field-label">ชื่อ-สกุล *</label>
                 <input
@@ -369,7 +364,7 @@ export default function UsersPage() {
                   className={fieldClass("name")}
                   aria-invalid={!!formErrors.name}
                 />
-                <p className="field-error min-h-[1.4rem]">{formErrors.name}</p>
+                {formErrors.name && <p className="field-error">{formErrors.name}</p>}
               </div>
 
               <div>
@@ -383,7 +378,7 @@ export default function UsersPage() {
                   className={fieldClass("email")}
                   aria-invalid={!!formErrors.email}
                 />
-                <p className="field-error min-h-[1.4rem]">{formErrors.email}</p>
+                {formErrors.email && <p className="field-error">{formErrors.email}</p>}
               </div>
 
               <div>
@@ -400,31 +395,39 @@ export default function UsersPage() {
                   aria-invalid={!!formErrors.password}
                   placeholder={editing === "new" ? "" : "เว้นว่างไว้หากไม่เปลี่ยน"}
                 />
-                <p className="field-error min-h-[1.4rem]">
-                  {formErrors.password || (
-                    <span className="font-normal text-ink-subtle">อย่างน้อย {PASSWORD_MIN_LENGTH} ตัวอักษร</span>
-                  )}
-                </p>
+                {formErrors.password ? (
+                  <p className="field-error">{formErrors.password}</p>
+                ) : (
+                  <p className="field-hint">อย่างน้อย {PASSWORD_MIN_LENGTH} ตัวอักษร</p>
+                )}
               </div>
 
-              <div>
-                <label htmlFor="user-role" className="field-label">บทบาท</label>
-                <select
-                  id="user-role"
-                  value={form.role}
-                  onChange={(e) => updateField("role", e.target.value)}
-                  className="input-field"
-                  disabled={isSelf}
-                >
+              {/* 3 options → radio cards (design.md › Radio button: 2–5 options). */}
+              <fieldset>
+                <legend className="field-label">บทบาท</legend>
+                <div className="radio-group--cards">
                   {Object.entries(ROLE_LABELS).map(([v, l]) => (
-                    <option key={v} value={v}>{l}</option>
+                    <label key={v} className="radio radio--card">
+                      <input
+                        type="radio"
+                        name="user-role"
+                        value={v}
+                        checked={form.role === v}
+                        onChange={() => updateField("role", v)}
+                        disabled={isSelf}
+                      />
+                      <span className="radio__text">
+                        {l}
+                        <span className="radio__hint">{ROLE_HINTS[v]}</span>
+                      </span>
+                    </label>
                   ))}
-                </select>
+                </div>
                 {isSelf && <p className="field-hint">แก้ไขบทบาทตัวเองไม่ได้</p>}
-              </div>
+              </fieldset>
 
               {editing !== "new" && (
-                <label className="flex items-center gap-3 text-body-small text-ink pt-2 cursor-pointer">
+                <label className="checkbox">
                   <input
                     type="checkbox"
                     checked={form.active}
@@ -440,7 +443,7 @@ export default function UsersPage() {
                   ยกเลิก
                 </button>
                 <button type="submit" className="btn-primary" disabled={isSaving}>
-                  <span className="icon icon--20 icon--w500" aria-hidden="true">save</span>
+                  <span className="icon icon--20" aria-hidden="true">save</span>
                   {isSaving ? "กำลังบันทึก..." : editing === "new" ? "สร้างผู้ใช้" : "บันทึก"}
                 </button>
               </div>

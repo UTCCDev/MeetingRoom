@@ -3,16 +3,16 @@
 import { useRef, useState } from "react";
 import {
   AMENITIES,
+  COVER_MOCKUP,
   PHOTO_SHOTS,
   PHOTO_URL_ERROR,
-  ROOM_PHOTOS,
   SHOT_INFO,
+  SHOT_MOCKUPS,
   isPhotoUrl,
   type PhotoShot,
   type RoomPhoto,
   type RoomPhotos,
 } from "@/lib/room-photos";
-import { layoutTopic } from "./RoomGallery";
 
 export const GENERAL_TIPS = [
   "เปิดไฟทุกดวงและเปิดม่าน",
@@ -79,8 +79,8 @@ function ShotCard({
     <figure className="rounded-sm overflow-hidden ring-1 ring-line bg-canvas flex flex-col">
       <div className="relative aspect-video overflow-hidden bg-surface-variant">
         <img src={own || sample.src} alt="" loading="lazy" className="w-full h-full object-cover" />
-        <span className={`absolute top-1.5 left-1.5 !py-1 !px-2.5 shadow-sm ${own ? "badge--success" : "badge-neutral bg-white/90"}`}>
-          {own ? "รูปจริง" : "ภาพตัวอย่าง"}
+        <span className={`absolute top-2 left-2 shadow-sm ${own ? "badge--success" : "badge-neutral !bg-white/90"}`}>
+          {own ? "รูปจริง" : sample.source ? "ภาพตัวอย่าง" : "ภาพจำลอง"}
         </span>
         {uploading && (
           <span className="absolute inset-0 flex items-center justify-center bg-ink/50 text-white text-label-large">
@@ -88,10 +88,10 @@ function ShotCard({
           </span>
         )}
       </div>
-      <figcaption className="p-2 flex flex-col gap-1.5 flex-1">
+      <figcaption className="p-2 flex flex-col gap-2 flex-1">
         <p className="text-label-large text-ink">{title}</p>
         <p className="text-body-small text-ink-muted flex-1">{tip}</p>
-        {!own && (
+        {!own && sample.source && (
           // CC BY / BY-SA samples must keep their credit.
           <a
             href={sample.source}
@@ -102,6 +102,7 @@ function ShotCard({
             ภาพตัวอย่าง: {sample.creator || "ไม่ระบุ"} · {sample.license}
           </a>
         )}
+        {!own && !sample.source && <p className="text-label-medium text-ink-subtle">ภาพจำลองการถ่ายรูป</p>}
 
         <input
           ref={fileRef}
@@ -119,7 +120,7 @@ function ShotCard({
             disabled={uploading}
             aria-label={`${own ? "เปลี่ยน" : "อัปโหลด"}รูป${title}`}
           >
-            <span className="icon icon--20 icon--w500" aria-hidden="true">upload</span>
+            <span className="icon icon--20" aria-hidden="true">upload</span>
             {own ? "เปลี่ยนรูป" : "อัปโหลดรูป"}
           </button>
           {url && (
@@ -144,7 +145,7 @@ function ShotCard({
             inputMode="url"
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            className="input-field !h-10 !px-3 !text-body-small mt-1.5"
+            className="input-field !h-10 !px-3 !text-body-small mt-2"
             placeholder="https://…"
             aria-invalid={invalid}
           />
@@ -165,14 +166,12 @@ const isAmenity = (shot: PhotoShot) => (AMENITIES as readonly string[]).includes
  * upload button. Inline rather than a separate page so it doesn't lose the unsaved form.
  */
 export default function PhotoGuide({
-  capacity = 10,
   amenities,
   cover = "",
   onCoverChange,
   photos,
   onPhotoChange,
 }: {
-  capacity?: number;
   /** Ticked amenities; their photo slots show. */
   amenities: string[];
   cover?: string;
@@ -188,7 +187,6 @@ export default function PhotoGuide({
   const equipmentShots = PHOTO_SHOTS.filter((s) => isAmenity(s) && shown(s));
   const slots = [cover, ...[...roomShots, ...equipmentShots].map((s) => photos[s] || "")];
   const filled = slots.filter((u) => u.trim() && isPhotoUrl(u)).length;
-  const layout = layoutTopic(capacity);
 
   const card = (shot: PhotoShot) => (
     <ShotCard
@@ -196,7 +194,7 @@ export default function PhotoGuide({
       id={`room-photo-${shot}`}
       value={photos[shot] || ""}
       onChange={(url) => onPhotoChange(shot, url)}
-      sample={ROOM_PHOTOS[SHOT_INFO[shot].topic][0]}
+      sample={SHOT_MOCKUPS[shot]}
       title={SHOT_INFO[shot].title}
       tip={SHOT_INFO[shot].tip}
     />
@@ -211,10 +209,10 @@ export default function PhotoGuide({
         aria-controls="photo-guide"
         className="w-full flex items-center gap-3 px-4 h-12 text-label-large text-primary hover:bg-canvas"
       >
-        <span className="icon icon--20 icon--w500" aria-hidden="true">photo_camera</span>
+        <span className="icon icon--20" aria-hidden="true">photo_camera</span>
         รูปห้องและอุปกรณ์ภายในห้อง
         <span className="text-body-small text-ink-subtle">ใส่แล้ว {filled}/{slots.length}</span>
-        <span className="icon icon--20 icon--w300 ml-auto" aria-hidden="true">
+        <span className="icon icon--20 ml-auto" aria-hidden="true">
           {open ? "expand_less" : "expand_more"}
         </span>
       </button>
@@ -222,13 +220,13 @@ export default function PhotoGuide({
       {open && (
         <div id="photo-guide" className="px-4 pb-4 space-y-3">
           <p className="text-body-small text-ink-muted">
-            ถ่ายตามภาพตัวอย่างของแต่ละช่อง แล้วกด &quot;อัปโหลดรูป&quot; (JPG, PNG หรือ WebP ไม่เกิน 5 MB)
-            ช่องที่ไม่ได้ใส่จะแสดงภาพตัวอย่างแทน
+            ถ่ายตามภาพจำลองของแต่ละช่อง แล้วกด &quot;อัปโหลดรูป&quot; (JPG, PNG หรือ WebP ไม่เกิน 5 MB)
+            ช่องที่ไม่ได้ใส่จะแสดงภาพจำลองแทน
           </p>
           <ul className="flex flex-wrap gap-x-4 gap-y-1 text-body-small text-ink-muted">
             {GENERAL_TIPS.map((t) => (
               <li key={t} className="flex items-center gap-1">
-                <span className="icon icon--20 icon--w400 icon--success" aria-hidden="true">check</span>
+                <span className="icon icon--20 icon--success" aria-hidden="true">check</span>
                 {t}
               </li>
             ))}
@@ -240,7 +238,7 @@ export default function PhotoGuide({
               id="room-photo-cover"
               value={cover}
               onChange={onCoverChange}
-              sample={ROOM_PHOTOS[layout.topic][0]}
+              sample={COVER_MOCKUP}
               title={COVER_SHOT.title}
               tip={COVER_SHOT.tip}
             />
@@ -252,7 +250,7 @@ export default function PhotoGuide({
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">{equipmentShots.map(card)}</div>
           ) : (
             <p className="flex items-center gap-2 p-3 rounded-sm bg-canvas text-body-small text-ink-muted">
-              <span className="icon icon--20 icon--w400" aria-hidden="true">info</span>
+              <span className="icon icon--20" aria-hidden="true">info</span>
               เลือก &quot;สิ่งอำนวยความสะดวก&quot; ที่ห้องมี แล้วช่องรูปของอุปกรณ์แต่ละชิ้นจะขึ้นที่นี่
             </p>
           )}

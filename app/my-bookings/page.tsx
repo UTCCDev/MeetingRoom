@@ -8,6 +8,7 @@ import ConfirmDialog from "@/app/components/ConfirmDialog";
 import { SkeletonCards } from "@/app/components/Skeleton";
 import { useToast } from "@/app/components/Toast";
 import { formatRange, roomLabel, STATUS_BADGE, STATUS_ICONS, STATUS_LABELS } from "@/lib/format";
+import Pagination, { usePagination } from "@/app/components/Pagination";
 
 interface Booking {
   id: string;
@@ -117,6 +118,7 @@ export default function MyBookingsPage() {
       const created = new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime();
       return created || new Date(b.startTime).getTime() - new Date(a.startTime).getTime();
     });
+  const paged = usePagination(visible, 10, `${tab}|${filter}`);
 
   const upcomingCount = bookings.filter(isUpcoming).length;
 
@@ -124,7 +126,7 @@ export default function MyBookingsPage() {
     <div className="min-h-screen bg-canvas">
       <AppHeader title="การจองของฉัน" breadcrumbs={[{ label: "การจองของฉัน" }]} />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <div className="max-w-[75rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex border-b border-line mb-6" role="tablist">
           {[
             { value: "upcoming" as const, icon: "upcoming", label: "กำลังจะมาถึง", count: upcomingCount },
@@ -142,14 +144,12 @@ export default function MyBookingsPage() {
                 tab === t.value ? "border-primary text-primary" : "border-transparent text-ink-subtle hover:text-ink"
               }`}
             >
-              <span className={`icon icon--20 ${tab === t.value ? "icon--w500 icon--fill" : "icon--w300"}`} aria-hidden="true">
+              <span className={`icon icon--20 ${tab === t.value ? "icon--filled" : ""}`} aria-hidden="true">
                 {t.icon}
               </span>
               {t.label}
               <span
-                className={`min-w-[1.75rem] px-2.5 py-2 leading-none rounded-full text-label-medium tabular-nums ${
-                  tab === t.value ? "bg-primary text-white" : "bg-gray-100 text-ink-subtle"
-                }`}
+                className={`tabular-nums ${tab === t.value ? "badge-primary" : "badge-neutral"}`}
               >
                 {t.count}
               </span>
@@ -157,19 +157,16 @@ export default function MyBookingsPage() {
           ))}
         </div>
 
-        <div className="mb-6 flex flex-wrap gap-2">
+        <div className="chip-group mb-6">
           {["ALL", ...tabStatuses].map((value) => (
             <button
               key={value}
+              type="button"
               onClick={() => setFilter(value)}
               aria-pressed={filter === value}
-              className={`inline-flex items-center gap-2 h-10 px-4 rounded-full text-label-medium border transition-colors ${
-                filter === value
-                  ? "bg-primary-container text-on-primary-container border-primary-container"
-                  : "bg-surface text-ink-muted border-outline hover:bg-surface-variant"
-              }`}
+              className="chip"
             >
-              {filter === value && <span className="icon icon--20 icon--w500" aria-hidden="true">check</span>}
+              {filter === value && <span className="icon icon--20" aria-hidden="true">check</span>}
               {value === "ALL" ? "ทั้งหมด" : STATUS_LABELS[value]}
             </button>
           ))}
@@ -177,7 +174,7 @@ export default function MyBookingsPage() {
 
         {error && (
           <div className="alert alert--error mb-6" role="alert">
-            <span className="icon icon--24 icon--w500 icon--error" aria-hidden="true">error</span>
+            <span className="icon icon--24 icon--error" aria-hidden="true">error</span>
             {error}
           </div>
         )}
@@ -186,7 +183,7 @@ export default function MyBookingsPage() {
           <SkeletonCards count={3} />
         ) : visible.length === 0 ? (
           <div className="empty-state">
-            <span className="icon icon--40 icon--w300 text-ink-subtle" aria-hidden="true">event_busy</span>
+            <span className="icon icon--40 text-ink-subtle" aria-hidden="true">event_busy</span>
             <p className="mb-2">
               {bookings.length === 0
                 ? "คุณยังไม่มีการจองใดๆ"
@@ -197,94 +194,103 @@ export default function MyBookingsPage() {
                 : "ยังไม่มีประวัติการจอง"}
             </p>
             <Link href="/rooms" className="btn-primary">
-              <span className="icon icon--20 icon--w500" aria-hidden="true">search</span>
+              <span className="icon icon--20" aria-hidden="true">search</span>
               ค้นหาห้องประชุม
             </Link>
           </div>
         ) : (
-          <div className="space-y-4">
-            {visible.map((booking) => {
-              const cancellable = isUpcoming(booking);
-              const countdown = cancellable
-                ? timeUntil(new Date(booking.startTime), new Date(booking.endTime), now)
-                : null;
-              const muted = !cancellable;
-              return (
-                <div
-                  key={booking.id}
-                  className="card"
-                >
-                  <div className="flex flex-wrap justify-between items-start gap-3 mb-3">
-                    <div className="flex-1 min-w-0">
-                      <h3 className={`card__title mb-2 ${muted ? "text-ink-muted" : "text-ink"}`}>
-                        {booking.title}
-                      </h3>
-                      <p className="flex items-center gap-2 text-label-large text-ink tabular-nums">
-                        <span className="icon icon--20 icon--w300 text-primary" aria-hidden="true">schedule</span>
-                        {formatRange(booking.startTime, booking.endTime)}
-                      </p>
-                      <p className="flex items-center gap-2 card__body mt-1">
-                        <span className="icon icon--20 icon--w300 text-ink-subtle" aria-hidden="true">location_on</span>
-                        {roomLabel(booking.room)}
-                      </p>
-                      <p className="flex items-center gap-2 card__body">
-                        <span className="icon icon--20 icon--w300 text-ink-subtle" aria-hidden="true">group</span>
-                        <span className="tabular-nums">{booking.attendees}</span> คน
-                      </p>
-                    </div>
-                    <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                      <span className={STATUS_CLASS[booking.status] || "badge-neutral"}>
-                        <span className="icon icon--20 icon--w500" aria-hidden="true">
-                          {STATUS_ICONS[booking.status] || "info"}
+          <div ref={paged.listRef} className="scroll-mt-24">
+            <div className="space-y-4">
+              {paged.pageItems.map((booking) => {
+                const cancellable = isUpcoming(booking);
+                const countdown = cancellable
+                  ? timeUntil(new Date(booking.startTime), new Date(booking.endTime), now)
+                  : null;
+                const muted = !cancellable;
+                return (
+                  <div
+                    key={booking.id}
+                    className="card"
+                  >
+                    <div className="flex flex-wrap justify-between items-start gap-3 mb-3">
+                      <div className="flex-1 min-w-0">
+                        <h3 className={`card__title mb-2 ${muted ? "text-ink-muted" : "text-ink"}`}>
+                          {booking.title}
+                        </h3>
+                        <p className="flex items-center gap-2 text-label-large text-ink tabular-nums">
+                          <span className="icon icon--20 text-primary" aria-hidden="true">schedule</span>
+                          {formatRange(booking.startTime, booking.endTime)}
+                        </p>
+                        <p className="flex items-center gap-2 card__body mt-1">
+                          <span className="icon icon--20 text-ink-subtle" aria-hidden="true">location_on</span>
+                          {roomLabel(booking.room)}
+                        </p>
+                        <p className="flex items-center gap-2 card__body">
+                          <span className="icon icon--20 text-ink-subtle" aria-hidden="true">group</span>
+                          <span className="tabular-nums">{booking.attendees}</span> คน
+                        </p>
+                      </div>
+                      <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                        <span className={STATUS_CLASS[booking.status] || "badge-neutral"}>
+                          <span className="icon icon--20" aria-hidden="true">
+                            {STATUS_ICONS[booking.status] || "info"}
+                          </span>
+                          {STATUS_LABELS[booking.status] || booking.status}
                         </span>
-                        {STATUS_LABELS[booking.status] || booking.status}
-                      </span>
-                      {countdown && (
-                        <span
-                          className={`inline-flex items-center gap-1.5 py-2 pl-2.5 pr-3.5 rounded-full text-label-medium ${
-                            countdown.urgent ? "bg-primary text-white" : "bg-primary-container text-on-primary-container"
-                          }`}
-                        >
-                          <span className="icon icon--20 icon--w500" aria-hidden="true">timer</span>
-                          {countdown.label}
-                        </span>
-                      )}
+                        {countdown && (
+                          <span
+                            className={countdown.urgent ? "badge--warning" : "badge-primary"}
+                          >
+                            <span className="icon icon--20" aria-hidden="true">timer</span>
+                            {countdown.label}
+                          </span>
+                        )}
+                      </div>
                     </div>
+  
+                    <div className="my-5 py-4 border-y border-line">
+                      <BookingProgress booking={booking} now={now} />
+                    </div>
+  
+                    {booking.status === "REJECTED" && booking.rejectionReason && (
+                      <div className="alert alert--error font-normal mb-3">
+                        <span className="icon icon--20 icon--error" aria-hidden="true">feedback</span>
+                        <p>
+                          <span className="font-medium">เหตุผลที่ถูกปฏิเสธ: </span>
+                          {booking.rejectionReason}
+                        </p>
+                      </div>
+                    )}
+  
+                    {booking.description && (
+                      <div className="mb-3 px-4 py-3 bg-canvas border border-line rounded-sm text-body-small text-ink-muted">
+                        <span className="text-ink-subtle">หมายเหตุ: </span>
+                        {booking.description}
+                      </div>
+                    )}
+  
+                    {cancellable && (
+                      <button
+                        onClick={() => setPendingCancel(booking)}
+                        className="btn-outline-error btn--s"
+                      >
+                        <span className="icon icon--20" aria-hidden="true">event_busy</span>
+                        ยกเลิกการจอง
+                      </button>
+                    )}
                   </div>
-
-                  <div className="my-5 py-4 border-y border-line">
-                    <BookingProgress booking={booking} now={now} />
-                  </div>
-
-                  {booking.status === "REJECTED" && booking.rejectionReason && (
-                    <div className="alert alert--error font-normal mb-3">
-                      <span className="icon icon--20 icon--w500 icon--error" aria-hidden="true">feedback</span>
-                      <p>
-                        <span className="font-medium">เหตุผลที่ถูกปฏิเสธ: </span>
-                        {booking.rejectionReason}
-                      </p>
-                    </div>
-                  )}
-
-                  {booking.description && (
-                    <div className="mb-3 px-4 py-3 bg-canvas border border-line rounded-sm text-body-small text-ink-muted">
-                      <span className="text-ink-subtle">หมายเหตุ: </span>
-                      {booking.description}
-                    </div>
-                  )}
-
-                  {cancellable && (
-                    <button
-                      onClick={() => setPendingCancel(booking)}
-                      className="btn-outline-error btn--s"
-                    >
-                      <span className="icon icon--20 icon--w500" aria-hidden="true">event_busy</span>
-                      ยกเลิกการจอง
-                    </button>
-                  )}
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+            <Pagination
+              page={paged.page}
+              pageCount={paged.pageCount}
+              onChange={paged.setPage}
+              from={paged.from}
+              to={paged.to}
+              total={visible.length}
+              unit="รายการ"
+            />
           </div>
         )}
       </div>
@@ -306,7 +312,7 @@ export default function MyBookingsPage() {
             {formatRange(pendingCancel.startTime, pendingCancel.endTime)} ใช่หรือไม่?
             {pendingCancel.status === "APPROVED" && (
               <span className="flex items-center gap-2 mt-3 text-ink">
-                <span className="icon icon--20 icon--w500 text-error" aria-hidden="true">warning</span>
+                <span className="icon icon--20 text-error" aria-hidden="true">warning</span>
                 การจองนี้อนุมัติแล้ว หากยกเลิกต้องจองใหม่
               </span>
             )}

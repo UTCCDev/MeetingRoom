@@ -131,7 +131,7 @@ export default function BookingProgress({
               className={`relative z-10 inline-flex items-center justify-center w-8 h-8 rounded-full ${MARKER[step.state]}`}
               aria-hidden="true"
             >
-              <span className={`icon icon--20 ${step.state === "current" ? "icon--w600" : "icon--w500"}`}>
+              <span className="icon icon--20">
                 {step.state === "done" ? "check" : step.icon}
               </span>
             </span>

@@ -65,15 +65,15 @@ export default function AdminDashboardPage() {
     return (
       <div className="min-h-screen bg-canvas">
         <AppHeader title="แดชบอร์ดระบบ" breadcrumbs={[{ label: "แดชบอร์ด" }]} />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        <div className="max-w-[75rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {isLoading ? (
             <SkeletonCards count={3} className="grid grid-cols-1 md:grid-cols-3 gap-5" />
           ) : (
             <div className="card empty-state" role="alert">
-              <span className="icon icon--40 icon--w300 icon--error" aria-hidden="true">error</span>
+              <span className="icon icon--40 icon--error" aria-hidden="true">error</span>
               <p>{error || "ไม่สามารถโหลดสถิติได้"}</p>
               <button type="button" onClick={fetchStats} className="btn-primary">
-                <span className="icon icon--20 icon--w500" aria-hidden="true">refresh</span>
+                <span className="icon icon--20" aria-hidden="true">refresh</span>
                 ลองใหม่
               </button>
             </div>
@@ -97,18 +97,18 @@ export default function AdminDashboardPage() {
     <div className="min-h-screen bg-canvas">
       <AppHeader title="แดชบอร์ดระบบ" breadcrumbs={[{ label: "แดชบอร์ด" }]} />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+      <div className="max-w-[75rem] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* Main Stats */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
           {STAT_TILES.map((t) => (
             <div key={t.label} className={`card flex flex-col gap-3 ${t.card}`} role={t.card ? "status" : undefined}>
               {t.card ? (
                 <span className="inline-flex items-center h-10" aria-hidden="true">
-                  <span className="icon icon--32 icon--w500">{t.icon}</span>
+                  <span className="icon icon--32">{t.icon}</span>
                 </span>
               ) : (
                 <span className="icon-tile bg-primary-container text-on-primary-container" aria-hidden="true">
-                  <span className="icon icon--24 icon--w500">{t.icon}</span>
+                  <span className="icon icon--24">{t.icon}</span>
                 </span>
               )}
               <div>
@@ -123,14 +123,14 @@ export default function AdminDashboardPage() {
           {/* Bookings by Status */}
           <section className="card">
             <h2 className="flex items-center gap-2 text-title-large text-ink mb-5">
-              <span className="icon icon--24 icon--w500 text-primary" aria-hidden="true">donut_small</span>
+              <span className="icon icon--24 text-primary" aria-hidden="true">donut_small</span>
               การจองตามสถานะ
             </h2>
             <ul className="divide-y divide-line">
               {Object.entries(stats.bookingsByStatus).map(([status, count]) => (
                 <li key={status} className="flex justify-between items-center py-3">
                   <span className={STATUS_BADGE[status] || "badge-neutral"}>
-                    <span className="icon icon--20 icon--w500" aria-hidden="true">{STATUS_ICONS[status] || "info"}</span>
+                    <span className="icon icon--20" aria-hidden="true">{STATUS_ICONS[status] || "info"}</span>
                     {STATUS_LABELS[status] || status}
                   </span>
                   <span className="text-title-large text-ink tabular-nums">{count}</span>
@@ -142,7 +142,7 @@ export default function AdminDashboardPage() {
           {/* Room Utilization */}
           <section className="card">
             <h2 className="flex items-center gap-2 text-title-large text-ink mb-1">
-              <span className="icon icon--24 icon--w500 text-primary" aria-hidden="true">bar_chart</span>
+              <span className="icon icon--24 text-primary" aria-hidden="true">bar_chart</span>
               การใช้ห้อง
             </h2>
             <p className="text-body-small text-ink-subtle mb-5">จำนวนการจองที่อนุมัติแล้ว เรียงจากมากไปน้อย</p>
@@ -190,14 +190,14 @@ export default function AdminDashboardPage() {
                 className="icon-tile bg-primary-container text-on-primary-container"
                 aria-hidden="true"
               >
-                <span className="icon icon--24 icon--w500">{a.icon}</span>
+                <span className="icon icon--24">{a.icon}</span>
               </span>
               <div className="flex-1 min-w-0">
                 <h3 className="card__title">{a.title}</h3>
                 <p className="card__body">{a.body}</p>
               </div>
               <span
-                className="icon icon--24 icon--w300 text-ink-subtle transition-transform group-hover:translate-x-1 group-hover:text-primary"
+                className="icon icon--24 text-ink-subtle transition-transform group-hover:translate-x-1 group-hover:text-primary"
                 aria-hidden="true"
               >
                 arrow_forward

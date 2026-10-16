@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import AppHeader from "@/app/components/AppHeader";
+import Dropdown from "@/app/components/Dropdown";
+import DatePicker from "@/app/components/DatePicker";
 import RoomGallery from "@/app/components/RoomGallery";
 import { parseRoomPhotos } from "@/lib/room-photos";
 import { SkeletonCards } from "@/app/components/Skeleton";
@@ -58,12 +60,22 @@ const AMENITY_LABELS: Record<string, string> = {
 const END_SLOTS = [...TIME_SLOTS.slice(1), "22:00"];
 const MAX_DATE = addDays(todayKey(), 365);
 
+/** "2 ชม.", "1 ชม. 30 นาที", "30 นาที" between two "HH:MM" times. */
+function durationLabel(from: string, to: string): string {
+  const mins = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
+  const total = Math.max(0, mins(to) - mins(from));
+  const h = Math.floor(total / 60);
+  const m = total % 60;
+  return [h && `${h} ชม.`, m && `${m} นาที`].filter(Boolean).join(" ") || "0 นาที";
+}
+
 function FieldError({ id, message }: { id: string; message?: string }) {
-  // Space is always reserved so an error doesn't push the submit button around.
+  // Only takes space when there is an error, so fields keep the 24px form rhythm.
+  if (!message) return null;
   return (
-    <p id={id} className="field-error flex items-center gap-1 min-h-[1.4rem] mt-1" role={message ? "alert" : undefined}>
-      {message && <span className="icon icon--20 icon--w500" aria-hidden="true">error</span>}
-      {message || ""}
+    <p id={id} className="field-error flex items-center gap-1" role="alert">
+      <span className="icon icon--20" aria-hidden="true">error</span>
+      {message}
     </p>
   );
 }
@@ -85,6 +97,10 @@ export default function RoomDetailPage() {
   const [date, setDate] = useState(todayKey());
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
+  // Grid range picking: the first click sets `anchor` (start), the next click sets the end.
+  const [anchor, setAnchor] = useState<string | null>(null);
+  const [hoverSlot, setHoverSlot] = useState<string | null>(null);
+  const [rangeNote, setRangeNote] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<Field, string>>>({});
   const router = useRouter();
@@ -150,20 +166,53 @@ export default function RoomDetailPage() {
     return bookings.some((b) => new Date(b.startTime) < end && new Date(b.endTime) > start);
   };
 
-  const slotState = (slot: string): "past" | "booked" | "selected" | "free" => {
+  // A clicked slot stands for the hour starting there, shortened to 30 minutes when the
+  // next half hour is taken (addMinutes also stops at 22:00).
+  const blockEnd = (slot: string) => {
+    const oneHour = addMinutes(slot, 60);
+    return conflicts(slot, oneHour) ? addMinutes(slot, 30) : oneHour;
+  };
+
+  // Two clicks → from the earlier slot's start to the later slot's hour end.
+  const rangeFor = (a: string, b: string) => {
+    const [first, last] = a <= b ? [a, b] : [b, a];
+    return { from: first, to: blockEnd(last) };
+  };
+
+  // Hover preview while waiting for the second click.
+  const preview = anchor && hoverSlot && hoverSlot !== anchor ? rangeFor(anchor, hoverSlot) : null;
+  const previewOk = !!preview && !conflicts(preview.from, preview.to);
+
+  const slotState = (slot: string): "past" | "booked" | "selected" | "preview" | "free" => {
     if (isPast(slot)) return "past";
     if (conflicts(slot, addMinutes(slot, 30))) return "booked";
+    if (previewOk && slot >= preview!.from && slot < preview!.to) return "preview";
     if (startTime && endTime && slot >= startTime && slot < endTime) return "selected";
     return "free";
   };
 
   const pickSlot = (slot: string) => {
-    setStartTime(slot);
-    // One hour by default, shortened if the next half hour is taken.
-    const oneHour = addMinutes(slot, 60);
-    setEndTime(conflicts(slot, oneHour) ? addMinutes(slot, 30) : oneHour);
     clearError("startTime");
     clearError("endTime");
+    setRangeNote("");
+    if (anchor && slot === anchor) {
+      // Clicking the start again keeps that single hour and finishes.
+      setAnchor(null);
+      return;
+    }
+    if (anchor) {
+      const range = rangeFor(anchor, slot);
+      if (!conflicts(range.from, range.to)) {
+        setStartTime(range.from);
+        setEndTime(range.to);
+        setAnchor(null);
+        return;
+      }
+      setRangeNote("ช่วงนี้ทับการจองอื่น จึงเริ่มเลือกใหม่จากช่องที่คลิก");
+    }
+    setStartTime(slot);
+    setEndTime(blockEnd(slot));
+    setAnchor(slot);
   };
 
   const attendeesError = (value: string, required: boolean): string | undefined => {
@@ -178,6 +227,7 @@ export default function RoomDetailPage() {
   // Picking a start time: keep a valid end, default to one hour, and stop
   // before the next booking.
   const chooseStart = (v: string) => {
+    setAnchor(null);
     setStartTime(v);
     clearError("startTime");
     clearError("endTime");
@@ -188,6 +238,7 @@ export default function RoomDetailPage() {
   };
 
   const chooseDate = (d: string) => {
+    setAnchor(null);
     setDate(d);
     clearError("date");
     clearError("startTime");
@@ -267,7 +318,7 @@ export default function RoomDetailPage() {
     return (
       <div className="min-h-screen bg-canvas">
         <AppHeader title="กำลังโหลด…" breadcrumbs={[{ label: "ค้นหาห้อง", href: "/rooms" }]} />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        <div className="max-w-[75rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <SkeletonCards count={2} />
         </div>
       </div>
@@ -280,10 +331,10 @@ export default function RoomDetailPage() {
         <AppHeader title="ไม่พบห้อง" breadcrumbs={[{ label: "ค้นหาห้อง", href: "/rooms" }]} />
         <div className="p-8 text-center">
           <div className="empty-state">
-            <span className="icon icon--40 icon--w300 text-ink-subtle" aria-hidden="true">search_off</span>
+            <span className="icon icon--40 text-ink-subtle" aria-hidden="true">search_off</span>
             <p>{error || "ไม่พบห้องนี้"}</p>
             <Link href="/rooms" className="btn-secondary">
-              <span className="icon icon--20 icon--w500" aria-hidden="true">arrow_back</span>
+              <span className="icon icon--20" aria-hidden="true">arrow_back</span>
               กลับไปค้นหาห้อง
             </Link>
           </div>
@@ -303,7 +354,7 @@ export default function RoomDetailPage() {
         breadcrumbs={[{ label: "ค้นหาห้อง", href: "/rooms" }, { label: room.name }]}
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <div className="max-w-[75rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Room Details */}
           <div className="lg:col-span-2 space-y-6">
@@ -312,47 +363,71 @@ export default function RoomDetailPage() {
                 room={{ id: room.id, name: room.name, capacity: room.capacity, amenities: amenitiesList, image: room.image, photos: parseRoomPhotos(room.photos) }}
               />
               <div className="p-4 sm:p-6">
-                {location && (
-                  <p className="icon-lead gap-2 text-body-medium text-ink mb-5">
-                    <span className="icon icon--24 icon--w300 text-primary" aria-hidden="true">location_on</span>
-                    {location}
-                  </p>
-                )}
-
-                <dl className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {/* Room facts as aligned rows: icon + label column, value column (min-h keeps first lines level). */}
+                <dl className="rounded-md bg-canvas ring-1 ring-line divide-y divide-line">
                   {[
-                    { icon: "group", label: "จำนวนที่นั่ง", value: `${room.capacity} คน` },
-                    { icon: "person", label: "ผู้ดูแลห้อง", value: room.roomAdmin.name },
-                    { icon: "mail", label: "อีเมล", value: room.roomAdmin.email },
-                  ].map((item) => (
-                    <div key={item.label} className="flex items-center gap-3">
-                      <span
-                        className="icon-tile bg-primary-container text-on-primary-container"
-                        aria-hidden="true"
+                    location && {
+                      icon: "location_on",
+                      label: "สถานที่",
+                      value: <span className="text-ink">{location}</span>,
+                    },
+                    {
+                      icon: "group",
+                      label: "จำนวนที่นั่ง",
+                      value: (
+                        <span className="text-ink">
+                          <strong className="font-medium tabular-nums">{room.capacity}</strong> คน
+                        </span>
+                      ),
+                    },
+                    {
+                      icon: "person",
+                      label: "ผู้ดูแลห้อง",
+                      value: (
+                        <span className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                          <span className="text-ink">{room.roomAdmin.name}</span>
+                          {room.roomAdmin.email && (
+                            <a
+                              href={`mailto:${room.roomAdmin.email}`}
+                              className="inline-flex items-center gap-1 text-primary hover:underline break-all"
+                            >
+                              <span className="icon icon--20" aria-hidden="true">mail</span>
+                              {room.roomAdmin.email}
+                            </a>
+                          )}
+                        </span>
+                      ),
+                    },
+                    amenitiesList.length > 0 && {
+                      icon: "devices",
+                      label: "อุปกรณ์ในห้อง",
+                      value: (
+                        <span className="flex flex-wrap gap-2">
+                          {amenitiesList.map((amenity: string) => (
+                            <span key={amenity} className="badge-primary">
+                              <span className="icon icon--20" aria-hidden="true">check</span>
+                              {AMENITY_LABELS[amenity] || amenity}
+                            </span>
+                          ))}
+                        </span>
+                      ),
+                    },
+                  ]
+                    .filter((row): row is { icon: string; label: string; value: React.ReactElement } => !!row)
+                    .map((row) => (
+                      <div
+                        key={row.label}
+                        className="grid grid-cols-[7.5rem_minmax(0,1fr)] sm:grid-cols-[9.5rem_minmax(0,1fr)] items-start gap-3 px-4 py-3"
                       >
-                        <span className="icon icon--20 icon--w500">{item.icon}</span>
-                      </span>
-                      <div className="min-w-0">
-                        <dt className="text-body-small text-ink-subtle">{item.label}</dt>
-                        <dd className="text-label-large text-ink break-all tabular-nums">{item.value}</dd>
+                        <dt className="flex items-center gap-2 min-h-7 text-body-medium text-ink-subtle">
+                          <span className="icon icon--20 text-primary self-center" aria-hidden="true">{row.icon}</span>
+                          {row.label}
+                        </dt>
+                        <dd className="flex items-center min-h-7 text-body-medium">{row.value}</dd>
                       </div>
-                    </div>
-                  ))}
+                    ))}
                 </dl>
 
-                {amenitiesList.length > 0 && (
-                  <div className="mt-6 pt-5 border-t border-line">
-                    <h3 className="text-title-small text-ink mb-3">สิ่งอำนวยความสะดวก</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {amenitiesList.map((amenity: string) => (
-                        <span key={amenity} className="badge-primary">
-                          <span className="icon icon--20 icon--w500" aria-hidden="true">check</span>
-                          {AMENITY_LABELS[amenity] || amenity}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
 
@@ -360,7 +435,7 @@ export default function RoomDetailPage() {
             <div className="card">
               <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                 <h2 className="flex items-center gap-2 text-title-large text-ink">
-                  <span className="icon icon--24 icon--w500 text-primary" aria-hidden="true">calendar_month</span>
+                  <span className="icon icon--24 text-primary" aria-hidden="true">calendar_month</span>
                   ตารางห้องรายวัน
                 </h2>
                 <div className="flex items-center gap-1">
@@ -385,14 +460,17 @@ export default function RoomDetailPage() {
                 </div>
               </div>
 
-              <p className="text-body-small text-ink-subtle mb-3">คลิกช่องว่างเพื่อเลือกเวลาในฟอร์มจอง</p>
-              <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-1.5">
+              <p className="text-body-small text-ink-subtle mb-3">
+                คลิกช่องแรกเป็นเวลาเริ่ม แล้วคลิกอีกช่องเป็นเวลาสิ้นสุด (แต่ละช่องนับ 1 ชั่วโมงจากเวลานั้น)
+              </p>
+              <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2" onMouseLeave={() => setHoverSlot(null)}>
                 {TIME_SLOTS.map((slot) => {
                   const state = slotState(slot);
                   const cls = {
                     past: "bg-disabled-bg text-disabled-fg border-transparent cursor-not-allowed",
                     booked: "bg-error-container text-on-error-container border-error-90 line-through cursor-not-allowed",
                     selected: "bg-primary text-white border-primary",
+                    preview: "bg-primary-container text-on-primary-container border-primary",
                     free: "bg-white text-ink border-outline hover:border-primary hover:bg-primary-container hover:text-primary",
                   }[state];
                   return (
@@ -401,7 +479,11 @@ export default function RoomDetailPage() {
                       type="button"
                       disabled={state === "past" || state === "booked"}
                       onClick={() => pickSlot(slot)}
-                      className={`rounded-xs border h-11 text-label-medium tabular-nums transition-colors ${cls}`}
+                      onMouseEnter={() => setHoverSlot(slot)}
+                      onFocus={() => setHoverSlot(slot)}
+                      className={`rounded-full border h-11 text-label-medium tabular-nums transition-colors ${cls} ${
+                        slot === anchor ? "ring-2 ring-offset-2 ring-primary" : ""
+                      }`}
                       aria-label={`${slot} ${state === "booked" ? "ไม่ว่าง" : state === "past" ? "เลยเวลาแล้ว" : "ว่าง"}`}
                       aria-pressed={state === "selected"}
                     >
@@ -410,11 +492,32 @@ export default function RoomDetailPage() {
                   );
                 })}
               </div>
+              {/* What's picked, its length, and what the next click does. */}
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mt-4 min-h-11 px-4 py-2 rounded-sm bg-canvas border border-line" aria-live="polite">
+                {startTime && endTime ? (
+                  <>
+                    <span className="icon icon--20 text-primary" aria-hidden="true">schedule</span>
+                    <span className="text-label-large text-ink tabular-nums">
+                      {(previewOk ? preview!.from : startTime)}–{(previewOk ? preview!.to : endTime)}
+                    </span>
+                    <span className="badge-primary tabular-nums">
+                      {durationLabel(previewOk ? preview!.from : startTime, previewOk ? preview!.to : endTime)}
+                    </span>
+                    <span className="text-body-small text-ink-subtle">
+                      {anchor ? "คลิกช่องเวลาสิ้นสุด หรือส่งคำขอได้เลย" : "คลิกช่องใหม่เพื่อเลือกช่วงเวลาใหม่"}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-body-small text-ink-subtle">ยังไม่ได้เลือกเวลา</span>
+                )}
+                {rangeNote && <span className="w-full text-body-small text-on-highlight-container">{rangeNote}</span>}
+              </div>
+
               <div className="flex flex-wrap gap-4 mt-3 text-body-small text-ink-subtle">
-                <span className="flex items-center gap-2"><span className="w-4 h-4 rounded-xs bg-white border border-outline" /> ว่าง</span>
-                <span className="flex items-center gap-2"><span className="w-4 h-4 rounded-xs bg-error-container border border-error-90" /> ไม่ว่าง</span>
-                <span className="flex items-center gap-2"><span className="w-4 h-4 rounded-xs bg-primary" /> ที่เลือก</span>
-                <span className="flex items-center gap-2"><span className="w-4 h-4 rounded-xs bg-disabled-bg" /> เลยเวลาแล้ว</span>
+                <span className="flex items-center gap-2"><span className="w-4 h-4 rounded-full bg-white border border-outline" /> ว่าง</span>
+                <span className="flex items-center gap-2"><span className="w-4 h-4 rounded-full bg-error-container border border-error-90" /> ไม่ว่าง</span>
+                <span className="flex items-center gap-2"><span className="w-4 h-4 rounded-full bg-primary" /> ที่เลือก</span>
+                <span className="flex items-center gap-2"><span className="w-4 h-4 rounded-full bg-disabled-bg" /> เลยเวลาแล้ว</span>
               </div>
 
               {dayBookings.length > 0 && (
@@ -424,7 +527,7 @@ export default function RoomDetailPage() {
                       key={booking.id}
                       className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 rounded-sm border border-line bg-canvas text-body-small"
                     >
-                      <span className="icon icon--20 icon--w300 text-ink-subtle" aria-hidden="true">schedule</span>
+                      <span className="icon icon--20 text-ink-subtle" aria-hidden="true">schedule</span>
                       <span className="text-label-large text-ink tabular-nums">{formatRange(booking.startTime, booking.endTime)}</span>
                       <span className="text-ink-muted flex-1 min-w-0 truncate">{booking.title}</span>
                       <span className={booking.status === "APPROVED" ? "badge-available" : "badge-pending"}>
@@ -438,27 +541,27 @@ export default function RoomDetailPage() {
           </div>
 
           {/* Booking Form */}
-          <div className="card card--elevated h-fit lg:sticky lg:top-8">
+          <div className="card card--elevated h-fit lg:sticky lg:top-24">
             <h2 className="flex items-center gap-2 text-title-large text-ink mb-5">
-              <span className="icon icon--24 icon--w500 text-primary" aria-hidden="true">edit_calendar</span>
+              <span className="icon icon--24 text-primary" aria-hidden="true">edit_calendar</span>
               จองห้องนี้
             </h2>
 
             {!room.status && (
               <div className="alert alert--info mb-4">
-                <span className="icon icon--24 icon--w500 text-primary" aria-hidden="true">block</span>
+                <span className="icon icon--24 text-primary" aria-hidden="true">block</span>
                 ห้องนี้ปิดใช้งานอยู่ ไม่สามารถจองได้
               </div>
             )}
 
             {error && (
               <div className="alert alert--error mb-4" role="alert">
-                <span className="icon icon--24 icon--w500 icon--error" aria-hidden="true">error</span>
+                <span className="icon icon--24 icon--error" aria-hidden="true">error</span>
                 {error}
               </div>
             )}
 
-            <form onSubmit={handleBooking} className="space-y-3" noValidate>
+            <form onSubmit={handleBooking} className="space-y-6" noValidate>
               <div>
                 <label htmlFor="booking-title" className="field-label">
                   ชื่อเรื่องการประชุม *
@@ -525,15 +628,13 @@ export default function RoomDetailPage() {
                 <label htmlFor="booking-date" className="field-label">
                   วันที่ *
                 </label>
-                <input
+                <DatePicker
                   id="booking-date"
-                  type="date"
+                  value={date}
+                  onChange={chooseDate}
                   min={todayKey()}
                   max={MAX_DATE}
-                  value={date}
-                  onChange={(e) => chooseDate(e.target.value)}
-                  className={inputClass(!!fieldErrors.date)}
-                  aria-invalid={!!fieldErrors.date}
+                  invalid={!!fieldErrors.date}
                   aria-describedby="booking-date-error"
                 />
                 <FieldError id="booking-date-error" message={fieldErrors.date} />
@@ -544,62 +645,68 @@ export default function RoomDetailPage() {
                   <label htmlFor="booking-start" className="field-label">
                     เริ่ม *
                   </label>
-                  <select
+                  <Dropdown
                     id="booking-start"
                     value={startTime}
-                    onChange={(e) => chooseStart(e.target.value)}
-                    className={inputClass(!!fieldErrors.startTime)}
-                    aria-invalid={!!fieldErrors.startTime}
+                    onChange={chooseStart}
+                    options={[
+                      { value: "", label: "--:--" },
+                      ...TIME_SLOTS.map((t) => {
+                        const state = slotState(t);
+                        return {
+                          value: t,
+                          label: `${t}${state === "booked" ? " (ไม่ว่าง)" : state === "past" ? " (ผ่านแล้ว)" : ""}`,
+                          disabled: state === "past" || state === "booked",
+                        };
+                      }),
+                    ]}
+                    searchable={false}
+                    className="tabular-nums"
+                    invalid={!!fieldErrors.startTime}
                     aria-describedby="booking-time-error"
-                  >
-                    <option value="">--:--</option>
-                    {TIME_SLOTS.map((t) => {
-                      const state = slotState(t);
-                      const unavailable = state === "past" || state === "booked";
-                      return (
-                        <option key={t} value={t} disabled={unavailable}>
-                          {t}{state === "booked" ? " (ไม่ว่าง)" : state === "past" ? " (ผ่านแล้ว)" : ""}
-                        </option>
-                      );
-                    })}
-                  </select>
+                  />
                 </div>
                 <div>
                   <label htmlFor="booking-end" className="field-label">
                     สิ้นสุด *
                   </label>
-                  <select
+                  <Dropdown
                     id="booking-end"
                     value={endTime}
-                    onChange={(e) => {
-                      setEndTime(e.target.value);
+                    onChange={(v) => {
+                      setAnchor(null);
+                      setEndTime(v);
                       clearError("endTime");
                     }}
-                    className={inputClass(!!fieldErrors.endTime)}
-                    aria-invalid={!!fieldErrors.endTime}
+                    options={[
+                      { value: "", label: "--:--" },
+                      ...END_SLOTS.filter((t) => !startTime || t > startTime).map((t) => {
+                        // Can't run into the next booking.
+                        const blocked = !!startTime && conflicts(startTime, t);
+                        return { value: t, label: `${t}${blocked ? " (ชนการจอง)" : ""}`, disabled: blocked };
+                      }),
+                    ]}
+                    searchable={false}
+                    className="tabular-nums"
+                    invalid={!!fieldErrors.endTime}
                     aria-describedby="booking-time-error"
-                  >
-                    <option value="">--:--</option>
-                    {END_SLOTS.filter((t) => !startTime || t > startTime).map((t) => {
-                      // Can't run into the next booking.
-                      const blocked = !!startTime && conflicts(startTime, t);
-                      return (
-                        <option key={t} value={t} disabled={blocked}>
-                          {t}{blocked ? " (ชนการจอง)" : ""}
-                        </option>
-                      );
-                    })}
-                  </select>
+                  />
                 </div>
               </div>
               <FieldError id="booking-time-error" message={fieldErrors.startTime || fieldErrors.endTime} />
+              {startTime && endTime > startTime && (
+                <p className="field-hint -mt-4 flex items-center gap-2">
+                  <span className="icon icon--20" aria-hidden="true">timelapse</span>
+                  ระยะเวลา {durationLabel(startTime, endTime)}
+                </p>
+              )}
 
               <button
                 type="submit"
                 disabled={isSubmitting || !room.status}
                 className="w-full btn-primary h-[52px] px-[34px] text-title-small"
               >
-                <span className="icon icon--24 icon--w500" aria-hidden="true">send</span>
+                <span className="icon icon--24" aria-hidden="true">send</span>
                 {isSubmitting ? "กำลังจอง..." : "ส่งคำขอจอง"}
               </button>
               <p className="text-body-small text-ink-subtle text-center">

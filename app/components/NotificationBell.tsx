@@ -152,7 +152,7 @@ export default function NotificationBell({ userId, isApprover }: { userId: strin
         aria-expanded={open}
         aria-controls="notification-panel"
       >
-        <span className={`icon icon--24 ${open ? "icon--fill icon--w500" : ""}`} aria-hidden="true">
+        <span className={`icon icon--24 ${open ? "icon--filled" : ""}`} aria-hidden="true">
           notifications
         </span>
         {unread > 0 && (
@@ -181,11 +181,11 @@ export default function NotificationBell({ userId, isApprover }: { userId: strin
               <section aria-label="รอคุณอนุมัติ">
                 <h3 className="flex items-center gap-2 px-5 pt-4 pb-2 text-label-large text-ink-muted">
                   รอคุณอนุมัติ
-                  <span className="badge-pending px-2.5 tabular-nums">{approvals.length}</span>
+                  <span className="badge-pending tabular-nums">{approvals.length}</span>
                 </h3>
                 {approvals.length === 0 ? (
                   <p className="flex items-center gap-2 px-5 pb-4 text-body-medium text-ink-subtle">
-                    <span className="icon icon--24 icon--w300" aria-hidden="true">task_alt</span>
+                    <span className="icon icon--24" aria-hidden="true">task_alt</span>
                     ไม่มีคำขอค้าง
                   </p>
                 ) : (
@@ -196,21 +196,21 @@ export default function NotificationBell({ userId, isApprover }: { userId: strin
                         <li key={n.id} className={`px-5 py-4 border-b border-line ${isNew(n) ? "bg-primary-99" : ""}`}>
                           <div className="flex gap-3">
                             <span className={`icon-tile ${LOOK.approval.tone}`} aria-hidden="true">
-                              <span className="icon icon--24 icon--w500">{LOOK.approval.icon}</span>
+                              <span className="icon icon--24">{LOOK.approval.icon}</span>
                             </span>
                             <div className="min-w-0 flex-1">
                               <p className="text-body-medium text-ink-muted">{headline(n)}</p>
-                              <p className="text-title-small text-ink mt-0.5">{n.title}</p>
+                              <p className="text-title-small text-ink mt-1">{n.title}</p>
                               <p className="flex items-center gap-2 mt-1 text-body-small text-ink-muted tabular-nums">
-                                <span className="icon icon--20 icon--w300 text-ink-subtle" aria-hidden="true">schedule</span>
+                                <span className="icon icon--20 text-ink-subtle" aria-hidden="true">schedule</span>
                                 {formatRange(n.startTime, n.endTime)}
                               </p>
                               <p className="flex items-center gap-2 text-body-small text-ink-muted">
-                                <span className="icon icon--20 icon--w300 text-ink-subtle" aria-hidden="true">group</span>
+                                <span className="icon icon--20 text-ink-subtle" aria-hidden="true">group</span>
                                 <span className="tabular-nums">{n.attendees}</span> คน / ความจุ {n.capacity}
                                 {over && (
                                   <span className="badge--error">
-                                    <span className="icon icon--20 icon--w500" aria-hidden="true">warning</span>
+                                    <span className="icon icon--20" aria-hidden="true">warning</span>
                                     เกินความจุ
                                   </span>
                                 )}
@@ -255,7 +255,7 @@ export default function NotificationBell({ userId, isApprover }: { userId: strin
                               ) : (
                                 <div className="flex flex-wrap gap-3 mt-3">
                                   <button type="button" className="btn-primary" disabled={busy === n.id} onClick={() => decide(n, "APPROVED")}>
-                                    <span className="icon icon--20 icon--w500" aria-hidden="true">check</span>
+                                    <span className="icon icon--20" aria-hidden="true">check</span>
                                     {busy === n.id ? "กำลังอนุมัติ…" : "อนุมัติ"}
                                   </button>
                                   <button
@@ -268,7 +268,7 @@ export default function NotificationBell({ userId, isApprover }: { userId: strin
                                       setReasonError("");
                                     }}
                                   >
-                                    <span className="icon icon--20 icon--w500" aria-hidden="true">close</span>
+                                    <span className="icon icon--20" aria-hidden="true">close</span>
                                     ปฏิเสธ
                                   </button>
                                 </div>
@@ -287,7 +287,7 @@ export default function NotificationBell({ userId, isApprover }: { userId: strin
               <h3 className="px-5 pt-4 pb-2 text-label-large text-ink-muted">อัปเดตล่าสุด</h3>
               {updates.length === 0 ? (
                 <p className="flex items-center gap-2 px-5 pb-5 text-body-medium text-ink-subtle">
-                  <span className="icon icon--24 icon--w300" aria-hidden="true">notifications_off</span>
+                  <span className="icon icon--24" aria-hidden="true">notifications_off</span>
                   ยังไม่มีการแจ้งเตือน
                 </p>
               ) : (
@@ -300,11 +300,11 @@ export default function NotificationBell({ userId, isApprover }: { userId: strin
                         className={`flex gap-3 px-5 py-4 border-b border-line hover:bg-surface-variant ${isNew(n) ? "bg-primary-99" : ""}`}
                       >
                         <span className={`icon-tile ${LOOK[n.type].tone}`} aria-hidden="true">
-                          <span className="icon icon--24 icon--w500">{LOOK[n.type].icon}</span>
+                          <span className="icon icon--24">{LOOK[n.type].icon}</span>
                         </span>
                         <span className="min-w-0 flex-1">
                           <span className="block text-body-medium text-ink-muted">{headline(n)}</span>
-                          <span className="block mt-0.5 text-body-small text-ink-subtle tabular-nums">
+                          <span className="block mt-1 text-body-small text-ink-subtle tabular-nums">
                             {n.roomName}
                             {roomLocation(n.roomDescription) && ` · ${roomLocation(n.roomDescription)}`} · {formatRange(n.startTime, n.endTime)}
                           </span>
@@ -329,7 +329,7 @@ export default function NotificationBell({ userId, isApprover }: { userId: strin
             {isApprover && (
               <Link href="/admin/pending-approvals" onClick={() => setOpen(false)} className="btn-text">
                 ดูคำขอทั้งหมด
-                <span className="icon icon--20 icon--w500" aria-hidden="true">arrow_forward</span>
+                <span className="icon icon--20" aria-hidden="true">arrow_forward</span>
               </Link>
             )}
           </div>

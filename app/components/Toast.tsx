@@ -54,7 +54,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastContext.Provider value={show}>
       {children}
       <div
-        className="fixed bottom-4 right-4 left-4 sm:left-auto z-[60] flex flex-col gap-2 sm:w-96"
+        className="fixed bottom-4 inset-x-4 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-[60] flex flex-col gap-2 sm:w-[35rem]"
         role="status"
         aria-live="polite"
       >
@@ -63,7 +63,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             key={t.id}
             className={`${STYLES[t.type || "info"]} text-white rounded-sm shadow-lg pl-4 pr-1 py-1 min-h-[3.5rem] flex items-center gap-3`}
           >
-            <span className="icon icon--24 icon--w500 icon--fill" aria-hidden="true">
+            <span className="icon icon--24 icon--filled" aria-hidden="true">
               {ICONS[t.type || "info"]}
             </span>
             <span className="flex-1 text-body-small py-2">{t.message}</span>

@@ -96,6 +96,42 @@ export const SHOT_INFO: Record<PhotoShot, { title: string; tip: string; topic: P
   entrance: { title: "หน้าห้อง", tip: "ถ่ายป้ายชื่อหรือเลขห้อง ช่วยให้ผู้จองหาห้องเจอ", topic: "entrance" },
 };
 
+/**
+ * Generated mock-ups showing how to shoot each slot, for the room guide and the room form's photo
+ * slots (room cards keep the samples above). No source on purpose: the UI then labels them
+ * "ภาพจำลองการถ่ายรูป" instead of a credit.
+ */
+const mockup = (src: string, title: string): RoomPhoto => ({ src, title, creator: "", license: "", source: "" });
+export const COVER_MOCKUP = mockup("/room-photos/cover-guide.jpg", "ภาพจำลองห้องประชุมโต๊ะยาว");
+export const SHOT_MOCKUPS: Record<PhotoShot, RoomPhoto> = {
+  seating: mockup("/room-photos/seating-guide.jpg", "ภาพจำลองที่นั่งระดับสายตา"),
+  projector: mockup("/room-photos/projector-guide.jpg", "ภาพจำลองโปรเจกเตอร์และจอภาพ"),
+  whiteboard: mockup("/room-photos/whiteboard-guide.jpg", "ภาพจำลองกระดานไวท์บอร์ด"),
+  videoconference: mockup("/room-photos/videoconference-guide.jpg", "ภาพจำลองกล้อง ลำโพง และจอวิดีโอคอนเฟอเรนซ์"),
+  printer: mockup("/room-photos/printer-guide.jpg", "ภาพจำลองเครื่องพิมพ์ในห้องประชุม"),
+  tv: mockup("/room-photos/tv-guide.jpg", "ภาพจำลองจอโทรทัศน์เทียบกับโต๊ะ"),
+  microphone: mockup("/room-photos/microphone-guide.jpg", "ภาพจำลองไมโครโฟนบนโต๊ะประชุม"),
+  entrance: mockup("/room-photos/entrance-guide.jpg", "ภาพจำลองหน้าห้องและป้ายชื่อห้อง"),
+};
+
+/**
+ * Generated mock-ups for the room cards (search and room management) of rooms without their own
+ * photo, by layout; see layoutTopic. Not for the room's photo gallery, which keeps the credited
+ * samples above.
+ */
+export const CARD_MOCKUPS: Partial<Record<PhotoTopic, RoomPhoto[]>> = {
+  round: [
+    mockup("/room-photos/card-small.jpg", "ภาพจำลองห้องประชุมย่อย"),
+    mockup("/room-photos/card-round.jpg", "ภาพจำลองห้องประชุมโต๊ะกลม"),
+  ],
+  board: [mockup("/room-photos/card-board.jpg", "ภาพจำลองห้องประชุมโต๊ะยาว")],
+  ushape: [mockup("/room-photos/card-ushape.jpg", "ภาพจำลองห้องประชุมรูปตัวยู")],
+  theater: [
+    mockup("/room-photos/card-theater-1.jpg", "ภาพจำลองห้องสัมมนา"),
+    mockup("/room-photos/card-theater-2.jpg", "ภาพจำลองห้องสัมมนา"),
+  ],
+};
+
 // Photos saved before each amenity had its own slot.
 const LEGACY_SHOTS: Record<string, PhotoShot> = { presentation: "projector", video: "videoconference" };
 

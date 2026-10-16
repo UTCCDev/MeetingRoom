@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import AppHeader from "@/app/components/AppHeader";
 import PhotoGuide from "@/app/components/PhotoGuide";
+import AmenityCheckboxes from "@/app/components/AmenityCheckboxes";
 import { PHOTO_SHOTS, PHOTO_URL_ERROR, amenityKeys, isPhotoUrl, parseRoomPhotos, type RoomPhotos } from "@/lib/room-photos";
 import { SkeletonCards } from "@/app/components/Skeleton";
 import { useToast } from "@/app/components/Toast";
@@ -119,10 +120,10 @@ export default function MyRoomsPage() {
     <div className="min-h-screen bg-canvas">
       <AppHeader title="ห้องที่ฉันดูแล" breadcrumbs={[{ label: "ห้องของฉัน" }]} />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <div className="max-w-[75rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {error && (
           <div className="alert alert--error mb-4" role="alert">
-            <span className="icon icon--24 icon--w500 icon--error" aria-hidden="true">error</span>
+            <span className="icon icon--24 icon--error" aria-hidden="true">error</span>
             {error}
           </div>
         )}
@@ -131,7 +132,7 @@ export default function MyRoomsPage() {
           <SkeletonCards count={2} />
         ) : rooms.length === 0 ? (
           <div className="card empty-state">
-            <span className="icon icon--40 icon--w300 text-ink-subtle" aria-hidden="true">meeting_room</span>
+            <span className="icon icon--40 text-ink-subtle" aria-hidden="true">meeting_room</span>
             <p>
               ยังไม่มีห้องที่คุณดูแล
             </p>
@@ -142,9 +143,9 @@ export default function MyRoomsPage() {
               <div key={room.id} className={`card ${editingRoomId === room.id ? "lg:col-span-2 card--elevated" : "p-0 sm:p-0 overflow-hidden flex flex-col"}`}>
                 {editingRoomId === room.id ? (
                   // Edit Mode
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     <h2 className="flex items-center gap-2 text-title-large text-ink mb-4">
-                      <span className="icon icon--24 icon--w500 text-primary" aria-hidden="true">edit_square</span>
+                      <span className="icon icon--24 text-primary" aria-hidden="true">edit_square</span>
                       แก้ไขห้อง
                     </h2>
 
@@ -199,31 +200,15 @@ export default function MyRoomsPage() {
                       />
                     </div>
 
-                    <div>
-                      <label className="field-label">
-                        สิ่งอำนวยความสะดวก (คั่นด้วยเครื่องหมายจุลภาค)
-                      </label>
-                      <input
-                        type="text"
-                        value={
-                          typeof editData.amenities === "string"
-                            ? editData.amenities
-                            : Array.isArray(editData.amenities)
-                            ? (editData.amenities as string[]).join(", ")
-                            : ""
-                        }
-                        onChange={(e) =>
-                          setEditData({
-                            ...editData,
-                            amenities: e.target.value,
-                          })
-                        }
-                        className="input-field"
+                    <fieldset>
+                      <legend className="field-label">สิ่งอำนวยความสะดวก</legend>
+                      <AmenityCheckboxes
+                        selected={amenityKeys(editData.amenities)}
+                        onChange={(next) => setEditData((d) => ({ ...d, amenities: next }))}
                       />
-                    </div>
+                    </fieldset>
 
                     <PhotoGuide
-                      capacity={Number(editData.capacity) || 10}
                       amenities={amenityKeys(editData.amenities)}
                       cover={editData.image || ""}
                       onCoverChange={(url) => setEditData((d) => ({ ...d, image: url }))}
@@ -242,7 +227,7 @@ export default function MyRoomsPage() {
                         onClick={handleSaveRoom}
                         className="btn-primary"
                       >
-                        <span className="icon icon--20 icon--w500" aria-hidden="true">save</span>
+                        <span className="icon icon--20" aria-hidden="true">save</span>
                         บันทึกการเปลี่ยนแปลง
                       </button>
                     </div>
@@ -255,12 +240,12 @@ export default function MyRoomsPage() {
                         <img src={room.image} alt="" className="w-full h-full object-cover" />
                       ) : (
                         <span className="absolute inset-0 flex items-center justify-center text-primary/40" aria-hidden="true">
-                          <span className="icon icon--40 icon--w300">meeting_room</span>
+                          <span className="icon icon--40">meeting_room</span>
                         </span>
                       )}
                       {room.status === false && (
                         <span className="badge-neutral absolute top-3 left-3 bg-white shadow-sm">
-                          <span className="icon icon--20 icon--w500" aria-hidden="true">block</span>
+                          <span className="icon icon--20" aria-hidden="true">block</span>
                           ปิดใช้งาน
                         </span>
                       )}
@@ -270,12 +255,12 @@ export default function MyRoomsPage() {
                       {room.name}
                     </h3>
                     <p className="icon-lead gap-2 card__body text-ink-subtle mb-4">
-                      <span className="icon icon--20 icon--w300" aria-hidden="true">location_on</span>
+                      <span className="icon icon--20" aria-hidden="true">location_on</span>
                       {roomLocation(room.description)}
                     </p>
 
                     <p className="flex items-center gap-2 text-body-small text-ink-muted mb-4">
-                      <span className="icon icon--20 icon--w300 text-ink-subtle" aria-hidden="true">group</span>
+                      <span className="icon icon--20 text-ink-subtle" aria-hidden="true">group</span>
                       <span className="font-medium text-ink tabular-nums">{room.capacity}</span> ที่นั่ง
                     </p>
 
@@ -312,7 +297,7 @@ export default function MyRoomsPage() {
                         onClick={() => handleEditRoom(room)}
                         className="btn-tonal btn--s"
                       >
-                        <span className="icon icon--20 icon--w500" aria-hidden="true">edit</span>
+                        <span className="icon icon--20" aria-hidden="true">edit</span>
                         แก้ไขห้อง
                       </button>
                     </div>

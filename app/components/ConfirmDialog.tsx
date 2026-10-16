@@ -58,14 +58,14 @@ export default function ConfirmDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="confirm-dialog-title"
-        className="bg-white rounded-lg shadow-xl max-w-md w-full p-6"
+        className="bg-white rounded-xl shadow-xl max-w-md w-full p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <span
           className={`icon-tile mb-4 ${TONE_ICON[tone].className}`}
           aria-hidden="true"
         >
-          <span className="icon icon--24 icon--w500">{TONE_ICON[tone].name}</span>
+          <span className="icon icon--24">{TONE_ICON[tone].name}</span>
         </span>
         <h3 id="confirm-dialog-title" className="text-title-large text-ink mb-2">
           {title}
