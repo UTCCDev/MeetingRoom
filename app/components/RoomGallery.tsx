@@ -1,7 +1,24 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AMENITIES, CARD_MOCKUPS, PHOTO_SHOTS, ROOM_PHOTOS, SHOT_INFO, SHOT_MOCKUPS, type PhotoTopic, type RoomPhoto, type RoomPhotos } from "@/lib/room-photos";
+import {
+  AMENITIES,
+  CARD_MOCKUPS,
+  PHOTO_SHOTS,
+  ROOM_PHOTOS,
+  SHOT_INFO,
+  SHOT_MOCKUPS,
+  layoutTopic,
+  pick,
+  roomCover,
+  type PhotoTopic,
+  type RoomPhoto,
+  type RoomPhotos,
+} from "@/lib/room-photos";
+
+// Re-exported so existing imports from this file keep working; the implementation
+// lives in lib/room-photos.ts since it's also needed from server components (e.g. the landing page).
+export { layoutTopic, roomCover };
 
 interface GalleryRoom {
   id: string;
@@ -19,14 +36,6 @@ interface Slide {
   credit?: RoomPhoto;
 }
 
-/** Room size → which "whole room" photos fit. */
-export function layoutTopic(capacity: number): { topic: PhotoTopic; label: string } {
-  if (capacity <= 8) return { topic: "round", label: "ห้องประชุมย่อย" };
-  if (capacity <= 20) return { topic: "board", label: "ห้องประชุมโต๊ะยาว" };
-  if (capacity <= 40) return { topic: "ushape", label: "ห้องประชุมรูปตัวยู" };
-  return { topic: "theater", label: "ห้องสัมมนา" };
-}
-
 // Stable per-room pick so neighbouring rooms don't all show the same photos.
 function hash(s: string): number {
   let h = 0;
@@ -34,15 +43,6 @@ function hash(s: string): number {
   return h;
 }
 
-function pick(topic: PhotoTopic, seed: number, pools: Partial<Record<PhotoTopic, RoomPhoto[]>> = ROOM_PHOTOS): RoomPhoto {
-  const pool = pools[topic] ?? ROOM_PHOTOS[topic];
-  return pool[seed % pool.length];
-}
-
-/** The room card's photo: its own image, else a mock-up matching its size. */
-export function roomCover(room: { id: string; capacity: number; image?: string | null }): string {
-  return room.image || pick(layoutTopic(room.capacity).topic, hash(room.id), CARD_MOCKUPS).src;
-}
 
 /**
  * One slide per topic: the room's own photo where it has one, else a mock-up (the whole-room

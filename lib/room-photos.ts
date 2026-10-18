@@ -156,3 +156,29 @@ export function amenityKeys(value: unknown): string[] {
   const list = Array.isArray(value) ? value : typeof value === "string" ? value.split(",") : [];
   return list.map((a) => String(a).trim()).filter(Boolean);
 }
+
+/** Room size → which "whole room" photos fit. */
+export function layoutTopic(capacity: number): { topic: PhotoTopic; label: string } {
+  if (capacity <= 8) return { topic: "round", label: "ห้องประชุมย่อย" };
+  if (capacity <= 20) return { topic: "board", label: "ห้องประชุมโต๊ะยาว" };
+  if (capacity <= 40) return { topic: "ushape", label: "ห้องประชุมรูปตัวยู" };
+  return { topic: "theater", label: "ห้องสัมมนา" };
+}
+
+// Stable per-room pick so neighbouring rooms don't all show the same photos.
+function hash(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return h;
+}
+
+export function pick(topic: PhotoTopic, seed: number, pools: Partial<Record<PhotoTopic, RoomPhoto[]>> = ROOM_PHOTOS): RoomPhoto {
+  const pool = pools[topic] ?? ROOM_PHOTOS[topic];
+  return pool[seed % pool.length];
+}
+
+/** The room card's photo: its own image, else a mock-up matching its size. Safe to call from server components. */
+export function roomCover(room: { id: string; capacity: number; image?: string | null }): string {
+  return room.image || pick(layoutTopic(room.capacity).topic, hash(room.id), CARD_MOCKUPS).src;
+}
+

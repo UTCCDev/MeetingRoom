@@ -13,7 +13,7 @@ import AmenityCheckboxes from "@/app/components/AmenityCheckboxes";
 import { PHOTO_SHOTS, PHOTO_URL_ERROR, isPhotoUrl, parseRoomPhotos, type RoomPhotos } from "@/lib/room-photos";
 import { SkeletonCards } from "@/app/components/Skeleton";
 import { useToast } from "@/app/components/Toast";
-import { roomLocation } from "@/lib/format";
+import { formatPricePerHour, roomLocation } from "@/lib/format";
 import Pagination, { usePagination } from "@/app/components/Pagination";
 
 interface Room {
@@ -21,6 +21,7 @@ interface Room {
   name: string;
   description?: string;
   capacity: number;
+  pricePerHour: number;
   image?: string;
   amenities?: string[];
   photos?: unknown;
@@ -46,6 +47,7 @@ type RoomForm = {
   building: string;
   floor: string;
   capacity: string;
+  pricePerHour: string;
   image: string;
   amenities: string[];
   photos: RoomPhotos;
@@ -59,6 +61,7 @@ const EMPTY_FORM: RoomForm = {
   building: "",
   floor: "",
   capacity: "10",
+  pricePerHour: "500",
   image: "",
   amenities: [],
   photos: {},
@@ -173,6 +176,7 @@ export default function RoomsManagementPage() {
       name: room.name,
       ...parseDescription(room.description),
       capacity: String(room.capacity),
+      pricePerHour: String(room.pricePerHour),
       image: room.image || "",
       amenities: Array.isArray(room.amenities) ? room.amenities : [],
       photos: parseRoomPhotos(room.photos),
@@ -195,8 +199,10 @@ export default function RoomsManagementPage() {
 
     const errors: Partial<Record<keyof RoomForm, string>> = {};
     const capacity = Number(form.capacity);
+    const pricePerHour = Number(form.pricePerHour);
     if (!form.name.trim()) errors.name = "กรุณากรอกชื่อห้อง";
     if (!Number.isInteger(capacity) || capacity < 1) errors.capacity = "จำนวนที่นั่งต้องเป็นจำนวนเต็มตั้งแต่ 1";
+    if (!Number.isInteger(pricePerHour) || pricePerHour < 0) errors.pricePerHour = "ราคาค่าเช่าต้องเป็นจำนวนเต็มตั้งแต่ 0";
     if (!form.roomAdminId) errors.roomAdminId = "กรุณาเลือกผู้ดูแลห้อง";
     if (!isPhotoUrl(form.image)) {
       errors.image = PHOTO_URL_ERROR;
@@ -217,6 +223,7 @@ export default function RoomsManagementPage() {
           name: form.name.trim(),
           description: composeDescription(form),
           capacity,
+          pricePerHour,
           image: form.image.trim(),
           amenities: form.amenities,
           photos: form.photos,
@@ -423,6 +430,10 @@ export default function RoomsManagementPage() {
                       <span className="icon icon--20 text-ink-subtle" aria-hidden="true">person</span>
                       {room.roomAdmin.name}
                     </span>
+                    <span className="flex items-center gap-2">
+                      <span className="icon icon--20 text-ink-subtle" aria-hidden="true">payments</span>
+                      {formatPricePerHour(room.pricePerHour)}
+                    </span>
                   </div>
   
                   {/* Applies immediately, so a switch (design.md › Switch); a failed save keeps the old value. */}
@@ -507,6 +518,21 @@ export default function RoomsManagementPage() {
                       aria-invalid={!!formErrors.capacity}
                     />
                     {errorText("capacity")}
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label htmlFor="room-price" className="field-label">ราคาค่าเช่า (บาท/ชม.) *</label>
+                    <input
+                      id="room-price"
+                      type="number"
+                      min="0"
+                      inputMode="numeric"
+                      value={form.pricePerHour}
+                      onChange={(e) => updateField("pricePerHour", e.target.value)}
+                      className={fieldClass("pricePerHour")}
+                      aria-invalid={!!formErrors.pricePerHour}
+                    />
+                    {errorText("pricePerHour")}
                   </div>
 
                   <div className="md:col-span-2">

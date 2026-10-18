@@ -1,11 +1,11 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import AppHeader from "@/app/components/AppHeader";
 import Phrases from "@/app/components/Phrases";
 import { prisma } from "@/lib/prisma";
-import { formatRange, roomLabel } from "@/lib/format";
+import { roomCover } from "@/lib/room-photos";
+import { formatPricePerHour, formatRange, roomLabel, roomLocation } from "@/lib/format";
 
 type Tone = "default" | "warning";
 
@@ -79,7 +79,7 @@ export default async function Home() {
   const session = await getServerSession(authOptions);
 
   if (!session?.user) {
-    redirect("/auth/login");
+    return <PublicLanding />;
   }
 
   const me = (session.user as any).id as string;
@@ -250,6 +250,132 @@ export default async function Home() {
             </div>
           </section>
         )}
+      </main>
+    </div>
+  );
+}
+
+// Guests see available rooms and their schedules without signing in; booking
+// itself still requires an account (enforced on /rooms/[id] and /api/bookings).
+async function PublicLanding() {
+  const [roomCount, rooms] = await Promise.all([
+    prisma.room.count({ where: { status: true } }),
+    prisma.room.findMany({
+      where: { status: true },
+      select: { id: true, name: true, description: true, capacity: true, pricePerHour: true, image: true },
+      orderBy: { name: "asc" },
+      take: 6,
+    }),
+  ]);
+
+  return (
+    <div className="min-h-screen flex flex-col bg-surface">
+      <AppHeader />
+
+      <main className="flex-1 w-full">
+        {/* Hero */}
+        <section className="bg-primary text-on-primary">
+          <div className="max-w-[75rem] mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20 grid gap-8 lg:grid-cols-2 items-center">
+            <div>
+              <span className="block text-label-large text-highlight mb-2">ระบบจองห้องประชุม UTCC</span>
+              <h1 className="text-headline-small md:text-headline-medium text-on-primary">
+                <Phrases text="ดูห้องประชุมและเวลาว่างได้ทันที ไม่ต้องเข้าสู่ระบบ" />
+              </h1>
+              <p className="text-body-large leading-[1.6] text-primary-90 mt-4">
+                <Phrases text="เลือกห้อง ดูวันเวลาที่ว่าง แล้วเข้าสู่ระบบเมื่อพร้อมจองจริง" />
+              </p>
+              <div className="flex flex-wrap items-center gap-4 mt-8">
+                <Link
+                  href="/rooms"
+                  className="inline-flex items-center gap-2 h-[52px] px-[34px] rounded-full bg-surface text-primary text-title-small hover:bg-primary-95 transition-colors"
+                >
+                  <span className="icon icon--24" aria-hidden="true">search</span>
+                  ดูห้องทั้งหมด
+                </Link>
+                <Link
+                  href="/auth/login"
+                  className="inline-flex items-center gap-2 h-[52px] px-[34px] rounded-full border border-white/40 text-on-primary text-title-small hover:bg-white/10 transition-colors"
+                >
+                  <span className="icon icon--24" aria-hidden="true">login</span>
+                  เข้าสู่ระบบเพื่อจอง
+                </Link>
+              </div>
+            </div>
+            <img
+              src="/room-photos/board-1.jpg"
+              alt=""
+              className="hidden lg:block rounded-md shadow-xl w-full h-80 object-cover"
+            />
+          </div>
+        </section>
+
+        {/* Room preview */}
+        <section className="max-w-[75rem] mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="flex flex-wrap items-end justify-between gap-4 mb-6">
+            <div>
+              <h2 className="text-title-large text-ink">ห้องประชุมที่เปิดให้จอง</h2>
+              <p className="text-body-medium text-ink-subtle">
+                เปิดให้จองทั้งหมด <strong className="font-bold text-ink tabular-nums">{roomCount}</strong> ห้อง
+              </p>
+            </div>
+            <Link href="/rooms" className="btn-text">
+              ดูทั้งหมด
+              <span className="icon icon--20" aria-hidden="true">arrow_forward</span>
+            </Link>
+          </div>
+
+          {rooms.length === 0 ? (
+            <div className="empty-state">
+              <span className="icon icon--40 text-ink-subtle" aria-hidden="true">meeting_room</span>
+              <p>ยังไม่มีห้องประชุมในระบบ</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {rooms.map((room) => (
+                <Link
+                  key={room.id}
+                  href={`/rooms/${room.id}`}
+                  className="card card--interactive group p-0 sm:p-0 overflow-hidden flex flex-col"
+                >
+                  <div className="relative aspect-video card__media overflow-hidden">
+                    <img
+                      src={roomCover(room)}
+                      alt=""
+                      loading="lazy"
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 motion-reduce:transition-none"
+                    />
+                    {!room.image && (
+                      <span className="absolute top-3 right-3 badge-neutral !bg-ink/70 !text-white">ภาพจำลอง</span>
+                    )}
+                  </div>
+                  <div className="p-4 sm:p-6 flex-1 flex flex-col">
+                    <h3 className="card__title mb-1 line-clamp-2 group-hover:text-primary">{room.name}</h3>
+                    <p className="card__body icon-lead gap-2 mb-4 text-ink-subtle">
+                      <span className="icon icon--20" aria-hidden="true">location_on</span>
+                      <span className="line-clamp-2">{roomLocation(room.description)}</span>
+                    </p>
+                    <dl className="flex flex-wrap gap-x-5 gap-y-2 mt-auto text-body-small text-ink-muted">
+                      <div className="flex items-center gap-2">
+                        <span className="icon icon--20 text-ink-subtle" aria-hidden="true">group</span>
+                        <span className="font-medium text-ink tabular-nums">{room.capacity}</span> ที่นั่ง
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="icon icon--20 text-ink-subtle" aria-hidden="true">payments</span>
+                        {formatPricePerHour(room.pricePerHour)}
+                      </div>
+                    </dl>
+                  </div>
+                  <span className="card__footer px-4 sm:px-6 h-12 flex items-center justify-between text-label-large text-primary">
+                    ดูวันเวลาว่าง
+                    <span className="icon icon--20 transition-transform duration-100 group-hover:translate-x-1" aria-hidden="true">
+                      arrow_forward
+                    </span>
+                  </span>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
       </main>
     </div>
   );

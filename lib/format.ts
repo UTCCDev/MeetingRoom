@@ -112,6 +112,13 @@ export function roomLocation(description?: string | null): string {
     .join(" · ");
 }
 
+const thaiBaht = new Intl.NumberFormat("th-TH", { maximumFractionDigits: 0 });
+
+/** "500 บาท/ชม." */
+export function formatPricePerHour(pricePerHour: number): string {
+  return `${thaiBaht.format(pricePerHour)} บาท/ชม.`;
+}
+
 export const STATUS_LABELS: Record<string, string> = {
   PENDING: "รอการตัดสินใจ",
   APPROVED: "อนุมัติแล้ว",

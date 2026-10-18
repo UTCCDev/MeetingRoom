@@ -9,13 +9,14 @@ import AmenityCheckboxes from "@/app/components/AmenityCheckboxes";
 import { PHOTO_SHOTS, PHOTO_URL_ERROR, amenityKeys, isPhotoUrl, parseRoomPhotos, type RoomPhotos } from "@/lib/room-photos";
 import { SkeletonCards } from "@/app/components/Skeleton";
 import { useToast } from "@/app/components/Toast";
-import { roomLocation } from "@/lib/format";
+import { formatPricePerHour, roomLocation } from "@/lib/format";
 
 interface Room {
   id: string;
   name: string;
   description?: string;
   capacity: number;
+  pricePerHour: number;
   image?: string;
   amenities?: string | string[];
   photos?: unknown;
@@ -97,6 +98,7 @@ export default function MyRoomsPage() {
           name: editData.name,
           description: editData.description,
           capacity: editData.capacity,
+          pricePerHour: editData.pricePerHour,
           image: editData.image,
           amenities: amenitiesArray,
           photos: editPhotos,
@@ -176,6 +178,24 @@ export default function MyRoomsPage() {
                             setEditData({
                               ...editData,
                               capacity: parseInt(e.target.value),
+                            })
+                          }
+                          className="input-field"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="field-label">
+                          ราคาค่าเช่า (บาท/ชม.)
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={editData.pricePerHour ?? ""}
+                          onChange={(e) =>
+                            setEditData({
+                              ...editData,
+                              pricePerHour: parseInt(e.target.value),
                             })
                           }
                           className="input-field"
@@ -262,6 +282,11 @@ export default function MyRoomsPage() {
                     <p className="flex items-center gap-2 text-body-small text-ink-muted mb-4">
                       <span className="icon icon--20 text-ink-subtle" aria-hidden="true">group</span>
                       <span className="font-medium text-ink tabular-nums">{room.capacity}</span> ที่นั่ง
+                    </p>
+
+                    <p className="flex items-center gap-2 text-body-small text-ink-muted mb-4">
+                      <span className="icon icon--20 text-ink-subtle" aria-hidden="true">payments</span>
+                      {formatPricePerHour(room.pricePerHour)}
                     </p>
 
                     {room.amenities && (

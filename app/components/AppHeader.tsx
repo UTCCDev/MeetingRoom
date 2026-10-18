@@ -14,10 +14,10 @@ const ROLE_LABELS: Record<string, string> = {
   SYSTEM_ADMIN: "ผู้ดูแลระบบ",
 };
 
-const NAV: { href: string; label: string; icon: string; roles?: string[] }[] = [
+const NAV: { href: string; label: string; icon: string; roles?: string[]; authOnly?: boolean }[] = [
   { href: "/", label: "หน้าแรก", icon: "home" },
   { href: "/rooms", label: "ค้นหาห้อง", icon: "meeting_room" },
-  { href: "/my-bookings", label: "การจองของฉัน", icon: "event_note" },
+  { href: "/my-bookings", label: "การจองของฉัน", icon: "event_note", authOnly: true },
   { href: "/admin/pending-approvals", label: "อนุมัติการจอง", icon: "fact_check", roles: ["ROOM_ADMIN", "SYSTEM_ADMIN"] },
   { href: "/admin/my-rooms", label: "ห้องของฉัน", icon: "edit_square", roles: ["ROOM_ADMIN"] },
   { href: "/admin/dashboard", label: "แดชบอร์ด", icon: "monitoring", roles: ["SYSTEM_ADMIN"] },
@@ -80,7 +80,7 @@ export default function AppHeader({
   const [menuOpen, setMenuOpen] = useState(false);
   const user = session?.user as any;
   const role = user?.role as string | undefined;
-  const items = NAV.filter((n) => !n.roles || (role && n.roles.includes(role)));
+  const items = NAV.filter((n) => (!n.roles || (role && n.roles.includes(role))) && (!n.authOnly || !!user));
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname === href || pathname?.startsWith(href + "/");
@@ -236,7 +236,7 @@ export default function AppHeader({
               PDF
             </span>
           </button>
-          {user && (
+          {user ? (
             <div className="mt-2 rounded-md bg-white/10 p-2.5 shadow-md">
               <div className="flex items-center gap-3 px-1 pb-2 border-b border-white/10">
                 <span
@@ -260,6 +260,15 @@ export default function AppHeader({
                 {isSigningOut ? "กำลังออก…" : "ออกจากระบบ"}
               </button>
             </div>
+          ) : (
+            <Link
+              href={`/auth/login?callbackUrl=${encodeURIComponent(pathname || "/")}`}
+              onClick={() => setMenuOpen(false)}
+              className="mt-2 w-full btn-primary justify-center"
+            >
+              <span className="icon icon--20" aria-hidden="true">login</span>
+              เข้าสู่ระบบ
+            </Link>
           )}
         </div>
       </>
@@ -353,7 +362,17 @@ export default function AppHeader({
           )}
           {/* One bell at a time: the top bar's below 1280px, the sidebar's from 1280px. */}
           {user?.id && (!SIDEBAR || !isXl) && <NotificationBell userId={user.id} isApprover={isApprover} />}
-          {SIDEBAR ? <div className="xl:hidden"><LogoutButton /></div> : <LogoutButton />}
+          {user ? (
+            SIDEBAR ? <div className="xl:hidden"><LogoutButton /></div> : <LogoutButton />
+          ) : (
+            <Link
+              href={`/auth/login?callbackUrl=${encodeURIComponent(pathname || "/")}`}
+              className={`btn-secondary btn--s max-sm:w-10 max-sm:px-0 ${SIDEBAR ? "xl:hidden" : ""}`}
+            >
+              <span className="icon icon--20" aria-hidden="true">login</span>
+              <span className="hidden sm:inline">เข้าสู่ระบบ</span>
+            </Link>
+          )}
           {!SIDEBAR && (
           <button
             type="button"

@@ -8,13 +8,14 @@ import Dropdown from "@/app/components/Dropdown";
 import DatePicker from "@/app/components/DatePicker";
 import { roomCover } from "@/app/components/RoomGallery";
 import { SkeletonCards } from "@/app/components/Skeleton";
-import { addMinutes, bangkokISO, roomLocation, TIME_SLOTS, todayKey } from "@/lib/format";
+import { addMinutes, bangkokISO, formatPricePerHour, formatTime, roomLocation, TIME_SLOTS, toDateKey, todayKey } from "@/lib/format";
 
 interface Room {
   id: string;
   name: string;
   description: string;
   capacity: number;
+  pricePerHour: number;
   image?: string;
   amenities?: string;
   roomAdmin: {
@@ -25,6 +26,14 @@ interface Room {
 }
 
 const END_SLOTS = [...TIME_SLOTS.slice(1), "22:00"];
+
+/** "09:00–10:00, 14:00–15:00" booked ranges for a room on the given day, earliest first. */
+function dayBookingRanges(bookings: Room["bookings"], day: string): string[] {
+  return bookings
+    .filter((b) => toDateKey(b.startTime) === day)
+    .sort((a, b) => a.startTime.localeCompare(b.startTime))
+    .map((b) => `${formatTime(b.startTime)}–${formatTime(b.endTime)}`);
+}
 
 export default function RoomsPage() {
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -259,7 +268,9 @@ export default function RoomsPage() {
         ) : (
           <div ref={paged.listRef} className="scroll-mt-24">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {paged.pageItems.map((room) => (
+              {paged.pageItems.map((room) => {
+                const busyRanges = dayBookingRanges(room.bookings, date || todayKey());
+                return (
                 <Link
                   key={room.id}
                   href={bookingHref(room.id)}
@@ -287,9 +298,22 @@ export default function RoomsPage() {
   
                   <div className="p-4 sm:p-6 flex-1 flex flex-col">
                     <h2 className="card__title mb-1 line-clamp-2 group-hover:text-primary">{room.name}</h2>
-                    <p className="card__body icon-lead gap-2 mb-4 text-ink-subtle">
+                    <p className="card__body icon-lead gap-2 mb-2 text-ink-subtle">
                       <span className="icon icon--20" aria-hidden="true">location_on</span>
                       <span className="line-clamp-2">{roomLocation(room.description)}</span>
+                    </p>
+
+                    {/* What's already booked that day, so users can see at a glance when the room is actually free. */}
+                    <p className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-4 text-body-small">
+                      <span className="icon icon--20 text-ink-subtle" aria-hidden="true">schedule</span>
+                      {busyRanges.length === 0 ? (
+                        <span className="badge-available">ว่างทั้งวัน</span>
+                      ) : (
+                        <>
+                          <span className="text-ink-subtle">มีจอง:</span>
+                          <span className="font-medium text-ink tabular-nums">{busyRanges.join(", ")}</span>
+                        </>
+                      )}
                     </p>
   
                     <dl className="flex flex-wrap gap-x-5 gap-y-2 mb-5 text-body-small text-ink-muted">
@@ -309,6 +333,13 @@ export default function RoomsPage() {
                         </dt>
                         <dd>{room.roomAdmin.name}</dd>
                       </div>
+                      <div className="flex items-center gap-2">
+                        <dt className="flex">
+                          <span className="icon icon--20 text-ink-subtle" aria-hidden="true">payments</span>
+                          <span className="sr-only">ราคาค่าเช่า</span>
+                        </dt>
+                        <dd className="font-medium text-ink">{formatPricePerHour(room.pricePerHour)}</dd>
+                      </div>
                     </dl>
   
                   </div>
@@ -322,7 +353,8 @@ export default function RoomsPage() {
                     </span>
                   </span>
                 </Link>
-              ))}
+                );
+              })}
             </div>
             <Pagination
               page={paged.page}

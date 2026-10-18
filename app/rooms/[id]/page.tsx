@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import AppHeader from "@/app/components/AppHeader";
 import Dropdown from "@/app/components/Dropdown";
 import DatePicker from "@/app/components/DatePicker";
@@ -16,6 +17,7 @@ import {
   amenityList,
   bangkokISO,
   formatDate,
+  formatPricePerHour,
   formatRange,
   roomLocation,
   TIME_SLOTS,
@@ -28,6 +30,7 @@ interface Room {
   name: string;
   description: string;
   capacity: number;
+  pricePerHour: number;
   image?: string;
   amenities?: string;
   photos?: unknown;
@@ -40,7 +43,7 @@ interface Room {
 
 interface Booking {
   id: string;
-  title: string;
+  title?: string | null;
   startTime: string;
   endTime: string;
   status: string;
@@ -87,6 +90,7 @@ function inputClass(invalid: boolean) {
 export default function RoomDetailPage() {
   const params = useParams();
   const roomId = params?.id as string;
+  const { data: session } = useSession();
   const [room, setRoom] = useState<Room | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -381,6 +385,11 @@ export default function RoomDetailPage() {
                       ),
                     },
                     {
+                      icon: "payments",
+                      label: "ราคาค่าเช่า",
+                      value: <span className="text-ink">{formatPricePerHour(room.pricePerHour)}</span>,
+                    },
+                    {
                       icon: "person",
                       label: "ผู้ดูแลห้อง",
                       value: (
@@ -468,10 +477,19 @@ export default function RoomDetailPage() {
                   const state = slotState(slot);
                   const cls = {
                     past: "bg-disabled-bg text-disabled-fg border-transparent cursor-not-allowed",
-                    booked: "bg-error-container text-on-error-container border-error-90 line-through cursor-not-allowed",
+                    booked: "bg-error-container text-on-error-container border-error-90 cursor-not-allowed",
                     selected: "bg-primary text-white border-primary",
                     preview: "bg-primary-container text-on-primary-container border-primary",
                     free: "bg-white text-ink border-outline hover:border-primary hover:bg-primary-container hover:text-primary",
+                  }[state];
+                  // A short word under the time so every slot's state reads clearly, not just from colour
+                  // (most slots are free, so it must show there too or the change goes unnoticed).
+                  const stateLabel = {
+                    past: "เลยเวลาแล้ว",
+                    booked: "ไม่ว่าง",
+                    selected: "ที่เลือก",
+                    preview: "กำลังเลือก",
+                    free: "ว่าง",
                   }[state];
                   return (
                     <button
@@ -481,13 +499,14 @@ export default function RoomDetailPage() {
                       onClick={() => pickSlot(slot)}
                       onMouseEnter={() => setHoverSlot(slot)}
                       onFocus={() => setHoverSlot(slot)}
-                      className={`rounded-full border h-11 text-label-medium tabular-nums transition-colors ${cls} ${
+                      className={`rounded-full border h-14 flex flex-col items-center justify-center gap-0.5 text-label-medium tabular-nums transition-colors ${cls} ${
                         slot === anchor ? "ring-2 ring-offset-2 ring-primary" : ""
                       }`}
                       aria-label={`${slot} ${state === "booked" ? "ไม่ว่าง" : state === "past" ? "เลยเวลาแล้ว" : "ว่าง"}`}
                       aria-pressed={state === "selected"}
                     >
-                      {slot}
+                      <span>{slot}</span>
+                      {stateLabel && <span className="text-[0.6875rem] font-normal leading-none opacity-90">{stateLabel}</span>}
                     </button>
                   );
                 })}
@@ -529,7 +548,7 @@ export default function RoomDetailPage() {
                     >
                       <span className="icon icon--20 text-ink-subtle" aria-hidden="true">schedule</span>
                       <span className="text-label-large text-ink tabular-nums">{formatRange(booking.startTime, booking.endTime)}</span>
-                      <span className="text-ink-muted flex-1 min-w-0 truncate">{booking.title}</span>
+                      <span className="text-ink-muted flex-1 min-w-0 truncate">{booking.title || "มีการจองแล้ว"}</span>
                       <span className={booking.status === "APPROVED" ? "badge-available" : "badge-pending"}>
                         {booking.status === "APPROVED" ? "อนุมัติแล้ว" : "รอการตัดสินใจ"}
                       </span>
@@ -561,6 +580,21 @@ export default function RoomDetailPage() {
               </div>
             )}
 
+            {!session ? (
+              <div className="text-center py-6">
+                <span className="icon icon--40 text-primary mb-3 inline-block" aria-hidden="true">login</span>
+                <p className="text-body-medium text-ink-muted mb-5">
+                  เข้าสู่ระบบเพื่อส่งคำขอจองห้องนี้ ระบบจะพากลับมาที่หน้านี้ให้หลังเข้าสู่ระบบสำเร็จ
+                </p>
+                <Link
+                  href={`/auth/login?callbackUrl=${encodeURIComponent("/rooms/" + roomId)}`}
+                  className="btn-primary w-full h-[52px] px-[34px] text-title-small justify-center"
+                >
+                  <span className="icon icon--24" aria-hidden="true">login</span>
+                  เข้าสู่ระบบเพื่อจอง
+                </Link>
+              </div>
+            ) : (
             <form onSubmit={handleBooking} className="space-y-6" noValidate>
               <div>
                 <label htmlFor="booking-title" className="field-label">
@@ -713,6 +747,7 @@ export default function RoomDetailPage() {
                 การจองจะรอการอนุมัติจากผู้ดูแลห้อง
               </p>
             </form>
+            )}
           </div>
         </div>
       </div>

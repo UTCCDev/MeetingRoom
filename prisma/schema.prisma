@@ -40,6 +40,7 @@ model Room {
   name        String
   description String?  @db.Text
   capacity    Int
+  pricePerHour Int     @default(500) // Thai baht per hour, mock pricing editable later
   image       String?
   amenities   Json? // JSON array of amenities
   photos      Json? // { [shot]: url } real photos of seating, screen, whiteboard, etc.
