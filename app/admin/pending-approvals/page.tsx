@@ -243,7 +243,7 @@ export default function PendingApprovalsPage() {
     <div className="min-h-screen bg-canvas">
       <AppHeader title="คำขอจองที่รอการตัดสินใจ" breadcrumbs={[{ label: "อนุมัติการจอง" }]} />
 
-      <div className="max-w-[75rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-[120rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {error && (
           <div className="alert alert--error mb-4" role="alert">
             <span className="icon icon--24 icon--error" aria-hidden="true">error</span>
@@ -343,7 +343,7 @@ export default function PendingApprovalsPage() {
                             รอการตัดสินใจ
                           </span>
                         </div>
-                        <p className="flex items-center gap-2 text-label-large text-ink tabular-nums mt-2">
+                        <p className="flex items-center gap-2 text-title-small text-ink tabular-nums mt-2">
                           <span className="icon icon--20 text-primary" aria-hidden="true">schedule</span>
                           {formatRange(booking.startTime, booking.endTime)}
                         </p>
@@ -357,12 +357,12 @@ export default function PendingApprovalsPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 sm:pl-8">
                       <div>
                         <p className="text-body-small text-ink-subtle">ผู้ขอ</p>
-                        <p className="text-label-large text-ink">{booking.user.name}</p>
+                        <p className="text-title-small text-ink">{booking.user.name}</p>
                         <p className="text-body-small text-ink-subtle break-all">{booking.user.email}</p>
                       </div>
                       <div>
                         <p className="text-body-small text-ink-subtle">จำนวนผู้เข้าร่วม</p>
-                        <p className="text-label-large text-ink tabular-nums">
+                        <p className="text-title-small text-ink tabular-nums">
                           {booking.attendees} คน{" "}
                           <span className="text-ink-subtle font-normal">/ ความจุ {booking.room.capacity}</span>
                         </p>
@@ -471,15 +471,15 @@ export default function PendingApprovalsPage() {
       </div>
 
       {!isLoading && expired.length > 0 && (
-        <div className="max-w-[75rem] mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+        <div className="max-w-[120rem] mx-auto px-4 sm:px-6 lg:px-8 pb-12">
           <details className="card">
-            <summary className="cursor-pointer text-label-large text-ink-muted">
+            <summary className="cursor-pointer text-title-small text-ink-muted">
               คำขอที่เลยเวลาเริ่มประชุมแล้ว ({expired.length}) — อนุมัติไม่ได้
             </summary>
             <ul className="mt-4 divide-y divide-line">
               {expired.map((b) => (
                 <li key={b.id} className="py-3 text-body-small text-ink-subtle">
-                  <p className="text-label-large text-ink-muted">{b.title}</p>
+                  <p className="text-title-small text-ink-muted">{b.title}</p>
                   <p className="flex items-center gap-2 tabular-nums">
                     <span className="icon icon--20" aria-hidden="true">schedule</span>
                     {formatRange(b.startTime, b.endTime)}

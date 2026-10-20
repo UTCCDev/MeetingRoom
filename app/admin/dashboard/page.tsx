@@ -65,7 +65,7 @@ export default function AdminDashboardPage() {
     return (
       <div className="min-h-screen bg-canvas">
         <AppHeader title="แดชบอร์ดระบบ" breadcrumbs={[{ label: "แดชบอร์ด" }]} />
-        <div className="max-w-[75rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-[120rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {isLoading ? (
             <SkeletonCards count={3} className="grid grid-cols-1 md:grid-cols-3 gap-5" />
           ) : (
@@ -97,7 +97,7 @@ export default function AdminDashboardPage() {
     <div className="min-h-screen bg-canvas">
       <AppHeader title="แดชบอร์ดระบบ" breadcrumbs={[{ label: "แดชบอร์ด" }]} />
 
-      <div className="max-w-[75rem] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      <div className="max-w-[120rem] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* Main Stats */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
           {STAT_TILES.map((t) => (
@@ -148,20 +148,20 @@ export default function AdminDashboardPage() {
             <p className="text-body-small text-ink-subtle mb-5">จำนวนการจองที่อนุมัติแล้ว เรียงจากมากไปน้อย</p>
             <div className="space-y-4 max-h-96 overflow-y-auto pr-1">
               {stats.roomUtilization.length === 0 ? (
-                <p className="empty-state py-8 text-body-small">ยังไม่มีห้องที่มีการจอง</p>
+                <p className="empty-state py-8 text-body-medium">ยังไม่มีห้องที่มีการจอง</p>
               ) : (
                 stats.roomUtilization.map((room) => (
                   <div key={room.roomId}>
                     <div className="flex justify-between items-baseline gap-3 mb-2">
                       <div className="min-w-0">
-                        <p className="text-label-large text-ink truncate">{room.roomName}</p>
+                        <p className="text-title-small text-ink truncate">{room.roomName}</p>
                         {room.roomDescription && (
                           <p className="text-body-small text-ink-subtle truncate">
                             {roomLocation(room.roomDescription)}
                           </p>
                         )}
                       </div>
-                      <span className="text-label-large text-ink tabular-nums whitespace-nowrap">
+                      <span className="text-title-small text-ink tabular-nums whitespace-nowrap">
                         {room.bookingCount} <span className="font-normal text-ink-subtle">ครั้ง</span>
                       </span>
                     </div>

@@ -126,7 +126,7 @@ export default function MyBookingsPage() {
     <div className="min-h-screen bg-canvas">
       <AppHeader title="การจองของฉัน" breadcrumbs={[{ label: "การจองของฉัน" }]} />
 
-      <div className="max-w-[75rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-[120rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex border-b border-line mb-6" role="tablist">
           {[
             { value: "upcoming" as const, icon: "upcoming", label: "กำลังจะมาถึง", count: upcomingCount },
@@ -140,7 +140,7 @@ export default function MyBookingsPage() {
                 setTab(t.value);
                 setFilter("ALL");
               }}
-              className={`flex items-center gap-2 px-4 h-12 text-label-large -mb-px border-b-[3px] transition-colors ${
+              className={`flex items-center gap-2 px-4 h-12 text-title-small -mb-px border-b-[3px] transition-colors ${
                 tab === t.value ? "border-primary text-primary" : "border-transparent text-ink-subtle hover:text-ink"
               }`}
             >
@@ -217,7 +217,7 @@ export default function MyBookingsPage() {
                         <h3 className={`card__title mb-2 ${muted ? "text-ink-muted" : "text-ink"}`}>
                           {booking.title}
                         </h3>
-                        <p className="flex items-center gap-2 text-label-large text-ink tabular-nums">
+                        <p className="flex items-center gap-2 text-title-small text-ink tabular-nums">
                           <span className="icon icon--20 text-primary" aria-hidden="true">schedule</span>
                           {formatRange(booking.startTime, booking.endTime)}
                         </p>

@@ -190,7 +190,7 @@ export default function AppHeader({
           {groups.map((g) => (
             <div key={g.label ?? "main"}>
               {g.label && (
-                <p className="mt-5 mb-1 px-4 pt-4 border-t border-white/10 text-label-medium text-white/60">{g.label}</p>
+                <p className="mt-5 mb-1 px-4 pt-4 border-t border-white/10 text-label-large text-white/60">{g.label}</p>
               )}
               <ul className="flex flex-col gap-1">
                 {g.items.map((n) => {
@@ -201,7 +201,7 @@ export default function AppHeader({
                         href={n.href}
                         onClick={() => setMenuOpen(false)}
                         aria-current={active ? "page" : undefined}
-                        className={`side-link group relative z-[1] flex items-center gap-3 px-4 min-h-11 rounded-full text-title-small font-light ${
+                        className={`side-link group relative z-[1] flex items-center gap-3 px-4 min-h-11 rounded-full text-title-medium font-light ${
                           active
                             ? `text-primary ${withPill ? "" : "bg-white"}`
                             : "text-white/80 hover:bg-white/10 hover:text-white"
@@ -230,8 +230,8 @@ export default function AppHeader({
             className="group w-full flex items-center gap-3 px-4 min-h-11 rounded-full text-white/80 hover:bg-white/10 hover:text-white transition-colors"
           >
             <span className="icon icon--24 text-white/70 group-hover:text-white" aria-hidden="true">menu_book</span>
-            <span className="text-title-small font-light">คู่มือการใช้งาน</span>
-            <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-label-small text-white/80 group-hover:bg-white/20">
+            <span className="text-title-medium font-light">คู่มือการใช้งาน</span>
+            <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-label-medium text-white/80 group-hover:bg-white/20">
               <span className="icon icon--20" aria-hidden="true">download</span>
               PDF
             </span>
@@ -246,15 +246,15 @@ export default function AppHeader({
                   <span className="icon icon--20">person</span>
                 </span>
                 <div className="min-w-0">
-                  <p className="text-title-small text-white truncate" title={user.name}>{user.name}</p>
-                  <p className="text-label-medium text-white/60 truncate">{roleLabel}</p>
+                  <p className="text-title-medium text-white truncate" title={user.name}>{user.name}</p>
+                  <p className="text-label-large text-white/60 truncate">{roleLabel}</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={handleLogout}
                 disabled={isSigningOut}
-                className="group mt-2 w-full flex items-center gap-3 px-3 py-1 rounded-sm text-title-small font-light text-white/80 hover:bg-red-500/20 hover:text-white transition-colors disabled:cursor-progress"
+                className="group mt-2 w-full flex items-center gap-3 px-3 py-1 rounded-sm text-title-medium font-light text-white/80 hover:bg-red-500/20 hover:text-white transition-colors disabled:cursor-progress"
               >
                 <span className="icon icon--24 text-white/70 group-hover:text-white" aria-hidden="true">logout</span>
                 {isSigningOut ? "กำลังออก…" : "ออกจากระบบ"}
@@ -291,7 +291,7 @@ export default function AppHeader({
     {/* The menu bar stays at the top while the page scrolls; the title row below scrolls away. */}
     {/* From 1280px the sidebar carries the logo, bell and logout, so the top bar is phone/tablet only. */}
     <header className={`${SIDEBAR ? "xl:hidden " : ""}sticky top-0 z-40 bg-white border-b border-line transition-shadow duration-200 ${scrolled ? "shadow-[var(--shadow-2)]" : ""}`}>
-      <div className={`${SIDEBAR ? "" : "max-w-[75rem] mx-auto "}px-4 sm:px-6 lg:px-8 h-16 flex items-center gap-4`}>
+      <div className={`${SIDEBAR ? "" : "max-w-[120rem] mx-auto "}px-4 sm:px-6 lg:px-8 h-16 flex items-center gap-4`}>
         {SIDEBAR && (
           <button
             type="button"
@@ -304,7 +304,7 @@ export default function AppHeader({
             <span className="icon icon--24" aria-hidden="true">menu</span>
           </button>
         )}
-        <Link href="/" className={`flex items-center gap-2 text-title-medium text-primary whitespace-nowrap ${SIDEBAR ? "xl:hidden" : ""}`}>
+        <Link href="/" className={`flex items-center gap-2 text-title-large text-primary whitespace-nowrap ${SIDEBAR ? "xl:hidden" : ""}`}>
           <span
             className="icon-tile bg-primary text-on-primary"
             aria-hidden="true"
@@ -323,7 +323,7 @@ export default function AppHeader({
                 key={n.href}
                 href={n.href}
                 aria-current={active ? "page" : undefined}
-                className={`nav-link relative flex items-center gap-2 px-3 h-full text-label-large whitespace-nowrap ${
+                className={`nav-link relative flex items-center gap-2 px-3 h-full text-title-small whitespace-nowrap ${
                   active ? "text-primary" : "text-ink-muted hover:text-primary"
                 }`}
               >
@@ -348,9 +348,10 @@ export default function AppHeader({
           {user && (
             <div className={`hidden sm:flex items-center gap-3 ${SIDEBAR ? "xl:hidden" : ""}`} title={user.name}>
               {/* Name and role hide between 1280 and 1536 so the full menu fits (avatar stays). Two tight lines (name / role) centred on the avatar. */}
-              <div className={`flex flex-col items-end gap-1 ${SIDEBAR ? "" : "xl:hidden 2xl:flex"}`}>
-                <span className="text-label-large leading-none text-ink whitespace-nowrap">{user.name}</span>
-                <span className="text-label-medium leading-none text-ink-subtle">{ROLE_LABELS[role || ""] || role}</span>
+              {/* Name and role from 1024px only: between 640 and 1024 they pushed the logout button off screen. */}
+              <div className={`hidden lg:flex flex-col items-end gap-1 ${SIDEBAR ? "" : "xl:hidden 2xl:flex"}`}>
+                <span className="text-title-small leading-none text-ink whitespace-nowrap">{user.name}</span>
+                <span className="text-label-large leading-none text-ink-subtle">{ROLE_LABELS[role || ""] || role}</span>
               </div>
               <span
                 className="flex-none inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary-container text-on-primary-container"
@@ -367,7 +368,7 @@ export default function AppHeader({
           ) : (
             <Link
               href={`/auth/login?callbackUrl=${encodeURIComponent(pathname || "/")}`}
-              className={`btn-secondary btn--s max-sm:w-10 max-sm:px-0 ${SIDEBAR ? "xl:hidden" : ""}`}
+              className={`btn-secondary btn--s max-sm:w-11 max-sm:px-0 flex-none ${SIDEBAR ? "xl:hidden" : ""}`}
             >
               <span className="icon icon--20" aria-hidden="true">login</span>
               <span className="hidden sm:inline">เข้าสู่ระบบ</span>
@@ -405,7 +406,7 @@ export default function AppHeader({
                 href={n.href}
                 onClick={() => setMenuOpen(false)}
                 aria-current={active ? "page" : undefined}
-                className={`flex items-center gap-3 px-4 h-12 rounded-full text-label-large ${
+                className={`flex items-center gap-3 px-4 h-12 rounded-full text-title-small ${
                   active ? "bg-primary-container text-on-primary-container" : "text-ink-muted hover:bg-canvas"
                 }`}
               >
@@ -470,7 +471,7 @@ export default function AppHeader({
 
       {title && (
         <div className="bg-canvas border-b border-line">
-          <div className="max-w-[75rem] mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-wrap items-end justify-between gap-3">
+          <div className="max-w-[120rem] mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-wrap items-end justify-between gap-3">
             <div>
               <ol className="flex flex-wrap items-center gap-1 text-body-small text-ink-subtle mb-1" aria-label="breadcrumb">
                 <li>

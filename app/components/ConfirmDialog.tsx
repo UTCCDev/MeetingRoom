@@ -70,7 +70,7 @@ export default function ConfirmDialog({
         <h3 id="confirm-dialog-title" className="text-title-large text-ink mb-2">
           {title}
         </h3>
-        <div className="text-body-small text-ink-muted mb-6">{children}</div>
+        <div className="text-body-medium text-ink-muted mb-6">{children}</div>
         {/* Primary action sits on the right; 12px between buttons. */}
         <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
           <button type="button" onClick={onCancel} className="btn-text" disabled={busy}>

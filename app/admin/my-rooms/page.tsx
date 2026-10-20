@@ -122,7 +122,7 @@ export default function MyRoomsPage() {
     <div className="min-h-screen bg-canvas">
       <AppHeader title="ห้องที่ฉันดูแล" breadcrumbs={[{ label: "ห้องของฉัน" }]} />
 
-      <div className="max-w-[75rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-[120rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {error && (
           <div className="alert alert--error mb-4" role="alert">
             <span className="icon icon--24 icon--error" aria-hidden="true">error</span>

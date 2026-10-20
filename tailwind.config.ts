@@ -22,11 +22,12 @@ const config: Config = {
         bold: '700',
       },
       // DB Heavent has a small x-height, so every step is one size up from the
-      // Latin scale (root 16px). Thai body text never goes below 18px.
+      // Latin scale (root 16px). Thai body text never goes below 18px. Body
+      // line-height is 1.4–1.45: DB Heavent stays legible that tight, and 1.6+ looked gappy.
       fontSize: {
         xs: ['0.875rem', { lineHeight: '1.4' }],    // label-small 14
-        sm: ['1.125rem', { lineHeight: '1.6' }],    // body-small 18
-        base: ['1.25rem', { lineHeight: '1.65' }],  // body-medium 20
+        sm: ['1.125rem', { lineHeight: '1.4' }],    // body-small 18
+        base: ['1.25rem', { lineHeight: '1.45' }],  // body-medium 20
         lg: ['1.5rem', { lineHeight: '1.35' }],     // title-medium 24
         xl: ['1.75rem', { lineHeight: '1.3' }],     // title-large 28
         '2xl': ['2rem', { lineHeight: '1.25' }],    // headline-small 32
@@ -45,9 +46,9 @@ const config: Config = {
         'title-large': ['1.75rem', { lineHeight: '1.3', fontWeight: '500' }],
         'title-medium': ['1.5rem', { lineHeight: '1.35', fontWeight: '500' }],
         'title-small': ['1.25rem', { lineHeight: '1.4', fontWeight: '500' }],
-        'body-large': ['1.5rem', { lineHeight: '1.6', fontWeight: '300' }],
-        'body-medium': ['1.25rem', { lineHeight: '1.65', fontWeight: '300' }],
-        'body-small': ['1.125rem', { lineHeight: '1.6', fontWeight: '300' }],
+        'body-large': ['1.5rem', { lineHeight: '1.4', fontWeight: '300' }],
+        'body-medium': ['1.25rem', { lineHeight: '1.45', fontWeight: '300' }],
+        'body-small': ['1.125rem', { lineHeight: '1.4', fontWeight: '300' }],
         'label-large': ['1.125rem', { lineHeight: '1.4', fontWeight: '500' }],
         'label-medium': ['1rem', { lineHeight: '1.4', fontWeight: '500' }],
         'label-small': ['0.875rem', { lineHeight: '1.4', fontWeight: '500' }],

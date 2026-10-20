@@ -89,6 +89,20 @@ export default function RoomsPage() {
   };
 
   useEffect(() => {
+    // Filters can arrive from the landing page's quick search (?q, seats, date, start, end).
+    const qs = new URLSearchParams(window.location.search);
+    const q = qs.get("q");
+    const seats = parseInt(qs.get("seats") || "", 10);
+    const d = qs.get("date");
+    const s = qs.get("start");
+    const e = qs.get("end");
+    if (q) setSearchTerm(q);
+    if (seats > 0) setMinCapacity(String(seats));
+    if (d && /^\d{4}-\d{2}-\d{2}$/.test(d) && d >= todayKey()) setDate(d);
+    if (s && TIME_SLOTS.includes(s)) {
+      setStartTime(s);
+      setEndTime(e && END_SLOTS.includes(e) && e > s ? e : addMinutes(s, 60));
+    }
     fetchRooms();
   }, []);
 
@@ -118,7 +132,7 @@ export default function RoomsPage() {
     <div className="min-h-screen bg-canvas">
       <AppHeader title="ค้นหาห้องประชุม" breadcrumbs={[{ label: "ค้นหาห้อง" }]} />
 
-      <div className="max-w-[75rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-[120rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Search & Filter Section */}
         <section className="card mb-6 space-y-4" aria-label="ค้นหาและกรองห้อง">
           {/* One row on desktop: search · seats · date · from · to. Below 1024px the search takes
@@ -250,7 +264,7 @@ export default function RoomsPage() {
         )}
 
         {isLoading ? (
-          <SkeletonCards count={6} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" />
+          <SkeletonCards count={6} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 min-[1800px]:grid-cols-4 gap-5" />
         ) : rooms.length === 0 ? (
           <div className="empty-state">
             <span className="icon icon--40 text-ink-subtle" aria-hidden="true">meeting_room</span>
@@ -267,7 +281,7 @@ export default function RoomsPage() {
           </div>
         ) : (
           <div ref={paged.listRef} className="scroll-mt-24">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 min-[1800px]:grid-cols-4 gap-5">
               {paged.pageItems.map((room) => {
                 const busyRanges = dayBookingRanges(room.bookings, date || todayKey());
                 return (
@@ -304,7 +318,7 @@ export default function RoomsPage() {
                     </p>
 
                     {/* What's already booked that day, so users can see at a glance when the room is actually free. */}
-                    <p className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-4 text-body-small">
+                    <p className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-4 text-body-medium">
                       <span className="icon icon--20 text-ink-subtle" aria-hidden="true">schedule</span>
                       {busyRanges.length === 0 ? (
                         <span className="badge-available">ว่างทั้งวัน</span>
@@ -316,7 +330,7 @@ export default function RoomsPage() {
                       )}
                     </p>
   
-                    <dl className="flex flex-wrap gap-x-5 gap-y-2 mb-5 text-body-small text-ink-muted">
+                    <dl className="flex flex-wrap gap-x-5 gap-y-2 mb-5 text-body-medium text-ink-muted">
                       <div className="flex items-center gap-2">
                         <dt className="flex">
                           <span className="icon icon--20 text-ink-subtle" aria-hidden="true">group</span>
@@ -343,7 +357,7 @@ export default function RoomsPage() {
                     </dl>
   
                   </div>
-                  <span className="card__footer px-4 sm:px-6 h-12 flex items-center justify-between text-label-large text-primary">
+                  <span className="card__footer px-4 sm:px-6 h-12 flex items-center justify-between text-title-small text-primary">
                     {window_ ? "จองช่วงเวลานี้" : "ดูรายละเอียดและจอง"}
                     <span
                       className="icon icon--20 transition-transform duration-100 group-hover:translate-x-1"

@@ -11,10 +11,10 @@
   --type-h2: 700 var(--h2-size)/1.15 var(--font-family);
   --type-h3: 500 var(--h3-size)/1.2 var(--font-family);
   --type-nav-title: 500 1.5rem/1.35 var(--font-family);
-  --type-body: 300 1.25rem/1.65 var(--font-family);
-  --type-body-large: 300 1.5rem/1.6 var(--font-family); /* body-large: 24px, Thai body line-height ≥ 1.6 */
-  --type-body-small: 300 1.125rem/1.6 var(--font-family);
-  --type-label: 500 1.125rem/1.4 var(--font-family);
+  --type-body: 300 1.25rem/1.45 var(--font-family);
+  --type-body-large: 300 1.5rem/1.4 var(--font-family); /* body-large: 24px, Thai body line-height ≥ 1.6 */
+  --type-body-small: 300 1.125rem/1.4 var(--font-family);
+  --type-label: 500 1.25rem/1.4 var(--font-family);
   --type-caption: 300 1rem/1.45 var(--font-family);
   --type-overline: 700 1.25rem/1.4 var(--font-family); /* title-small (20px): 16px is too small for DB Heavent */
 
@@ -155,14 +155,14 @@
   font: var(--type-label);
   display: inline-flex; align-items: center; justify-content: center; gap: 10px;
   box-sizing: border-box; cursor: pointer; border: none; text-decoration: none;
-  height: 44px; padding: 0 28px; border-radius: var(--radius-button);
+  height: 48px; padding: 0 28px; border-radius: var(--radius-button);
   transition: background 120ms ease, border-color 120ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
 .login .btn:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
 .login .btn:disabled { background: var(--color-disabled-bg); color: var(--color-disabled-fg); cursor: not-allowed; box-shadow: none; }
 .login .btn[aria-busy="true"] { opacity: .75; cursor: progress; }
 .login .btn--block { width: 100%; }
-.login .btn--l { height: 52px; padding: 0 34px; }
+.login .btn--l { height: 56px; padding: 0 34px; }
 
 .login .btn--filled { background: var(--color-primary); color: var(--color-on-primary); }
 .login .btn--filled:hover:not(:disabled) { background: var(--color-primary-hover); }
@@ -179,16 +179,16 @@
 /* Text field — UTCC DS › Forms: 48px, radius 4, outline-strong border (hover ink-subtle),
    18px Light, label 16 Medium 8px above, hint/error 16px below, 2px focus ring. */
 .login .field { display: flex; flex-direction: column; gap: 8px; }
-.login .field__label { font: 500 1rem/1.3 var(--font-family); color: var(--color-ink); display: flex; justify-content: space-between; align-items: baseline; }
+.login .field__label { font: 500 1.125rem/1.3 var(--font-family); color: var(--color-ink); display: flex; justify-content: space-between; align-items: baseline; }
 .login .field__control { position: relative; }
 .login .field__input {
-  font: 300 1.125rem/1.45 var(--font-family); color: var(--color-ink);
-  width: 100%; box-sizing: border-box; height: 48px; padding: 0 16px;
+  font: 300 1.25rem/1.45 var(--font-family); color: var(--color-ink);
+  width: 100%; box-sizing: border-box; height: 56px; padding: 0 16px;
   border: 1px solid var(--color-outline-strong); border-radius: var(--radius-control); background: var(--color-surface);
   transition: border-color .1s;
 }
 .login .field__hint { margin: 0; font: 300 1rem/1.3 var(--font-family); color: var(--color-ink-subtle); }
-.login .field__error { margin: 0; font: 300 1rem/1.3 var(--font-family); color: var(--color-error); }
+.login .field__error { margin: 0; font: 300 1.125rem/1.3 var(--font-family); color: var(--color-error); }
 .login .field__input--with-toggle { padding-right: 72px; }
 .login .field__input::placeholder { color: var(--color-ink-subtle); }
 .login .field__input:hover:not(:disabled) { border-color: var(--color-ink-subtle); }
@@ -201,7 +201,7 @@
 .login .field__toggle:focus-visible { outline: var(--focus-ring); }
 
 /* Alert */
-.login .alert { margin: 0; padding: 16px 20px; border-radius: var(--radius-xs); font: var(--type-body-small); display: flex; gap: 12px; align-items: flex-start; }
+.login .alert { margin: 0; padding: 16px 20px; border-radius: var(--radius-xs); font: var(--type-body); display: flex; gap: 12px; align-items: flex-start; }
 .login .alert svg { flex: none; width: 24px; height: 24px; margin-top: 2px; }
 .login .alert--error { font-weight: 500; background: var(--color-error-bg); color: var(--color-error-text); }
 .login .alert--success { background: var(--color-success-bg); color: var(--color-success); }

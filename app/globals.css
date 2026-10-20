@@ -149,7 +149,7 @@
      Color comes from variables so every variant reads the same set:
      --btn-c filled · --btn-soft tonal · --btn-ink text/outline (outline line = ink color). */
   .btn-primary, .btn-secondary, .btn-tonal, .btn-text, .btn-success, .btn-danger, .btn-outline-error {
-    --btn-h: 2.75rem; --btn-px: 1.75rem;
+    --btn-h: 3rem; --btn-px: 1.75rem;
     --btn-c: #2E3192; --btn-on: #FFFFFF; --btn-c-h: #4548AB; --btn-c-a: #1F2275;
     --btn-soft: #E8E9F6; --btn-on-soft: #151757; --btn-soft-h: #D2D3F2; --btn-soft-a: #A9ABE4;
     --btn-ink: #2E3192; --btn-tint: 46, 49, 146;
@@ -157,7 +157,7 @@
     display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
     box-sizing: border-box; height: var(--btn-h); padding: 0 var(--btn-px);
     border: 0; border-radius: 9999px;
-    font-size: 1.125rem; line-height: 1; font-weight: 500;
+    font-size: 1.25rem; line-height: 1; font-weight: 500;
     white-space: nowrap; cursor: pointer; text-decoration: none;
     transition: background-color 0.15s, box-shadow 0.15s, color 0.15s;
   }
@@ -194,7 +194,7 @@
   .btn-text:disabled { background: transparent; color: var(--color-disabled-fg); cursor: not-allowed; }
 
   /* size s (40px / 20px, 16px text) — in cards and dense rows */
-  .btn--s { --btn-h: 2.5rem; --btn-px: 1.25rem; font-size: 1rem; }
+  .btn--s { --btn-h: 2.75rem; --btn-px: 1.25rem; font-size: 1.125rem; }
   .btn-text.btn--s { --btn-px: 0.75rem; }
 
   /* Icon button (standard) — 44×44, 24px icon, transparent ink-muted, hover surface-variant. */
@@ -278,7 +278,7 @@
     min-width: 44px; height: 44px; padding: 0 6px;
     display: inline-grid; place-items: center;
     border: 0; border-radius: 9999px; background: transparent;
-    font-size: 1.125rem; line-height: 1; font-weight: 500; font-variant-numeric: tabular-nums;
+    font-size: 1.25rem; line-height: 1; font-weight: 500; font-variant-numeric: tabular-nums;
     color: var(--color-ink); cursor: pointer; transition: background-color 0.15s, color 0.15s;
   }
   .page-link:hover:not(:disabled):not([aria-current="page"]) { background: var(--color-surface-variant); }
@@ -286,7 +286,7 @@
   .page-link[aria-current="page"] { background: var(--color-primary); color: #FFFFFF; }
   .page-link:disabled { color: var(--color-disabled-fg); background: transparent; cursor: not-allowed; }
   .page-ellipsis { min-width: 44px; text-align: center; color: var(--color-ink-subtle); }
-  .pagination__status { font-size: 1.125rem; color: var(--color-ink-muted); font-variant-numeric: tabular-nums; }
+  .pagination__status { font-size: 1.25rem; color: var(--color-ink-muted); font-variant-numeric: tabular-nums; }
 
   /* Chip (design.md › Chip และ Tag) — 36px, 44px touch target, radius full, 16px Medium;
      selected (aria-pressed) = primary-container + check. */
@@ -294,10 +294,10 @@
   .chip {
     position: relative; box-sizing: border-box;
     display: inline-flex; align-items: center; gap: 0.5rem;
-    height: 2.25rem; padding: 0 1rem;
+    height: 2.5rem; padding: 0 1.125rem;
     border: 1px solid var(--color-outline-strong); border-radius: 9999px;
     background: var(--color-surface); color: var(--color-ink);
-    font-size: 1rem; line-height: 1; font-weight: 500; white-space: nowrap; cursor: pointer;
+    font-size: 1.125rem; line-height: 1; font-weight: 500; white-space: nowrap; cursor: pointer;
   }
   .chip::after { content: ""; position: absolute; inset: -4px 0; }
   .chip .icon { font-size: 20px; }
@@ -310,7 +310,7 @@
      on: primary + 24px white knob. Only for settings that apply immediately. */
   .switch {
     box-sizing: border-box; display: inline-flex; align-items: center; gap: 0.75rem; min-height: 2.75rem;
-    font-size: 1.125rem; line-height: 1.3; font-weight: 300; color: var(--color-ink); cursor: pointer;
+    font-size: 1.25rem; line-height: 1.3; font-weight: 300; color: var(--color-ink); cursor: pointer;
   }
   .switch input {
     appearance: none; -webkit-appearance: none; position: relative; flex: none; box-sizing: border-box;
@@ -338,7 +338,7 @@
   .checkbox, .radio {
     box-sizing: border-box; display: inline-flex; align-items: flex-start; gap: 0.75rem;
     min-height: 2.75rem; padding: 0.625rem 0;
-    font-size: 1.125rem; line-height: 1.3; font-weight: 300; color: var(--color-ink); cursor: pointer;
+    font-size: 1.25rem; line-height: 1.3; font-weight: 300; color: var(--color-ink); cursor: pointer;
   }
   .checkbox input, .radio input { margin-top: 2px; }
   .checkbox:has(input:disabled), .radio:has(input:disabled) { color: var(--color-disabled-fg); cursor: not-allowed; }
@@ -358,7 +358,7 @@
      hint / error 16px under it. */
   .field-label {
     @apply block mb-2 text-ink;
-    font-size: 1rem;
+    font-size: 1.125rem;
     line-height: 1.3;
     font-weight: 500;
   }
@@ -371,7 +371,7 @@
 
   .field-error {
     @apply mt-2 text-error;
-    font-size: 1rem;
+    font-size: 1.125rem;
     line-height: 1.3;
   }
 
@@ -381,7 +381,7 @@
 
   /* Alerts — error / success / info, icon + message. */
   .alert {
-    @apply flex items-start gap-3 px-5 py-4 border rounded-sm text-body-small;
+    @apply flex items-start gap-3 px-5 py-4 border rounded-sm text-body-medium;
     --lead-lh: 1lh;
   }
 
@@ -415,11 +415,11 @@
 
   /* Data table — header label-medium, rows separated by line. */
   .table {
-    @apply w-full text-left text-body-small;
+    @apply w-full text-left text-body-medium;
   }
 
   .table thead th {
-    @apply px-4 py-3 bg-canvas border-b border-line text-label-medium text-ink-subtle whitespace-nowrap;
+    @apply px-4 py-3 bg-canvas border-b border-line text-label-large text-ink-subtle whitespace-nowrap;
   }
 
   .table tbody td {
@@ -482,15 +482,15 @@
   }
 
   .card__overline {
-    @apply block text-label-medium text-primary;
+    @apply block text-label-large text-primary;
   }
 
   .card__title {
-    @apply text-title-medium text-ink;
+    @apply text-title-large text-ink;
   }
 
   .card__body {
-    @apply text-body-small text-ink-muted;
+    @apply text-body-medium text-ink-muted;
   }
 
   .card__meta {
@@ -555,10 +555,10 @@
     width: 100%;
     padding: 0.75rem 1rem;
     border: 1px solid var(--color-outline-strong);
-    border-radius: 4px;
+    border-radius: 8px; /* same as .dropdown__trigger and select */
     background: var(--color-surface);
     color: var(--color-ink);
-    font-size: 1.125rem;
+    font-size: 1.25rem;
     line-height: 1.45;
     font-weight: 300;
     transition: border-color 0.1s;
@@ -579,10 +579,19 @@
 
   input.input-field,
   select.input-field {
-    height: 3rem;
+    height: 3.25rem;
     padding-top: 0;
     padding-bottom: 0;
   }
+
+  /* .ui-lg — one step larger form text and 56px controls for pages many older staff use
+     (landing quick search, room detail / booking form). */
+  .ui-lg .field-label { font-size: 1.25rem; }
+  .ui-lg .field-error { font-size: 1.125rem; }
+  .ui-lg input.input-field,
+  .ui-lg select.input-field,
+  .ui-lg .dropdown__trigger { height: 3.5rem; font-size: 1.25rem; }
+  .ui-lg textarea.input-field { font-size: 1.25rem; }
 
   textarea.input-field {
     min-height: 7.5rem;
@@ -613,7 +622,7 @@
   .dropdown__trigger {
     box-sizing: border-box;
     width: 100%;
-    height: 3rem;
+    height: 3.25rem;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -622,7 +631,7 @@
     border-radius: 8px;
     background: var(--color-surface);
     color: var(--color-ink);
-    font-size: 1.125rem;
+    font-size: 1.25rem;
     font-weight: 500;
     text-align: left;
     cursor: pointer;
@@ -676,7 +685,7 @@
   .dropdown__option[aria-disabled="true"] { color: var(--color-disabled-fg); background: transparent; cursor: not-allowed; }
   .dropdown__option-hint { display: block; font-size: 1rem; font-weight: 300; color: var(--color-ink-subtle); }
   .dropdown__check { margin-left: auto; flex: none; }
-  .dropdown__empty { padding: 12px 20px; font-size: 1rem; color: var(--color-ink-subtle); }
+  .dropdown__empty { padding: 12px 20px; font-size: 1.125rem; color: var(--color-ink-subtle); }
   .dropdown__divider { height: 1px; margin: 8px 0; background: var(--color-line); }
   /* Date picker (design.md › Date picker): trigger like the dropdown with calendar_today ·
      panel 328 radius 16 padding 16 shadow 2 · days 40 circles · today = primary ring ·
@@ -708,12 +717,12 @@
   .datepicker__grid { display: grid; grid-template-columns: repeat(7, 40px); justify-content: center; }
   .datepicker__weekday {
     height: 32px; display: grid; place-items: center;
-    font-size: 1rem; line-height: 1; font-weight: 500; color: var(--color-ink-subtle);
+    font-size: 1.125rem; line-height: 1; font-weight: 500; color: var(--color-ink-subtle);
   }
   .datepicker__cell { height: 40px; display: grid; place-items: center; }
   .datepicker__day {
     width: 40px; height: 40px; border-radius: 9999px; color: var(--color-ink);
-    font-size: 1.125rem; line-height: 1; font-weight: 300; font-variant-numeric: tabular-nums;
+    font-size: 1.25rem; line-height: 1; font-weight: 300; font-variant-numeric: tabular-nums;
   }
   .datepicker__day:hover:not(:disabled) { background: var(--color-surface-variant); }
   .datepicker__day:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 1px; }
@@ -737,8 +746,8 @@
   .badge-available, .badge-booked, .badge-pending, .badge-neutral, .badge-primary,
   .badge--success, .badge--error, .badge--warning, .badge--info {
     display: inline-flex; align-items: center; gap: 0.25rem;
-    height: 1.5rem; padding: 0 0.625rem; border-radius: 9999px;
-    font-size: 0.875rem; line-height: 1; font-weight: 500; white-space: nowrap;
+    height: 1.75rem; padding: 0 0.75rem; border-radius: 9999px;
+    font-size: 1rem; line-height: 1; font-weight: 500; white-space: nowrap;
   }
   :is(.badge-available, .badge-booked, .badge-pending, .badge-neutral, .badge-primary,
     .badge--success, .badge--error, .badge--warning, .badge--info) .icon { font-size: 16px; }

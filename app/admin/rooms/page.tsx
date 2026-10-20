@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import AppHeader from "@/app/components/AppHeader";
@@ -15,6 +15,7 @@ import { SkeletonCards } from "@/app/components/Skeleton";
 import { useToast } from "@/app/components/Toast";
 import { formatPricePerHour, roomLocation } from "@/lib/format";
 import Pagination, { usePagination } from "@/app/components/Pagination";
+import { usePopoverPlacement } from "@/app/components/usePopoverPlacement";
 
 interface Room {
   id: string;
@@ -311,7 +312,7 @@ export default function RoomsManagementPage() {
         }
       />
 
-      <div className="max-w-[75rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-[120rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {error && (
           <div className="alert alert--error mb-4" role="alert">
             <span className="icon icon--24 icon--error" aria-hidden="true">error</span>
@@ -356,7 +357,7 @@ export default function RoomsManagementPage() {
         </div>
 
         {isLoading ? (
-          <SkeletonCards count={6} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" />
+          <SkeletonCards count={6} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 min-[1800px]:grid-cols-4 gap-5" />
         ) : filteredRooms.length === 0 ? (
           <div className="card empty-state">
             <span className="icon icon--40 text-ink-subtle" aria-hidden="true">search_off</span>
@@ -364,7 +365,7 @@ export default function RoomsManagementPage() {
           </div>
         ) : (
           <div ref={paged.listRef} className="scroll-mt-24">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 min-[1800px]:grid-cols-4 gap-5">
               {paged.pageItems.map((room) => (
                 <div key={room.id} className="card relative p-0 sm:p-0 flex flex-col">
                   <div className={`relative aspect-video card__media rounded-t-md overflow-hidden ${room.status ? "" : "grayscale opacity-60"}`}>
@@ -380,40 +381,15 @@ export default function RoomsManagementPage() {
                   <div className="flex justify-between items-start gap-2 mb-1">
                     <h3 className="card__title">{room.name}</h3>
   
-                    <div className="relative">
-                      <button
-                        type="button"
-                        onClick={() => setOpenMenuRoomId(openMenuRoomId === room.id ? null : room.id)}
-                        aria-label="ตัวเลือกเพิ่มเติม"
-                        aria-expanded={openMenuRoomId === room.id}
-                        className="icon-button -mr-2 -mt-2"
-                      >
-                        <span className="icon icon--24" aria-hidden="true">more_vert</span>
-                      </button>
-                      {openMenuRoomId === room.id && (
-                        <div className="absolute right-0 mt-2 min-w-[13rem] py-2 bg-white border border-line rounded-md shadow-[var(--shadow-2)] z-10 overflow-hidden">
-                          <button
-                            type="button"
-                            onClick={() => openEdit(room)}
-                            className="w-full flex items-center gap-3 px-5 min-h-[52px] text-left text-body-medium text-ink hover:bg-surface-variant"
-                          >
-                            <span className="icon icon--20 text-ink-subtle" aria-hidden="true">edit</span>
-                            แก้ไข
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setOpenMenuRoomId(null);
-                              setRoomPendingDelete(room);
-                            }}
-                            className="w-full flex items-center gap-3 px-5 min-h-[52px] mt-2 text-left text-body-medium text-error border-t border-line hover:bg-error-container"
-                          >
-                            <span className="icon icon--20" aria-hidden="true">delete</span>
-                            ลบ
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                    <RoomMenu
+                      open={openMenuRoomId === room.id}
+                      onToggle={() => setOpenMenuRoomId(openMenuRoomId === room.id ? null : room.id)}
+                      onEdit={() => openEdit(room)}
+                      onDelete={() => {
+                        setOpenMenuRoomId(null);
+                        setRoomPendingDelete(room);
+                      }}
+                    />
                   </div>
   
                   <p className="icon-lead gap-2 card__body text-ink-subtle mb-4">
@@ -653,6 +629,61 @@ export default function RoomsManagementPage() {
           </>
         )}
       </ConfirmDialog>
+    </div>
+  );
+}
+
+/** Per-card ⋮ menu; flips above the button when the card sits near the bottom of the screen. */
+function RoomMenu({
+  open,
+  onToggle,
+  onEdit,
+  onDelete,
+}: {
+  open: boolean;
+  onToggle: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const placement = usePopoverPlacement(open, buttonRef, panelRef);
+  return (
+    <div className="relative">
+      <button
+        ref={buttonRef}
+        type="button"
+        onClick={onToggle}
+        aria-label="ตัวเลือกเพิ่มเติม"
+        aria-expanded={open}
+        className="icon-button -mr-2 -mt-2"
+      >
+        <span className="icon icon--24" aria-hidden="true">more_vert</span>
+      </button>
+      {open && (
+        <div
+          ref={panelRef}
+          style={placement.style}
+          className="absolute right-0 top-full mt-2 min-w-[13rem] py-2 bg-white border border-line rounded-md shadow-[var(--shadow-2)] z-10 overflow-hidden"
+        >
+          <button
+            type="button"
+            onClick={onEdit}
+            className="w-full flex items-center gap-3 px-5 min-h-[52px] text-left text-body-large text-ink hover:bg-surface-variant"
+          >
+            <span className="icon icon--20 text-ink-subtle" aria-hidden="true">edit</span>
+            แก้ไข
+          </button>
+          <button
+            type="button"
+            onClick={onDelete}
+            className="w-full flex items-center gap-3 px-5 min-h-[52px] mt-2 text-left text-body-large text-error border-t border-line hover:bg-error-container"
+          >
+            <span className="icon icon--20" aria-hidden="true">delete</span>
+            ลบ
+          </button>
+        </div>
+      )}
     </div>
   );
 }

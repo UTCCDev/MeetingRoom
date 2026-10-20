@@ -66,7 +66,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <span className="icon icon--24 icon--filled" aria-hidden="true">
               {ICONS[t.type || "info"]}
             </span>
-            <span className="flex-1 text-body-small py-2">{t.message}</span>
+            <span className="flex-1 text-body-medium py-2">{t.message}</span>
             {t.action && (
               <button
                 type="button"
@@ -74,7 +74,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                   t.action!.onClick();
                   dismiss(t.id);
                 }}
-                className="h-11 px-4 rounded-full text-label-large text-highlight hover:bg-white/10"
+                className="h-11 px-4 rounded-full text-title-small text-highlight hover:bg-white/10"
               >
                 {t.action.label}
               </button>

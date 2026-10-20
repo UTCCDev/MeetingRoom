@@ -22,7 +22,7 @@ const MANAGE_ITEMS = [
 function Section({ id, icon, title, children }: { id: string; icon: string; title: string; children: React.ReactNode }) {
   return (
     <section aria-labelledby={id} className="space-y-3">
-      <h3 id={id} className="flex items-center gap-2 text-title-medium text-ink">
+      <h3 id={id} className="flex items-center gap-2 text-title-large text-ink">
         <span className="icon icon--24 text-primary" aria-hidden="true">{icon}</span>
         {title}
       </h3>
@@ -38,8 +38,8 @@ function Example({ photo, title, tip, when }: { photo: RoomPhoto; title: string;
         <img src={photo.src} alt={photo.source ? `ตัวอย่างภาพ${title}` : `ภาพจำลอง${title}`} loading="lazy" className="w-full h-full object-cover" />
       </div>
       <figcaption className="p-3 flex flex-col gap-1 flex-1">
-        <p className="text-label-large text-ink">{title}</p>
-        <p className="text-label-medium text-primary">{when}</p>
+        <p className="text-title-small text-ink">{title}</p>
+        <p className="text-label-large text-primary">{when}</p>
         <p className="text-body-small text-ink-muted flex-1">{tip}</p>
         {/* CC BY / BY-SA samples must keep their credit; a generated mock-up says so instead. */}
         {photo.source ? (
@@ -47,12 +47,12 @@ function Example({ photo, title, tip, when }: { photo: RoomPhoto; title: string;
             href={photo.source}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-label-medium text-ink-subtle hover:text-primary hover:underline"
+            className="text-label-large text-ink-subtle hover:text-primary hover:underline"
           >
             ภาพ: {photo.creator || "ไม่ระบุ"} · {photo.license}
           </a>
         ) : (
-          <p className="text-label-medium text-ink-subtle">ภาพจำลองการถ่ายรูป</p>
+          <p className="text-label-large text-ink-subtle">ภาพจำลองการถ่ายรูป</p>
         )}
       </figcaption>
     </figure>
@@ -109,13 +109,13 @@ export default function RoomGuideDialog({ open, onClose }: { open: boolean; onCl
               {ADD_STEPS.map((step, i) => (
                 <li key={step.title} className="flex gap-3 p-3 rounded-sm border border-line">
                   <span
-                    className="flex-none inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary-container text-on-primary-container text-label-large"
+                    className="flex-none inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary-container text-on-primary-container text-title-small"
                     aria-hidden="true"
                   >
                     {i + 1}
                   </span>
                   <div>
-                    <p className="text-label-large text-ink">{step.title}</p>
+                    <p className="text-title-small text-ink">{step.title}</p>
                     <p className="text-body-small text-ink-muted">{step.text}</p>
                   </div>
                 </li>
@@ -130,7 +130,7 @@ export default function RoomGuideDialog({ open, onClose }: { open: boolean; onCl
                 <li key={item.title} className="flex gap-3 p-3 rounded-sm border border-line">
                   <span className="icon icon--24 text-ink-subtle" aria-hidden="true">{item.icon}</span>
                   <div>
-                    <p className="text-label-large text-ink">{item.title}</p>
+                    <p className="text-title-small text-ink">{item.title}</p>
                     <p className="text-body-small text-ink-muted">{item.text}</p>
                   </div>
                 </li>

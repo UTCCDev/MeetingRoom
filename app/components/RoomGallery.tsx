@@ -153,18 +153,18 @@ function Lightbox({
     >
       <div className="flex items-center gap-4 px-4 sm:px-8 py-4 flex-none border-b border-white/10">
         <div className="min-w-0 flex-1">
-          <p className="text-title-medium truncate">{room.name}</p>
-          <p className="mt-1 flex flex-wrap items-center gap-2 text-body-small text-white/70" aria-live="polite">
+          <p className="text-title-large truncate">{room.name}</p>
+          <p className="mt-1 flex flex-wrap items-center gap-2 text-body-medium text-white/70" aria-live="polite">
             <span className="text-white">{current.title}</span>
             {current.sample && (
-              <span className="inline-flex items-center gap-1 h-6 px-2 rounded-full bg-highlight text-on-highlight text-label-small">
+              <span className="inline-flex items-center gap-1 h-6 px-2 rounded-full bg-highlight text-on-highlight text-label-medium">
                 <span className="icon icon--20 !text-[16px]" aria-hidden="true">photo_camera</span>
                 ภาพจำลอง
               </span>
             )}
           </p>
         </div>
-        <span className="hidden sm:inline-flex items-center h-9 px-3 rounded-full bg-white/10 text-label-medium tabular-nums">
+        <span className="hidden sm:inline-flex items-center h-9 px-3 rounded-full bg-white/10 text-label-large tabular-nums">
           {index + 1} / {count}
         </span>
         <button
@@ -251,11 +251,11 @@ function Lightbox({
               >
                 <img src={s.src} alt="" loading="lazy" className="w-full h-full object-cover" />
               </span>
-              <span className={`text-label-small truncate ${i === index ? "text-highlight" : "text-white/80"}`}>{s.title}</span>
+              <span className={`text-label-medium truncate ${i === index ? "text-highlight" : "text-white/80"}`}>{s.title}</span>
             </button>
           ))}
         </div>
-        <p className="min-h-[1.4rem] text-body-small text-white/60 text-center">
+        <p className="min-h-[1.4rem] text-body-medium text-white/60 text-center">
           {current.credit && <Credit photo={current.credit} />}
         </p>
       </div>
@@ -287,7 +287,7 @@ export default function RoomGallery({ room }: { room: GalleryRoom }) {
             ภาพจำลอง
           </span>
         )}
-        <span className="absolute bottom-3 right-3 inline-flex items-center gap-2 h-10 px-4 rounded-full bg-ink/75 text-white text-label-medium">
+        <span className="absolute bottom-3 right-3 inline-flex items-center gap-2 h-10 px-4 rounded-full bg-ink/75 text-white text-label-large">
           <span className="icon icon--20" aria-hidden="true">photo_library</span>
           ดูภาพทั้งหมด ({slides.length})
         </span>
@@ -304,7 +304,7 @@ export default function RoomGallery({ room }: { room: GalleryRoom }) {
               aria-label={`ดูภาพ ${s.title}`}
             >
               <img src={s.src} alt="" loading="lazy" className="w-full h-full object-cover" />
-              <span className="absolute inset-x-0 bottom-0 px-2 py-1 bg-ink/70 text-white text-label-medium truncate">
+              <span className="absolute inset-x-0 bottom-0 px-2 py-1 bg-ink/70 text-white text-label-large truncate">
                 {s.title}
               </span>
             </button>

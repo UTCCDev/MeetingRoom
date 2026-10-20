@@ -22,12 +22,12 @@ export default function LogoutButton() {
       type="button"
       onClick={handleLogout}
       disabled={isSigningOut}
-      // Icon only on phones → a 40×40 circle; with its label it's the normal pill.
-      className="btn-secondary btn--s max-sm:w-10 max-sm:px-0"
+      // Icon only below 1024px → a 44×44 circle (same as the button height); with its label it's the normal pill.
+      className="btn-secondary btn--s max-lg:w-11 max-lg:px-0 flex-none"
       aria-label="ออกจากระบบ"
     >
       <span className="icon icon--20" aria-hidden="true">logout</span>
-      <span className="hidden sm:inline">{isSigningOut ? "กำลังออก…" : "ออกจากระบบ"}</span>
+      <span className="hidden lg:inline">{isSigningOut ? "กำลังออก…" : "ออกจากระบบ"}</span>
     </button>
   );
 }

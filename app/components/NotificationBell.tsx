@@ -156,7 +156,7 @@ export default function NotificationBell({ userId, isApprover }: { userId: strin
           notifications
         </span>
         {unread > 0 && (
-          <span className="absolute top-0.5 left-[1.375rem] min-w-[1.25rem] h-5 px-1 rounded-full bg-error text-on-error text-label-small leading-5 text-center tabular-nums ring-2 ring-white">
+          <span className="absolute top-0.5 left-[1.375rem] min-w-[1.25rem] h-5 px-1 rounded-full bg-error text-on-error text-label-medium leading-5 text-center tabular-nums ring-2 ring-white">
             {unread > 99 ? "99+" : unread}
           </span>
         )}
@@ -170,7 +170,7 @@ export default function NotificationBell({ userId, isApprover }: { userId: strin
           className="fixed sm:absolute inset-x-2 sm:inset-x-auto top-16 sm:top-full sm:right-0 sm:mt-2 sm:w-[34rem] z-40 bg-white border border-line rounded-md shadow-xl flex flex-col max-h-[calc(100vh-5rem)]"
         >
           <div className="flex items-center justify-between px-5 h-16 border-b border-line flex-none">
-            <h2 className="text-title-medium text-ink">การแจ้งเตือน</h2>
+            <h2 className="text-title-large text-ink">การแจ้งเตือน</h2>
             <button type="button" onClick={load} className="icon-button -mr-2" aria-label="รีเฟรช">
               <span className="icon icon--24" aria-hidden="true">refresh</span>
             </button>
@@ -179,7 +179,7 @@ export default function NotificationBell({ userId, isApprover }: { userId: strin
           <div className="overflow-y-auto">
             {isApprover && (
               <section aria-label="รอคุณอนุมัติ">
-                <h3 className="flex items-center gap-2 px-5 pt-4 pb-2 text-label-large text-ink-muted">
+                <h3 className="flex items-center gap-2 px-5 pt-4 pb-2 text-title-small text-ink-muted">
                   รอคุณอนุมัติ
                   <span className="badge-pending tabular-nums">{approvals.length}</span>
                 </h3>
@@ -200,7 +200,7 @@ export default function NotificationBell({ userId, isApprover }: { userId: strin
                             </span>
                             <div className="min-w-0 flex-1">
                               <p className="text-body-medium text-ink-muted">{headline(n)}</p>
-                              <p className="text-title-small text-ink mt-1">{n.title}</p>
+                              <p className="text-title-medium text-ink mt-1">{n.title}</p>
                               <p className="flex items-center gap-2 mt-1 text-body-small text-ink-muted tabular-nums">
                                 <span className="icon icon--20 text-ink-subtle" aria-hidden="true">schedule</span>
                                 {formatRange(n.startTime, n.endTime)}
@@ -284,7 +284,7 @@ export default function NotificationBell({ userId, isApprover }: { userId: strin
             )}
 
             <section aria-label="อัปเดตล่าสุด">
-              <h3 className="px-5 pt-4 pb-2 text-label-large text-ink-muted">อัปเดตล่าสุด</h3>
+              <h3 className="px-5 pt-4 pb-2 text-title-small text-ink-muted">อัปเดตล่าสุด</h3>
               {updates.length === 0 ? (
                 <p className="flex items-center gap-2 px-5 pb-5 text-body-medium text-ink-subtle">
                   <span className="icon icon--24" aria-hidden="true">notifications_off</span>
@@ -309,7 +309,7 @@ export default function NotificationBell({ userId, isApprover }: { userId: strin
                             {roomLocation(n.roomDescription) && ` · ${roomLocation(n.roomDescription)}`} · {formatRange(n.startTime, n.endTime)}
                           </span>
                           {n.type === "rejected" && n.reason && (
-                            <span className="block mt-1 text-body-small text-on-error-container">เหตุผล: {n.reason}</span>
+                            <span className="block mt-1 text-body-medium text-on-error-container">เหตุผล: {n.reason}</span>
                           )}
                           <span className="block text-body-small text-ink-subtle">{timeAgo(n.at)}</span>
                         </span>

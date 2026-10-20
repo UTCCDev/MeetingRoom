@@ -135,7 +135,7 @@ export default function BookingProgress({
                 {step.state === "done" ? "check" : step.icon}
               </span>
             </span>
-            <span className={`mt-2 text-label-large ${LABEL[step.state]}`}>
+            <span className={`mt-2 text-title-small ${LABEL[step.state]}`}>
               {step.label}
               <span className="sr-only"> ({STATE_TEXT[step.state]})</span>
             </span>

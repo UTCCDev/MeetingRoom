@@ -83,13 +83,13 @@ function ShotCard({
           {own ? "รูปจริง" : sample.source ? "ภาพตัวอย่าง" : "ภาพจำลอง"}
         </span>
         {uploading && (
-          <span className="absolute inset-0 flex items-center justify-center bg-ink/50 text-white text-label-large">
+          <span className="absolute inset-0 flex items-center justify-center bg-ink/50 text-white text-title-small">
             กำลังอัปโหลด…
           </span>
         )}
       </div>
       <figcaption className="p-2 flex flex-col gap-2 flex-1">
-        <p className="text-label-large text-ink">{title}</p>
+        <p className="text-title-small text-ink">{title}</p>
         <p className="text-body-small text-ink-muted flex-1">{tip}</p>
         {!own && sample.source && (
           // CC BY / BY-SA samples must keep their credit.
@@ -97,12 +97,12 @@ function ShotCard({
             href={sample.source}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-label-medium text-ink-subtle hover:text-primary hover:underline"
+            className="text-label-large text-ink-subtle hover:text-primary hover:underline"
           >
             ภาพตัวอย่าง: {sample.creator || "ไม่ระบุ"} · {sample.license}
           </a>
         )}
-        {!own && !sample.source && <p className="text-label-medium text-ink-subtle">ภาพจำลองการถ่ายรูป</p>}
+        {!own && !sample.source && <p className="text-label-large text-ink-subtle">ภาพจำลองการถ่ายรูป</p>}
 
         <input
           ref={fileRef}
@@ -145,7 +145,7 @@ function ShotCard({
             inputMode="url"
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            className="input-field !h-10 !px-3 !text-body-small mt-2"
+            className="input-field !h-10 !px-3 !text-body-medium mt-2"
             placeholder="https://…"
             aria-invalid={invalid}
           />
@@ -207,7 +207,7 @@ export default function PhotoGuide({
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-controls="photo-guide"
-        className="w-full flex items-center gap-3 px-4 h-12 text-label-large text-primary hover:bg-canvas"
+        className="w-full flex items-center gap-3 px-4 h-12 text-title-small text-primary hover:bg-canvas"
       >
         <span className="icon icon--20" aria-hidden="true">photo_camera</span>
         รูปห้องและอุปกรณ์ภายในห้อง
@@ -232,7 +232,7 @@ export default function PhotoGuide({
             ))}
           </ul>
 
-          <h3 className="text-title-small text-ink pt-1">ตัวห้อง</h3>
+          <h3 className="text-title-medium text-ink pt-1">ตัวห้อง</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <ShotCard
               id="room-photo-cover"
@@ -245,7 +245,7 @@ export default function PhotoGuide({
             {roomShots.map(card)}
           </div>
 
-          <h3 className="text-title-small text-ink pt-2">อุปกรณ์ภายในห้อง</h3>
+          <h3 className="text-title-medium text-ink pt-2">อุปกรณ์ภายในห้อง</h3>
           {equipmentShots.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">{equipmentShots.map(card)}</div>
           ) : (

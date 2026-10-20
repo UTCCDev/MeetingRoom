@@ -87,6 +87,12 @@ function inputClass(invalid: boolean) {
   return `input-field ${invalid ? "border-error" : ""}`;
 }
 
+const SLOT_PERIODS = [
+  { label: "ช่วงเช้า", icon: "wb_twilight", from: "07:00", to: "12:00" },
+  { label: "ช่วงบ่าย", icon: "light_mode", from: "12:00", to: "17:00" },
+  { label: "ช่วงเย็น", icon: "dark_mode", from: "17:00", to: "22:00" },
+];
+
 export default function RoomDetailPage() {
   const params = useParams();
   const roomId = params?.id as string;
@@ -320,9 +326,9 @@ export default function RoomDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-canvas">
+      <div className="min-h-screen bg-canvas ui-lg">
         <AppHeader title="กำลังโหลด…" breadcrumbs={[{ label: "ค้นหาห้อง", href: "/rooms" }]} />
-        <div className="max-w-[75rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-[120rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <SkeletonCards count={2} />
         </div>
       </div>
@@ -331,7 +337,7 @@ export default function RoomDetailPage() {
 
   if (!room) {
     return (
-      <div className="min-h-screen bg-canvas">
+      <div className="min-h-screen bg-canvas ui-lg">
         <AppHeader title="ไม่พบห้อง" breadcrumbs={[{ label: "ค้นหาห้อง", href: "/rooms" }]} />
         <div className="p-8 text-center">
           <div className="empty-state">
@@ -352,13 +358,13 @@ export default function RoomDetailPage() {
   const attendeesMessage = fieldErrors.attendees || attendeesError(attendees, false);
 
   return (
-    <div className="min-h-screen bg-canvas">
+    <div className="min-h-screen bg-canvas ui-lg">
       <AppHeader
         title={room.name}
         breadcrumbs={[{ label: "ค้นหาห้อง", href: "/rooms" }, { label: room.name }]}
       />
 
-      <div className="max-w-[75rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-[120rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Room Details */}
           <div className="lg:col-span-2 space-y-6">
@@ -426,13 +432,13 @@ export default function RoomDetailPage() {
                     .map((row) => (
                       <div
                         key={row.label}
-                        className="grid grid-cols-[7.5rem_minmax(0,1fr)] sm:grid-cols-[9.5rem_minmax(0,1fr)] items-start gap-3 px-4 py-3"
+                        className="grid grid-cols-1 sm:grid-cols-[11rem_minmax(0,1fr)] items-start gap-x-3 gap-y-1 px-4 py-3"
                       >
                         <dt className="flex items-center gap-2 min-h-7 text-body-medium text-ink-subtle">
                           <span className="icon icon--20 text-primary self-center" aria-hidden="true">{row.icon}</span>
                           {row.label}
                         </dt>
-                        <dd className="flex items-center min-h-7 text-body-medium">{row.value}</dd>
+                        <dd className="flex items-center min-h-7 text-body-large">{row.value}</dd>
                       </div>
                     ))}
                 </dl>
@@ -443,7 +449,7 @@ export default function RoomDetailPage() {
             {/* Day schedule */}
             <div className="card">
               <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-                <h2 className="flex items-center gap-2 text-title-large text-ink">
+                <h2 className="flex items-center gap-2 text-headline-small text-ink">
                   <span className="icon icon--24 text-primary" aria-hidden="true">calendar_month</span>
                   ตารางห้องรายวัน
                 </h2>
@@ -457,7 +463,7 @@ export default function RoomDetailPage() {
                   >
                     <span className="icon icon--24" aria-hidden="true">chevron_left</span>
                   </button>
-                  <span className="text-label-large text-ink min-w-[9rem] text-center">{formatDate(bangkokISO(date, "12:00"))}</span>
+                  <span className="text-title-small text-ink min-w-[9rem] text-center">{formatDate(bangkokISO(date, "12:00"))}</span>
                   <button
                     type="button"
                     onClick={() => date < MAX_DATE && chooseDate(addDays(date, 1))}
@@ -472,42 +478,82 @@ export default function RoomDetailPage() {
               <p className="text-body-small text-ink-subtle mb-3">
                 คลิกช่องแรกเป็นเวลาเริ่ม แล้วคลิกอีกช่องเป็นเวลาสิ้นสุด (แต่ละช่องนับ 1 ชั่วโมงจากเวลานั้น)
               </p>
-              <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2" onMouseLeave={() => setHoverSlot(null)}>
-                {TIME_SLOTS.map((slot) => {
-                  const state = slotState(slot);
-                  const cls = {
-                    past: "bg-disabled-bg text-disabled-fg border-transparent cursor-not-allowed",
-                    booked: "bg-error-container text-on-error-container border-error-90 cursor-not-allowed",
-                    selected: "bg-primary text-white border-primary",
-                    preview: "bg-primary-container text-on-primary-container border-primary",
-                    free: "bg-white text-ink border-outline hover:border-primary hover:bg-primary-container hover:text-primary",
-                  }[state];
-                  // A short word under the time so every slot's state reads clearly, not just from colour
-                  // (most slots are free, so it must show there too or the change goes unnoticed).
-                  const stateLabel = {
-                    past: "เลยเวลาแล้ว",
-                    booked: "ไม่ว่าง",
-                    selected: "ที่เลือก",
-                    preview: "กำลังเลือก",
-                    free: "ว่าง",
-                  }[state];
+              {/* Slots grouped into morning / afternoon / evening (10 half-hour slots each), so a long
+                  run of identical pills becomes three short rows that are easy to scan. */}
+              <div className="space-y-5" onMouseLeave={() => setHoverSlot(null)}>
+                {SLOT_PERIODS.map((period) => {
+                  const slots = TIME_SLOTS.filter((t) => t >= period.from && t < period.to);
+                  const freeCount = slots.filter((t) => slotState(t) === "free").length;
                   return (
-                    <button
-                      key={slot}
-                      type="button"
-                      disabled={state === "past" || state === "booked"}
-                      onClick={() => pickSlot(slot)}
-                      onMouseEnter={() => setHoverSlot(slot)}
-                      onFocus={() => setHoverSlot(slot)}
-                      className={`rounded-full border h-14 flex flex-col items-center justify-center gap-0.5 text-label-medium tabular-nums transition-colors ${cls} ${
-                        slot === anchor ? "ring-2 ring-offset-2 ring-primary" : ""
-                      }`}
-                      aria-label={`${slot} ${state === "booked" ? "ไม่ว่าง" : state === "past" ? "เลยเวลาแล้ว" : "ว่าง"}`}
-                      aria-pressed={state === "selected"}
-                    >
-                      <span>{slot}</span>
-                      {stateLabel && <span className="text-[0.6875rem] font-normal leading-none opacity-90">{stateLabel}</span>}
-                    </button>
+                    <section key={period.label} aria-label={`${period.label} ${period.from}–${period.to}`}>
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="icon icon--24 text-primary" aria-hidden="true">{period.icon}</span>
+                        <h3 className="text-title-medium text-ink">{period.label}</h3>
+                        <span className="text-body-small text-ink-subtle tabular-nums">{period.from}–{period.to}</span>
+                        <span className="ml-auto text-label-large text-ink-muted tabular-nums">
+                          {freeCount ? `ว่าง ${freeCount} ช่อง` : "ไม่มีช่องว่าง"}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                        {slots.map((slot) => {
+                          const state = slotState(slot);
+                          const cls = {
+                            past: "bg-surface-variant text-disabled-fg border-transparent cursor-not-allowed",
+                            booked: "bg-error-container text-on-error-container border-transparent cursor-not-allowed",
+                            selected: "bg-primary text-on-primary border-primary",
+                            preview: "bg-primary-container text-on-primary-container border-primary",
+                            free: "bg-surface text-ink border-outline hover:border-primary hover:bg-primary-99",
+                          }[state];
+                          // A short word under the time so every slot's state reads clearly, not just from
+                          // colour (most slots are free, so it must show there too or a change goes unnoticed).
+                          const stateLabel = {
+                            past: "เลยเวลาแล้ว",
+                            booked: "ไม่ว่าง",
+                            selected: "ที่เลือก",
+                            preview: "กำลังเลือก",
+                            free: "ว่าง",
+                          }[state];
+                          const stateIcon = {
+                            past: "history",
+                            booked: "block",
+                            selected: "check_circle",
+                            preview: "radio_button_checked",
+                            free: "",
+                          }[state];
+                          return (
+                            <button
+                              key={slot}
+                              type="button"
+                              disabled={state === "past" || state === "booked"}
+                              onClick={() => pickSlot(slot)}
+                              onMouseEnter={() => setHoverSlot(slot)}
+                              onFocus={() => setHoverSlot(slot)}
+                              className={`group rounded-sm border px-2.5 sm:px-3 py-2.5 flex flex-col items-start gap-1 text-left transition-colors ${cls} ${
+                                slot === anchor ? "ring-2 ring-offset-2 ring-primary" : ""
+                              }`}
+                              aria-label={`${slot} ${state === "booked" ? "ไม่ว่าง" : state === "past" ? "เลยเวลาแล้ว" : "ว่าง"}`}
+                              aria-pressed={state === "selected"}
+                            >
+                              <span className={`text-title-medium tabular-nums leading-none ${state === "past" ? "line-through decoration-1" : ""}`}>
+                                {slot}
+                              </span>
+                              <span
+                                className={`flex items-center gap-1 text-label-large leading-none ${
+                                  state === "free" ? "text-success" : ""
+                                }`}
+                              >
+                                {state === "free" ? (
+                                  <span className="w-2 h-2 rounded-full bg-success-50" aria-hidden="true" />
+                                ) : (
+                                  <span className="icon !text-[16px] hidden min-[400px]:inline" aria-hidden="true">{stateIcon}</span>
+                                )}
+                                {stateLabel}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </section>
                   );
                 })}
               </div>
@@ -516,7 +562,7 @@ export default function RoomDetailPage() {
                 {startTime && endTime ? (
                   <>
                     <span className="icon icon--20 text-primary" aria-hidden="true">schedule</span>
-                    <span className="text-label-large text-ink tabular-nums">
+                    <span className="text-title-small text-ink tabular-nums">
                       {(previewOk ? preview!.from : startTime)}–{(previewOk ? preview!.to : endTime)}
                     </span>
                     <span className="badge-primary tabular-nums">
@@ -529,14 +575,14 @@ export default function RoomDetailPage() {
                 ) : (
                   <span className="text-body-small text-ink-subtle">ยังไม่ได้เลือกเวลา</span>
                 )}
-                {rangeNote && <span className="w-full text-body-small text-on-highlight-container">{rangeNote}</span>}
+                {rangeNote && <span className="w-full text-body-medium text-on-highlight-container">{rangeNote}</span>}
               </div>
 
-              <div className="flex flex-wrap gap-4 mt-3 text-body-small text-ink-subtle">
-                <span className="flex items-center gap-2"><span className="w-4 h-4 rounded-full bg-white border border-outline" /> ว่าง</span>
-                <span className="flex items-center gap-2"><span className="w-4 h-4 rounded-full bg-error-container border border-error-90" /> ไม่ว่าง</span>
-                <span className="flex items-center gap-2"><span className="w-4 h-4 rounded-full bg-primary" /> ที่เลือก</span>
-                <span className="flex items-center gap-2"><span className="w-4 h-4 rounded-full bg-disabled-bg" /> เลยเวลาแล้ว</span>
+              <div className="flex flex-wrap gap-x-5 gap-y-2 mt-3 text-body-small text-ink-subtle">
+                <span className="flex items-center gap-2"><span className="w-4 h-4 rounded-xs bg-surface border border-outline" /> ว่าง</span>
+                <span className="flex items-center gap-2"><span className="w-4 h-4 rounded-xs bg-error-container" /> ไม่ว่าง</span>
+                <span className="flex items-center gap-2"><span className="w-4 h-4 rounded-xs bg-primary" /> ที่เลือก</span>
+                <span className="flex items-center gap-2"><span className="w-4 h-4 rounded-xs bg-surface-variant" /> เลยเวลาแล้ว</span>
               </div>
 
               {dayBookings.length > 0 && (
@@ -544,10 +590,10 @@ export default function RoomDetailPage() {
                   {dayBookings.map((booking) => (
                     <li
                       key={booking.id}
-                      className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 rounded-sm border border-line bg-canvas text-body-small"
+                      className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 rounded-sm border border-line bg-canvas text-body-medium"
                     >
                       <span className="icon icon--20 text-ink-subtle" aria-hidden="true">schedule</span>
-                      <span className="text-label-large text-ink tabular-nums">{formatRange(booking.startTime, booking.endTime)}</span>
+                      <span className="text-title-small text-ink tabular-nums">{formatRange(booking.startTime, booking.endTime)}</span>
                       <span className="text-ink-muted flex-1 min-w-0 truncate">{booking.title || "มีการจองแล้ว"}</span>
                       <span className={booking.status === "APPROVED" ? "badge-available" : "badge-pending"}>
                         {booking.status === "APPROVED" ? "อนุมัติแล้ว" : "รอการตัดสินใจ"}
@@ -561,7 +607,7 @@ export default function RoomDetailPage() {
 
           {/* Booking Form */}
           <div className="card card--elevated h-fit lg:sticky lg:top-24">
-            <h2 className="flex items-center gap-2 text-title-large text-ink mb-5">
+            <h2 className="flex items-center gap-2 text-headline-small text-ink mb-5">
               <span className="icon icon--24 text-primary" aria-hidden="true">edit_calendar</span>
               จองห้องนี้
             </h2>
@@ -588,7 +634,7 @@ export default function RoomDetailPage() {
                 </p>
                 <Link
                   href={`/auth/login?callbackUrl=${encodeURIComponent("/rooms/" + roomId)}`}
-                  className="btn-primary w-full h-[52px] px-[34px] text-title-small justify-center"
+                  className="btn-primary w-full h-[52px] px-[34px] text-title-medium justify-center"
                 >
                   <span className="icon icon--24" aria-hidden="true">login</span>
                   เข้าสู่ระบบเพื่อจอง
@@ -738,7 +784,7 @@ export default function RoomDetailPage() {
               <button
                 type="submit"
                 disabled={isSubmitting || !room.status}
-                className="w-full btn-primary h-[52px] px-[34px] text-title-small"
+                className="w-full btn-primary h-[52px] px-[34px] text-title-medium"
               >
                 <span className="icon icon--24" aria-hidden="true">send</span>
                 {isSubmitting ? "กำลังจอง..." : "ส่งคำขอจอง"}

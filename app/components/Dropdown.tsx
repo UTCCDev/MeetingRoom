@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { usePopoverPlacement } from "@/app/components/usePopoverPlacement";
 
 export interface DropdownOption {
   value: string;
@@ -51,6 +52,8 @@ export default function Dropdown({
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(-1);
+  // Flips above the trigger near the bottom of the screen and caps its height to fit.
+  const placement = usePopoverPlacement(open, triggerRef, menuRef);
 
   const selected = options.find((o) => o.value === value);
   const searchable = searchableProp ?? options.length > SEARCH_FROM;
@@ -153,7 +156,7 @@ export default function Dropdown({
       </button>
 
       {open && (
-        <ul ref={menuRef} id={menuId} className="dropdown__menu" role="listbox" aria-labelledby={id}>
+        <ul ref={menuRef} id={menuId} className="dropdown__menu" role="listbox" aria-labelledby={id} style={placement.style}>
           {searchable && (
             <li className="dropdown__search" role="presentation">
               <input

@@ -199,7 +199,7 @@ export default function UsersPage() {
         }
       />
 
-      <div className="max-w-[75rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-[120rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {error && (
           <div className="alert alert--error mb-4" role="alert">
             <span className="icon icon--24 icon--error" aria-hidden="true">error</span>
@@ -257,8 +257,8 @@ export default function UsersPage() {
           </div>
         ) : (
           <>
-            <div className="card overflow-x-auto p-0 sm:p-0">
-              <table className="table">
+            <div className="card relative overflow-x-auto p-0 sm:p-0">
+              <table className="table min-w-[52rem]">
                 <thead>
                   <tr>
                     <th>ชื่อ-สกุล</th>
@@ -273,10 +273,10 @@ export default function UsersPage() {
                   {pageUsers.map((user) => (
                     <tr key={user.id} className={user.active ? "" : "opacity-60"}>
                       <td>
-                        <span className="text-label-large text-ink">{user.name}</span>
+                        <span className="text-title-small text-ink">{user.name}</span>
                         {user.id === myId && <span className="ml-2 text-body-small text-ink-subtle">(คุณ)</span>}
                       </td>
-                      <td className="break-all">{user.email}</td>
+                      <td className="whitespace-nowrap">{user.email}</td>
                       <td>
                         <span className={ROLE_CLASS[user.role] || "badge-neutral"}>
                           <span className="icon icon--20" aria-hidden="true">{ROLE_ICONS[user.role] || "person"}</span>

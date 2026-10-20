@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { addDays, todayKey } from "@/lib/format";
+import { usePopoverPlacement } from "@/app/components/usePopoverPlacement";
 
 const MONTHS = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
 const MONTHS_SHORT = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
@@ -58,6 +59,9 @@ export default function DatePicker({
   const gridRef = useRef<HTMLDivElement>(null);
   const today = todayKey();
   const [open, setOpen] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
+  // Flips above the field near the bottom of the screen and caps its height to fit.
+  const placement = usePopoverPlacement(open, triggerRef, panelRef);
   const [focused, setFocused] = useState(value || today);
   const [year, month] = parse(focused);
 
@@ -150,7 +154,7 @@ export default function DatePicker({
       </button>
 
       {open && (
-        <div id={panelId} className="datepicker__panel" role="dialog" aria-modal="false" aria-label="เลือกวันที่">
+        <div ref={panelRef} id={panelId} className="datepicker__panel" role="dialog" aria-modal="false" aria-label="เลือกวันที่" style={placement.style}>
           <div className="datepicker__header">
             <button type="button" className="datepicker__nav" onClick={() => shiftMonth(-1)} disabled={prevDisabled} aria-label="เดือนก่อนหน้า">
               <span className="icon icon--24" aria-hidden="true">chevron_left</span>
