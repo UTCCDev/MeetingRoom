@@ -59,6 +59,12 @@
     "entrance": "/room-photos/all/E241801/E241801_entrance.jpg",
     "seating": "/room-photos/all/E241801/E241801_seating.jpg"
   },
+  "M000101": {
+    "cover": "/room-photos/all/M000101/M000101_cover.jpg",
+    "entrance": "/room-photos/all/M000101/M000101_entrance.jpg",
+    "seating": "/room-photos/all/M000101/M000101_seating.jpg",
+    "tv": "/room-photos/all/M000101/M000101_tv.jpg"
+  },
   "M010201": {
     "cover": "/room-photos/all/M010201/M010201_cover.jpg",
     "entrance": "/room-photos/all/M010201/M010201_entrance.jpg",
@@ -338,12 +344,6 @@
     "entrance": "/room-photos/all/M241702/M241702_entrance.jpg",
     "projector": "/room-photos/all/M241702/M241702_projector.jpg",
     "seating": "/room-photos/all/M241702/M241702_seating.jpg"
-  },
-  "MMT0101": {
-    "cover": "/room-photos/all/MMT0101/MMT0101_cover.jpg",
-    "entrance": "/room-photos/all/MMT0101/MMT0101_entrance.jpg",
-    "seating": "/room-photos/all/MMT0101/MMT0101_seating.jpg",
-    "tv": "/room-photos/all/MMT0101/MMT0101_tv.jpg"
   },
   "S050201": {
     "cover": "/room-photos/all/S050201/S050201_cover.jpg",
