@@ -37,6 +37,9 @@ enum UserRole {
 // Room model - stores meeting room information
 model Room {
   id          String   @id @default(cuid())
+  code        String?  @unique // e.g. M030401 = type prefix + building(2) + floor(2) + room(2), see lib/room-code.ts
+  roomType    RoomType @default(MEETING)
+  roomNumber  String? // room number within the floor, 2 digits in the code
   name        String
   description String?  @db.Text
   capacity    Int
@@ -54,6 +57,12 @@ model Room {
   bookings    Booking[]
 
   @@map("rooms")
+}
+
+enum RoomType {
+  MEETING // M
+  EVENT // E
+  SEMINAR // S
 }
 
 // Booking model - stores booking information

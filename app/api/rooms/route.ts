@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { roomSchema } from "@/lib/room-schema";
+import { DUPLICATE_ROOM_CODE_ERROR, isDuplicateRoomCode, roomCodeMismatch, roomSchema } from "@/lib/room-schema";
 import { firstError } from "@/lib/validation";
 
 // GET active rooms (public). Includes upcoming booked time ranges only, so the
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
           select: { startTime: true, endTime: true, status: true },
         },
       },
-      orderBy: { name: "asc" },
+      orderBy: [{ code: "asc" }, { name: "asc" }],
     });
 
     return NextResponse.json(rooms);
@@ -75,7 +75,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: firstError(parsed.error) }, { status: 400 });
     }
 
-    const { name, description, capacity, pricePerHour, image, amenities, photos, roomAdminId, status } = parsed.data;
+    const { roomType, roomNumber, code, name, description, capacity, pricePerHour, image, amenities, photos, roomAdminId, status } = parsed.data;
+
+    const codeError = roomCodeMismatch(code, roomType ?? "MEETING");
+    if (codeError) {
+      return NextResponse.json({ error: codeError }, { status: 400 });
+    }
 
     // Verify room admin exists
     const roomAdmin = await prisma.user.findUnique({
@@ -91,6 +96,9 @@ export async function POST(request: NextRequest) {
 
     const room = await prisma.room.create({
       data: {
+        roomType: roomType ?? undefined,
+        roomNumber: roomNumber ?? null,
+        code: code ?? null,
         name,
         description,
         capacity,
@@ -110,6 +118,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(room, { status: 201 });
   } catch (error) {
+    if (isDuplicateRoomCode(error)) {
+      return NextResponse.json({ error: DUPLICATE_ROOM_CODE_ERROR }, { status: 409 });
+    }
     console.error("Error creating room:", error);
     return NextResponse.json(
       { error: "\u0e40\u0e01\u0e34\u0e14\u0e02\u0e49\u0e2d\u0e41\u0e14\u0e01\u0e01\u0e25\u0e32\u0e07\u0e40\u0e0b\u0e34\u0e23\u0e4c\u0e1f\u0e40\u0e2d\u0e2d\u0e23\u0e4c" },

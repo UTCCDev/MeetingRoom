@@ -8,10 +8,11 @@ import Dropdown from "@/app/components/Dropdown";
 import DatePicker from "@/app/components/DatePicker";
 import { roomCover } from "@/app/components/RoomGallery";
 import { SkeletonCards } from "@/app/components/Skeleton";
-import { addMinutes, bangkokISO, formatPricePerHour, formatTime, roomLocation, TIME_SLOTS, toDateKey, todayKey } from "@/lib/format";
+import { addMinutes, bangkokISO, formatPricePerHour, formatTime, roomLocation, roomTitle, TIME_SLOTS, toDateKey, todayKey } from "@/lib/format";
 
 interface Room {
   id: string;
+  code?: string | null;
   name: string;
   description: string;
   capacity: number;
@@ -59,6 +60,7 @@ export default function RoomsPage() {
       rooms.filter((room) => {
         const matchesSearch =
           !normalizedSearch ||
+          (room.code || "").toLowerCase().includes(normalizedSearch) ||
           room.name.toLowerCase().includes(normalizedSearch) ||
           (room.description || "").toLowerCase().includes(normalizedSearch) ||
           room.roomAdmin.name.toLowerCase().includes(normalizedSearch);
@@ -311,7 +313,7 @@ export default function RoomsPage() {
                   </div>
   
                   <div className="p-4 sm:p-6 flex-1 flex flex-col">
-                    <h2 className="card__title mb-1 line-clamp-2 group-hover:text-primary">{room.name}</h2>
+                    <h2 className="card__title mb-1 line-clamp-2 group-hover:text-primary">{roomTitle(room)}</h2>
                     <p className="card__body icon-lead gap-2 mb-2 text-ink-subtle">
                       <span className="icon icon--20" aria-hidden="true">location_on</span>
                       <span className="line-clamp-2">{roomLocation(room.description)}</span>

@@ -103,6 +103,11 @@ export function roomLabel(room: { name: string; description?: string | null }): 
   return location ? `${room.name} · ${location}` : room.name;
 }
 
+/** "M030401 (ห้องประชุม)", or just the name for rooms without a code yet. */
+export function roomTitle(room: { name: string; code?: string | null }): string {
+  return room.code ? `${room.code} (${room.name})` : room.name;
+}
+
 /** "หน่วยงาน · อาคาร 1 ชั้น 2" from a room description. */
 export function roomLocation(description?: string | null): string {
   return (description || "")

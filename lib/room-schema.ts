@@ -1,7 +1,37 @@
 import { z } from "zod";
 import { PHOTO_SHOTS, PHOTO_URL_ERROR, SHOT_INFO, isPhotoUrl, type PhotoShot } from "./room-photos";
+import { ROOM_CODE_PATTERN, ROOM_TYPES, ROOM_TYPE_PREFIX, type RoomType } from "./room-code";
+
+/** Error message when a code's prefix doesn't match the room type, else null. */
+export function roomCodeMismatch(code: string | null | undefined, roomType: RoomType | undefined): string | null {
+  if (!code || !roomType) return null;
+  return code.startsWith(ROOM_TYPE_PREFIX[roomType]) ? null : "รหัสห้องต้องขึ้นต้นด้วยตัวย่อของประเภทห้อง";
+}
+
+/** Prisma unique-constraint error on rooms.code. */
+export function isDuplicateRoomCode(error: unknown): boolean {
+  const e = error as { code?: string; meta?: { target?: unknown } };
+  return e?.code === "P2002" && String(e.meta?.target ?? "").includes("code");
+}
+
+export const DUPLICATE_ROOM_CODE_ERROR = "รหัสห้องนี้ถูกใช้แล้ว กรุณาตรวจสอบอาคาร ชั้น และเลขห้อง";
 
 export const roomSchema = z.object({
+  roomType: z.enum(ROOM_TYPES, { errorMap: () => ({ message: "ประเภทห้องไม่ถูกต้อง" }) }).optional(),
+  roomNumber: z
+    .string()
+    .trim()
+    .regex(/^\d{1,2}$/, "เลขห้องต้องเป็นตัวเลข 1–2 หลัก")
+    .optional()
+    .nullable()
+    .or(z.literal("").transform(() => null)),
+  code: z
+    .string()
+    .trim()
+    .regex(ROOM_CODE_PATTERN, "รหัสห้องไม่ถูกต้อง (เช่น M030401)")
+    .optional()
+    .nullable()
+    .or(z.literal("").transform(() => null)),
   name: z.string({ required_error: "กรุณากรอกชื่อห้อง" }).trim().min(1, "กรุณากรอกชื่อห้อง").max(191, "ชื่อห้องยาวเกินไป"),
   description: z.string().trim().max(2000, "รายละเอียดยาวเกินไป").optional().nullable(),
   capacity: z.coerce

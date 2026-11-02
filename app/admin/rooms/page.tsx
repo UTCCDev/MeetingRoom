@@ -7,18 +7,23 @@ import AppHeader from "@/app/components/AppHeader";
 import ConfirmDialog from "@/app/components/ConfirmDialog";
 import Dropdown from "@/app/components/Dropdown";
 import RoomGuideDialog from "@/app/components/RoomGuideDialog";
+import RoomImportDialog from "@/app/components/RoomImportDialog";
 import { roomCover } from "@/app/components/RoomGallery";
 import PhotoGuide from "@/app/components/PhotoGuide";
 import AmenityCheckboxes from "@/app/components/AmenityCheckboxes";
 import { PHOTO_SHOTS, PHOTO_URL_ERROR, isPhotoUrl, parseRoomPhotos, type RoomPhotos } from "@/lib/room-photos";
 import { SkeletonCards } from "@/app/components/Skeleton";
 import { useToast } from "@/app/components/Toast";
-import { formatPricePerHour, roomLocation } from "@/lib/format";
+import { formatPricePerHour, roomLocation, roomTitle } from "@/lib/format";
+import { ROOM_TYPES, ROOM_TYPE_LABELS, buildRoomCode, type RoomType } from "@/lib/room-code";
 import Pagination, { usePagination } from "@/app/components/Pagination";
 import { usePopoverPlacement } from "@/app/components/usePopoverPlacement";
 
 interface Room {
   id: string;
+  code?: string | null;
+  roomType: RoomType;
+  roomNumber?: string | null;
   name: string;
   description?: string;
   capacity: number;
@@ -43,6 +48,8 @@ interface User {
 
 
 type RoomForm = {
+  roomType: RoomType;
+  roomNumber: string;
   name: string;
   department: string;
   building: string;
@@ -57,6 +64,8 @@ type RoomForm = {
 };
 
 const EMPTY_FORM: RoomForm = {
+  roomType: "MEETING",
+  roomNumber: "",
   name: "",
   department: "",
   building: "",
@@ -104,6 +113,7 @@ export default function RoomsManagementPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [roomPendingDelete, setRoomPendingDelete] = useState<Room | null>(null);
   const [guideOpen, setGuideOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
@@ -155,6 +165,7 @@ export default function RoomsManagementPage() {
     return rooms.filter(
       (r) =>
         (!q ||
+          (r.code || "").toLowerCase().includes(q) ||
           r.name.toLowerCase().includes(q) ||
           (r.description || "").toLowerCase().includes(q) ||
           r.roomAdmin.name.toLowerCase().includes(q)) &&
@@ -174,6 +185,8 @@ export default function RoomsManagementPage() {
     setOpenMenuRoomId(null);
     setEditing(room);
     setForm({
+      roomType: room.roomType,
+      roomNumber: room.roomNumber || "",
       name: room.name,
       ...parseDescription(room.description),
       capacity: String(room.capacity),
@@ -205,6 +218,11 @@ export default function RoomsManagementPage() {
     if (!Number.isInteger(capacity) || capacity < 1) errors.capacity = "จำนวนที่นั่งต้องเป็นจำนวนเต็มตั้งแต่ 1";
     if (!Number.isInteger(pricePerHour) || pricePerHour < 0) errors.pricePerHour = "ราคาค่าเช่าต้องเป็นจำนวนเต็มตั้งแต่ 0";
     if (!form.roomAdminId) errors.roomAdminId = "กรุณาเลือกผู้ดูแลห้อง";
+    if (form.roomNumber.trim() && !roomCode) {
+      if (!/^\d{1,2}$/.test(form.roomNumber.trim())) errors.roomNumber = "เลขห้องต้องเป็นตัวเลข 1–2 หลัก";
+      else if (!/^\d{1,2}$/.test(form.building.trim())) errors.building = "อาคารต้องเป็นตัวเลข 1–2 หลักเพื่อสร้างรหัสห้อง";
+      else errors.floor = "ชั้นต้องเป็นตัวเลขหรือตัวอักษร 1–3 ตัว (เช่น 4, 12A)";
+    }
     if (!isPhotoUrl(form.image)) {
       errors.image = PHOTO_URL_ERROR;
     }
@@ -221,6 +239,9 @@ export default function RoomsManagementPage() {
         method: isCreate ? "POST" : "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          roomType: form.roomType,
+          roomNumber: form.roomNumber.trim(),
+          code: roomCode ?? "",
           name: form.name.trim(),
           description: composeDescription(form),
           capacity,
@@ -287,6 +308,8 @@ export default function RoomsManagementPage() {
     }
   };
 
+  const roomCode = buildRoomCode(form.roomType, form.building, form.floor, form.roomNumber);
+
   const fieldClass = (key: keyof RoomForm) =>
     `input-field ${formErrors[key] ? "border-error" : ""}`;
 
@@ -303,6 +326,10 @@ export default function RoomsManagementPage() {
             <button type="button" onClick={() => setGuideOpen(true)} className="btn-secondary">
               <span className="icon icon--20" aria-hidden="true">menu_book</span>
               คู่มือ
+            </button>
+            <button type="button" onClick={() => setImportOpen(true)} className="btn-secondary">
+              <span className="icon icon--20" aria-hidden="true">upload_file</span>
+              นำเข้าจาก Excel
             </button>
             <button onClick={openCreate} className="btn-primary">
               <span className="icon icon--20" aria-hidden="true">add</span>
@@ -335,7 +362,7 @@ export default function RoomsManagementPage() {
               type="search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="ชื่อห้อง, หน่วยงาน, อาคาร หรือผู้ดูแล"
+              placeholder="รหัสห้อง, ชื่อห้อง, หน่วยงาน, อาคาร หรือผู้ดูแล"
               className="input-field pl-11"
             />
             </div>
@@ -379,7 +406,7 @@ export default function RoomsManagementPage() {
   
                   <div className="p-4 sm:p-6 flex-1 flex flex-col">
                   <div className="flex justify-between items-start gap-2 mb-1">
-                    <h3 className="card__title">{room.name}</h3>
+                    <h3 className="card__title">{roomTitle(room)}</h3>
   
                     <RoomMenu
                       open={openMenuRoomId === room.id}
@@ -550,6 +577,39 @@ export default function RoomsManagementPage() {
                     {errorText("floor")}
                   </div>
 
+                  <div className="md:col-span-2">
+                    <label htmlFor="room-type" className="field-label">ประเภทห้อง *</label>
+                    <Dropdown
+                      id="room-type"
+                      value={form.roomType}
+                      onChange={(v) => updateField("roomType", v as RoomType)}
+                      options={ROOM_TYPES.map((t) => ({ value: t, label: ROOM_TYPE_LABELS[t] }))}
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label htmlFor="room-number" className="field-label">เลขห้อง</label>
+                    <input
+                      id="room-number"
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={2}
+                      value={form.roomNumber}
+                      onChange={(e) => updateField("roomNumber", e.target.value)}
+                      className={fieldClass("roomNumber")}
+                      aria-invalid={!!formErrors.roomNumber}
+                      placeholder="เช่น 01"
+                    />
+                    {errorText("roomNumber")}
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <span className="field-label">รหัสห้อง</span>
+                    <p className="h-12 flex items-center font-mono text-title-medium text-ink tabular-nums" aria-live="polite">
+                      {roomCode ?? <span className="font-sans text-body-small text-ink-subtle">กรอกอาคาร ชั้น และเลขห้อง</span>}
+                    </p>
+                  </div>
+
                   <div className="md:col-span-6">
                     <label htmlFor="room-admin" className="field-label">ผู้ดูแลห้อง *</label>
                     <Dropdown
@@ -612,6 +672,16 @@ export default function RoomsManagementPage() {
       )}
 
       <RoomGuideDialog open={guideOpen} onClose={() => setGuideOpen(false)} />
+
+      <RoomImportDialog
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        onImported={({ created, deletedRooms, deletedBookings }) => {
+          setImportOpen(false);
+          toast(`นำเข้า ${created} ห้องแล้ว (ลบห้องเดิม ${deletedRooms} ห้อง การจอง ${deletedBookings} รายการ)`, { type: "success" });
+          fetchRooms();
+        }}
+      />
 
       <ConfirmDialog
         open={!!roomPendingDelete}

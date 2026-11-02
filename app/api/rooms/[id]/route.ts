@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { roomSchema } from "@/lib/room-schema";
+import { DUPLICATE_ROOM_CODE_ERROR, isDuplicateRoomCode, roomCodeMismatch, roomSchema } from "@/lib/room-schema";
 import { firstError } from "@/lib/validation";
 
 // GET a specific room
@@ -94,7 +94,12 @@ export async function PUT(
       return NextResponse.json({ error: firstError(parsed.error) }, { status: 400 });
     }
 
-    const { name, description, capacity, pricePerHour, image, amenities, photos, status, roomAdminId } = parsed.data;
+    const { roomType, roomNumber, code, name, description, capacity, pricePerHour, image, amenities, photos, status, roomAdminId } = parsed.data;
+
+    const codeError = roomCodeMismatch(code, roomType ?? room.roomType);
+    if (codeError) {
+      return NextResponse.json({ error: codeError }, { status: 400 });
+    }
 
     // Only system admins can hand a room to another admin.
     if (roomAdminId !== undefined && roomAdminId !== room.roomAdminId) {
@@ -113,6 +118,9 @@ export async function PUT(
     const updatedRoom = await prisma.room.update({
       where: { id: id },
       data: {
+        ...(roomType && { roomType }),
+        ...(roomNumber !== undefined && { roomNumber }),
+        ...(code !== undefined && { code }),
         ...(name && { name }),
         ...(description !== undefined && { description }),
         ...(capacity && { capacity }),
@@ -132,6 +140,9 @@ export async function PUT(
 
     return NextResponse.json(updatedRoom);
   } catch (error) {
+    if (isDuplicateRoomCode(error)) {
+      return NextResponse.json({ error: DUPLICATE_ROOM_CODE_ERROR }, { status: 409 });
+    }
     console.error("Error updating room:", error);
     return NextResponse.json(
       { error: "เกิดข้อผิดพลาดที่เซิร์ฟเวอร์ กรุณาลองใหม่" },

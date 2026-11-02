@@ -9,10 +9,11 @@ import AmenityCheckboxes from "@/app/components/AmenityCheckboxes";
 import { PHOTO_SHOTS, PHOTO_URL_ERROR, amenityKeys, isPhotoUrl, parseRoomPhotos, type RoomPhotos } from "@/lib/room-photos";
 import { SkeletonCards } from "@/app/components/Skeleton";
 import { useToast } from "@/app/components/Toast";
-import { formatPricePerHour, roomLocation } from "@/lib/format";
+import { formatPricePerHour, roomLocation, roomTitle } from "@/lib/format";
 
 interface Room {
   id: string;
+  code?: string | null;
   name: string;
   description?: string;
   capacity: number;
@@ -272,7 +273,7 @@ export default function MyRoomsPage() {
                     </div>
                     <div className="p-4 sm:p-6 flex-1 flex flex-col">
                     <h3 className="card__title mb-1">
-                      {room.name}
+                      {roomTitle(room)}
                     </h3>
                     <p className="icon-lead gap-2 card__body text-ink-subtle mb-4">
                       <span className="icon icon--20" aria-hidden="true">location_on</span>
