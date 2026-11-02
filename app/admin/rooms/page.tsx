@@ -11,7 +11,7 @@ import RoomImportDialog from "@/app/components/RoomImportDialog";
 import { roomCover } from "@/app/components/RoomGallery";
 import PhotoGuide from "@/app/components/PhotoGuide";
 import AmenityCheckboxes from "@/app/components/AmenityCheckboxes";
-import { PHOTO_SHOTS, PHOTO_URL_ERROR, isPhotoUrl, parseRoomPhotos, type RoomPhotos } from "@/lib/room-photos";
+import { PHOTO_URL_ERROR, folderPhotos, pruneAmenityPhotos, isPhotoUrl, parseRoomPhotos, roomImage, type RoomPhotos } from "@/lib/room-photos";
 import { SkeletonCards } from "@/app/components/Skeleton";
 import { useToast } from "@/app/components/Toast";
 import { formatPricePerHour, roomLocation, roomTitle } from "@/lib/format";
@@ -226,7 +226,7 @@ export default function RoomsManagementPage() {
     if (!isPhotoUrl(form.image)) {
       errors.image = PHOTO_URL_ERROR;
     }
-    if (PHOTO_SHOTS.some((shot) => !isPhotoUrl(form.photos[shot] || ""))) {
+    if (Object.values(form.photos).some((url) => !isPhotoUrl(url || ""))) {
       errors.photos = `รูปห้องและอุปกรณ์${PHOTO_URL_ERROR}`;
     }
     setFormErrors(errors);
@@ -248,7 +248,7 @@ export default function RoomsManagementPage() {
           pricePerHour,
           image: form.image.trim(),
           amenities: form.amenities,
-          photos: form.photos,
+          photos: pruneAmenityPhotos(form.photos, form.amenities),
           roomAdminId: form.roomAdminId,
           status: form.status,
         }),
@@ -397,7 +397,7 @@ export default function RoomsManagementPage() {
                 <div key={room.id} className="card relative p-0 sm:p-0 flex flex-col">
                   <div className={`relative aspect-video card__media rounded-t-md overflow-hidden ${room.status ? "" : "grayscale opacity-60"}`}>
                     <img src={roomCover(room)} alt="" loading="lazy" className="w-full h-full object-cover" />
-                    {!room.image && (
+                    {!roomImage(room) && (
                       <span className="absolute top-3 left-3 badge-neutral !bg-ink/70 !text-white">
                         ภาพจำลอง
                       </span>
@@ -638,6 +638,8 @@ export default function RoomsManagementPage() {
                       cover={form.image}
                       onCoverChange={(url) => updateField("image", url)}
                       photos={form.photos}
+                      folder={folderPhotos(roomCode)}
+                      onRemoveAmenity={(a) => updateField("amenities", form.amenities.filter((x) => x !== a))}
                       onPhotoChange={(shot, url) => {
                         setForm((f) => ({ ...f, photos: { ...f.photos, [shot]: url } }));
                         setFormErrors((e) => ({ ...e, photos: undefined }));

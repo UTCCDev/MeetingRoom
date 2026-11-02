@@ -7,12 +7,15 @@ import AppHeader from "@/app/components/AppHeader";
 import Dropdown from "@/app/components/Dropdown";
 import DatePicker from "@/app/components/DatePicker";
 import { roomCover } from "@/app/components/RoomGallery";
+import { roomImage } from "@/lib/room-photos";
 import { SkeletonCards } from "@/app/components/Skeleton";
+import { ROOM_TYPES, type RoomType } from "@/lib/room-code";
 import { addMinutes, bangkokISO, formatPricePerHour, formatTime, roomLocation, roomTitle, TIME_SLOTS, toDateKey, todayKey } from "@/lib/format";
 
 interface Room {
   id: string;
   code?: string | null;
+  roomType?: RoomType;
   name: string;
   description: string;
   capacity: number;
@@ -28,6 +31,14 @@ interface Room {
 
 const END_SLOTS = [...TIME_SLOTS.slice(1), "22:00"];
 
+// Short labels for the filter chips (ROOM_TYPE_LABELS carries the code prefix, for admins).
+const TYPE_FILTERS: { value: RoomType | ""; label: string }[] = [
+  { value: "", label: "ทั้งหมด" },
+  { value: "MEETING", label: "ห้องประชุม" },
+  { value: "EVENT", label: "ห้องจัดงาน" },
+  { value: "SEMINAR", label: "ห้องสัมมนา" },
+];
+
 /** "09:00–10:00, 14:00–15:00" booked ranges for a room on the given day, earliest first. */
 function dayBookingRanges(bookings: Room["bookings"], day: string): string[] {
   return bookings
@@ -42,6 +53,7 @@ export default function RoomsPage() {
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [minCapacity, setMinCapacity] = useState("");
+  const [roomType, setRoomType] = useState<RoomType | "">("");
   const [date, setDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
@@ -66,6 +78,7 @@ export default function RoomsPage() {
           room.roomAdmin.name.toLowerCase().includes(normalizedSearch);
 
         const matchesCapacity = !minSeats || room.capacity >= minSeats;
+        const matchesType = !roomType || (room.roomType ?? "MEETING") === roomType;
 
         const isFree =
           !window_ ||
@@ -73,25 +86,26 @@ export default function RoomsPage() {
             (b) => new Date(b.startTime) < window_.end && new Date(b.endTime) > window_.start
           );
 
-        return matchesSearch && matchesCapacity && isFree;
+        return matchesSearch && matchesCapacity && matchesType && isFree;
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [rooms, normalizedSearch, minSeats, date, startTime, endTime]
+    [rooms, normalizedSearch, minSeats, roomType, date, startTime, endTime]
   );
-  const paged = usePagination(filteredRooms, 12, `${searchTerm}|${minCapacity}|${date}|${startTime}|${endTime}`);
+  const paged = usePagination(filteredRooms, 12, `${searchTerm}|${minCapacity}|${roomType}|${date}|${startTime}|${endTime}`);
 
-  const hasFilters = !!(searchTerm || minCapacity || date || startTime || endTime);
+  const hasFilters = !!(searchTerm || minCapacity || roomType || date || startTime || endTime);
 
   const clearFilters = () => {
     setSearchTerm("");
     setMinCapacity("");
+    setRoomType("");
     setDate("");
     setStartTime("");
     setEndTime("");
   };
 
   useEffect(() => {
-    // Filters can arrive from the landing page's quick search (?q, seats, date, start, end).
+    // Filters can arrive from the landing page's quick search (?q, seats, type, date, start, end).
     const qs = new URLSearchParams(window.location.search);
     const q = qs.get("q");
     const seats = parseInt(qs.get("seats") || "", 10);
@@ -100,6 +114,8 @@ export default function RoomsPage() {
     const e = qs.get("end");
     if (q) setSearchTerm(q);
     if (seats > 0) setMinCapacity(String(seats));
+    const t = qs.get("type")?.toUpperCase();
+    if (t && (ROOM_TYPES as readonly string[]).includes(t)) setRoomType(t as RoomType);
     if (d && /^\d{4}-\d{2}-\d{2}$/.test(d) && d >= todayKey()) setDate(d);
     if (s && TIME_SLOTS.includes(s)) {
       setStartTime(s);
@@ -226,6 +242,24 @@ export default function RoomsPage() {
           </fieldset>
           </div>
 
+          <div>
+            <p id="room-type-label" className="field-label">ประเภทห้อง</p>
+            <div className="chip-group" role="group" aria-labelledby="room-type-label">
+              {TYPE_FILTERS.map((t) => (
+                <button
+                  key={t.value || "all"}
+                  type="button"
+                  className="chip"
+                  aria-pressed={roomType === t.value}
+                  onClick={() => setRoomType(t.value)}
+                >
+                  {roomType === t.value && <span className="icon" aria-hidden="true">check</span>}
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {(date || startTime) && !window_ && (
             <p className="flex items-center gap-2 text-body-small text-ink-muted">
               <span className="icon icon--20 text-primary" aria-hidden="true">info</span>
@@ -299,7 +333,7 @@ export default function RoomsPage() {
                       loading="lazy"
                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 motion-reduce:transition-none"
                     />
-                    {!room.image && (
+                    {!roomImage(room) && (
                       <span className="absolute top-3 right-3 badge-neutral !bg-ink/70 !text-white">
                         ภาพจำลอง
                       </span>

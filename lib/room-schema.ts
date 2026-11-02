@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { PHOTO_SHOTS, PHOTO_URL_ERROR, SHOT_INFO, isPhotoUrl, type PhotoShot } from "./room-photos";
+import { CUSTOM_AMENITY_MAX, PHOTO_SHOTS, PHOTO_URL_ERROR, isPhotoUrl } from "./room-photos";
 import { ROOM_CODE_PATTERN, ROOM_TYPES, ROOM_TYPE_PREFIX, type RoomType } from "./room-code";
 
 /** Error message when a code's prefix doesn't match the room type, else null. */
@@ -53,21 +53,18 @@ export const roomSchema = z.object({
     .optional()
     .nullable(),
   amenities: z.array(z.string().trim().min(1).max(50)).max(20).optional(),
+  // Keys are built-in shots or custom amenity names (see RoomPhotos).
   photos: z
-    .object(
-      Object.fromEntries(
-        PHOTO_SHOTS.map((shot) => [
-          shot,
-          z
-            .string()
-            .trim()
-            .max(1000, `URL รูป${SHOT_INFO[shot].title}ยาวเกินไป`)
-            .refine(isPhotoUrl, `รูป${SHOT_INFO[shot].title}${PHOTO_URL_ERROR}`)
-            .optional(),
-        ])
-      ) as Record<PhotoShot, z.ZodOptional<z.ZodEffects<z.ZodString>>>
+    .record(
+      z.string().trim().min(1).max(CUSTOM_AMENITY_MAX),
+      z
+        .string()
+        .trim()
+        .max(1000, "URL รูปยาวเกินไป")
+        .refine(isPhotoUrl, `รูป${PHOTO_URL_ERROR}`)
+        .optional()
     )
-    .strip()
+    .refine((p) => Object.keys(p).length <= PHOTO_SHOTS.length + 20, "รูปอุปกรณ์มากเกินไป")
     // Drop empty fields so cleared photos fall back to the sample.
     .transform((p) => Object.fromEntries(Object.entries(p).filter(([, url]) => url)))
     .optional(),

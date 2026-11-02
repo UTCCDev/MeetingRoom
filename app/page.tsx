@@ -291,7 +291,7 @@ async function PublicLanding() {
   const [rooms, todayBookings] = await Promise.all([
     prisma.room.findMany({
       where: { status: true },
-      select: { id: true, name: true, description: true, capacity: true, image: true },
+      select: { id: true, code: true, name: true, description: true, capacity: true, image: true },
     }),
     prisma.booking.findMany({
       where: {

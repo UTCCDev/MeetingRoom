@@ -1,0 +1,404 @@
+{
+  "E030401": {
+    "cover": "/room-photos/all/E030401/E030401_cover.jpg",
+    "entrance": "/room-photos/all/E030401/E030401_entrance.jpg",
+    "projector": "/room-photos/all/E030401/E030401_projector.jpg",
+    "seating": "/room-photos/all/E030401/E030401_seating.jpg",
+    "tv": "/room-photos/all/E030401/E030401_tv.jpg"
+  },
+  "E050101": {
+    "cover": "/room-photos/all/E050101/E050101_cover.jpg",
+    "entrance": "/room-photos/all/E050101/E050101_entrance.jpg",
+    "seating": "/room-photos/all/E050101/E050101_seating.jpg",
+    "tv": "/room-photos/all/E050101/E050101_tv.jpg"
+  },
+  "E050901": {
+    "cover": "/room-photos/all/E050901/E050901_cover.jpg",
+    "entrance": "/room-photos/all/E050901/E050901_entrance.jpg",
+    "projector": "/room-photos/all/E050901/E050901_projector.jpg",
+    "seating": "/room-photos/all/E050901/E050901_seating.jpg",
+    "tv": "/room-photos/all/E050901/E050901_tv.jpg"
+  },
+  "E071201": {
+    "cover": "/room-photos/all/E071201/E071201_cover.jpg",
+    "entrance": "/room-photos/all/E071201/E071201_entrance.jpg",
+    "seating": "/room-photos/all/E071201/E071201_seating.jpg",
+    "ตู้กดน้ำ": "/room-photos/all/E071201/E071201_%E0%B8%95%E0%B8%B9%E0%B9%89%E0%B8%81%E0%B8%94%E0%B8%99%E0%B9%89%E0%B8%B3.jpg",
+    "พัดลมไอเย็น": "/room-photos/all/E071201/E071201_%E0%B8%9E%E0%B8%B1%E0%B8%94%E0%B8%A5%E0%B8%A1%E0%B9%84%E0%B8%AD%E0%B9%80%E0%B8%A2%E0%B9%87%E0%B8%99.jpg",
+    "ลำโพง": "/room-photos/all/E071201/E071201_%E0%B8%A5%E0%B8%B3%E0%B9%82%E0%B8%9E%E0%B8%87.jpg"
+  },
+  "E100101": {
+    "cover": "/room-photos/all/E100101/E100101_cover.jpg",
+    "entrance": "/room-photos/all/E100101/E100101_entrance.jpg",
+    "seating": "/room-photos/all/E100101/E100101_seating.jpg",
+    "tv": "/room-photos/all/E100101/E100101_tv.jpg",
+    "ลำโพง": "/room-photos/all/E100101/E100101_%E0%B8%A5%E0%B8%B3%E0%B9%82%E0%B8%9E%E0%B8%87.jpg"
+  },
+  "E100301": {
+    "cover": "/room-photos/all/E100301/E100301_cover.jpg",
+    "entrance": "/room-photos/all/E100301/E100301_entrance.jpg",
+    "projector": "/room-photos/all/E100301/E100301_projector.jpg",
+    "seating": "/room-photos/all/E100301/E100301_seating.jpg"
+  },
+  "E150101": {
+    "cover": "/room-photos/all/E150101/E150101_cover.jpg",
+    "cover2": "/room-photos/all/E150101/E150101_cover2.jpg",
+    "entrance": "/room-photos/all/E150101/E150101_entrance.jpg",
+    "projector": "/room-photos/all/E150101/E150101_projector.jpg",
+    "seating": "/room-photos/all/E150101/E150101_seating.jpg"
+  },
+  "E230701": {
+    "cover": "/room-photos/all/E230701/E230701_cover.jpg",
+    "entrance": "/room-photos/all/E230701/E230701_entrance.jpg",
+    "projector": "/room-photos/all/E230701/E230701_projector.jpg",
+    "seating": "/room-photos/all/E230701/E230701_seating.jpg",
+    "ชุดควบคุมภาพและเสียง": "/room-photos/all/E230701/E230701_%E0%B8%8A%E0%B8%B8%E0%B8%94%E0%B8%84%E0%B8%A7%E0%B8%9A%E0%B8%84%E0%B8%B8%E0%B8%A1%E0%B8%A0%E0%B8%B2%E0%B8%9E%E0%B9%81%E0%B8%A5%E0%B8%B0%E0%B9%80%E0%B8%AA%E0%B8%B5%E0%B8%A2%E0%B8%87.jpg"
+  },
+  "E241801": {
+    "cover": "/room-photos/all/E241801/E241801_cover.jpg",
+    "entrance": "/room-photos/all/E241801/E241801_entrance.jpg",
+    "seating": "/room-photos/all/E241801/E241801_seating.jpg"
+  },
+  "M010201": {
+    "cover": "/room-photos/all/M010201/M010201_cover.jpg",
+    "entrance": "/room-photos/all/M010201/M010201_entrance.jpg",
+    "projector": "/room-photos/all/M010201/M010201_projector.jpg",
+    "seating": "/room-photos/all/M010201/M010201_seating.jpg"
+  },
+  "M010401": {
+    "cover": "/room-photos/all/M010401/M010401_cover.jpg",
+    "entrance": "/room-photos/all/M010401/M010401_entrance.jpg",
+    "projector": "/room-photos/all/M010401/M010401_projector.jpg",
+    "seating": "/room-photos/all/M010401/M010401_seating.jpg",
+    "whiteboard": "/room-photos/all/M010401/M010401_whiteboard.jpg"
+  },
+  "M030201": {
+    "cover": "/room-photos/all/M030201/M030201_cover.jpg",
+    "entrance": "/room-photos/all/M030201/M030201_entrance.jpg",
+    "seating": "/room-photos/all/M030201/M030201_seating.jpg",
+    "whiteboard": "/room-photos/all/M030201/M030201_whiteboard.jpg"
+  },
+  "M030202": {
+    "cover": "/room-photos/all/M030202/M030202_cover.jpg",
+    "entrance": "/room-photos/all/M030202/M030202_entrance.jpg",
+    "seating": "/room-photos/all/M030202/M030202_seating.jpg",
+    "whiteboard": "/room-photos/all/M030202/M030202_whiteboard.jpg"
+  },
+  "M030203": {
+    "cover": "/room-photos/all/M030203/M030203_cover.jpg",
+    "entrance": "/room-photos/all/M030203/M030203_entrance.jpg",
+    "seating": "/room-photos/all/M030203/M030203_seating.jpg",
+    "whiteboard": "/room-photos/all/M030203/M030203_whiteboard.jpg"
+  },
+  "M030204": {
+    "cover": "/room-photos/all/M030204/M030204_cover.jpg",
+    "entrance": "/room-photos/all/M030204/M030204_entrance.jpg",
+    "seating": "/room-photos/all/M030204/M030204_seating.jpg",
+    "whiteboard": "/room-photos/all/M030204/M030204_whiteboard.jpg"
+  },
+  "M030205": {
+    "cover": "/room-photos/all/M030205/M030205_cover.jpg",
+    "entrance": "/room-photos/all/M030205/M030205_entrance.jpg",
+    "seating": "/room-photos/all/M030205/M030205_seating.jpg",
+    "whiteboard": "/room-photos/all/M030205/M030205_whiteboard.jpg"
+  },
+  "M050102": {
+    "cover": "/room-photos/all/M050102/M050102_cover.jpg",
+    "entrance": "/room-photos/all/M050102/M050102_entrance.jpg",
+    "seating": "/room-photos/all/M050102/M050102_seating.jpg",
+    "videoconference": "/room-photos/all/M050102/M050102_videoconference.jpg",
+    "whiteboard": "/room-photos/all/M050102/M050102_whiteboard.jpg"
+  },
+  "M050103": {
+    "cover": "/room-photos/all/M050103/M050103_cover.jpg",
+    "entrance": "/room-photos/all/M050103/M050103_entrance.jpg",
+    "seating": "/room-photos/all/M050103/M050103_seating.jpg"
+  },
+  "M070501": {
+    "cover": "/room-photos/all/M070501/M070501_cover.jpg",
+    "entrance": "/room-photos/all/M070501/M070501_entrance.jpg",
+    "seating": "/room-photos/all/M070501/M070501_seating.jpg",
+    "tv": "/room-photos/all/M070501/M070501_tv.jpg",
+    "whiteboard": "/room-photos/all/M070501/M070501_whiteboard.jpg"
+  },
+  "M071001": {
+    "cover": "/room-photos/all/M071001/M071001_cover.jpg",
+    "entrance": "/room-photos/all/M071001/M071001_entrance.jpg",
+    "seating": "/room-photos/all/M071001/M071001_seating.jpg",
+    "tv": "/room-photos/all/M071001/M071001_tv.jpg"
+  },
+  "M071202": {
+    "cover": "/room-photos/all/M071202/M071202_cover.jpg",
+    "entrance": "/room-photos/all/M071202/M071202_entrance.jpg",
+    "projector": "/room-photos/all/M071202/M071202_projector.jpg",
+    "seating": "/room-photos/all/M071202/M071202_seating.jpg",
+    "whiteboard": "/room-photos/all/M071202/M071202_whiteboard.jpg"
+  },
+  "M071203": {
+    "cover": "/room-photos/all/M071203/M071203_cover.jpg",
+    "entrance": "/room-photos/all/M071203/M071203_entrance.jpg",
+    "seating": "/room-photos/all/M071203/M071203_seating.jpg",
+    "whiteboard": "/room-photos/all/M071203/M071203_whiteboard.jpg"
+  },
+  "M090301": {
+    "cover": "/room-photos/all/M090301/M090301_cover.jpg",
+    "entrance": "/room-photos/all/M090301/M090301_entrance.jpg",
+    "projector": "/room-photos/all/M090301/M090301_projector.jpg",
+    "seating": "/room-photos/all/M090301/M090301_seating.jpg"
+  },
+  "M090501": {
+    "cover": "/room-photos/all/M090501/M090501_cover.jpg",
+    "entrance": "/room-photos/all/M090501/M090501_entrance.jpg",
+    "seating": "/room-photos/all/M090501/M090501_seating.jpg"
+  },
+  "M100401": {
+    "cover": "/room-photos/all/M100401/M100401_cover.jpg",
+    "entrance": "/room-photos/all/M100401/M100401_entrance.jpg",
+    "seating": "/room-photos/all/M100401/M100401_seating.jpg",
+    "tv": "/room-photos/all/M100401/M100401_tv.jpg"
+  },
+  "M100501": {
+    "cover": "/room-photos/all/M100501/M100501_cover.jpg",
+    "entrance": "/room-photos/all/M100501/M100501_entrance.jpg",
+    "seating": "/room-photos/all/M100501/M100501_seating.jpg",
+    "tv": "/room-photos/all/M100501/M100501_tv.jpg",
+    "เครื่องฟอกอากาศ": "/room-photos/all/M100501/M100501_%E0%B9%80%E0%B8%84%E0%B8%A3%E0%B8%B7%E0%B9%88%E0%B8%AD%E0%B8%87%E0%B8%9F%E0%B8%AD%E0%B8%81%E0%B8%AD%E0%B8%B2%E0%B8%81%E0%B8%B2%E0%B8%A8.jpg"
+  },
+  "M100502": {
+    "cover": "/room-photos/all/M100502/M100502_cover.jpg",
+    "entrance": "/room-photos/all/M100502/M100502_entrance.jpg",
+    "seating": "/room-photos/all/M100502/M100502_seating.jpg",
+    "whiteboard": "/room-photos/all/M100502/M100502_whiteboard.jpg"
+  },
+  "M100503": {
+    "cover": "/room-photos/all/M100503/M100503_cover.jpg",
+    "entrance": "/room-photos/all/M100503/M100503_entrance.jpg",
+    "microphone": "/room-photos/all/M100503/M100503_microphone.jpg",
+    "projector": "/room-photos/all/M100503/M100503_projector.jpg",
+    "seating": "/room-photos/all/M100503/M100503_seating.jpg",
+    "ตู้อุปกรณ์": "/room-photos/all/M100503/M100503_%E0%B8%95%E0%B8%B9%E0%B9%89%E0%B8%AD%E0%B8%B8%E0%B8%9B%E0%B8%81%E0%B8%A3%E0%B8%93%E0%B9%8C.jpg"
+  },
+  "M140301": {
+    "cover": "/room-photos/all/M140301/M140301_cover.jpg",
+    "entrance": "/room-photos/all/M140301/M140301_entrance.jpg",
+    "seating": "/room-photos/all/M140301/M140301_seating.jpg"
+  },
+  "M140302": {
+    "cover": "/room-photos/all/M140302/M140302_cover.jpg",
+    "entrance": "/room-photos/all/M140302/M140302_entrance.jpg",
+    "seating": "/room-photos/all/M140302/M140302_seating.jpg"
+  },
+  "M190301": {
+    "cover": "/room-photos/all/M190301/M190301_cover.jpg",
+    "entrance": "/room-photos/all/M190301/M190301_entrance.jpg",
+    "projector": "/room-photos/all/M190301/M190301_projector.jpg",
+    "seating": "/room-photos/all/M190301/M190301_seating.jpg",
+    "whiteboard": "/room-photos/all/M190301/M190301_whiteboard.jpg"
+  },
+  "M210101": {
+    "cover": "/room-photos/all/M210101/M210101_cover.jpg",
+    "entrance": "/room-photos/all/M210101/M210101_entrance.jpg",
+    "seating": "/room-photos/all/M210101/M210101_seating.jpg",
+    "videoconference": "/room-photos/all/M210101/M210101_videoconference.jpg"
+  },
+  "M210701": {
+    "cover": "/room-photos/all/M210701/M210701_cover.jpg",
+    "entrance": "/room-photos/all/M210701/M210701_entrance.jpg",
+    "seating": "/room-photos/all/M210701/M210701_seating.jpg",
+    "tv": "/room-photos/all/M210701/M210701_tv.jpg",
+    "whiteboard": "/room-photos/all/M210701/M210701_whiteboard.jpg"
+  },
+  "M210702": {
+    "cover": "/room-photos/all/M210702/M210702_cover.jpg",
+    "entrance": "/room-photos/all/M210702/M210702_entrance.jpg",
+    "printer": "/room-photos/all/M210702/M210702_printer.jpg",
+    "seating": "/room-photos/all/M210702/M210702_seating.jpg"
+  },
+  "M210703": {
+    "cover": "/room-photos/all/M210703/M210703_cover.jpg",
+    "entrance": "/room-photos/all/M210703/M210703_entrance.jpg",
+    "seating": "/room-photos/all/M210703/M210703_seating.jpg",
+    "videoconference": "/room-photos/all/M210703/M210703_videoconference.jpg"
+  },
+  "M210704": {
+    "cover": "/room-photos/all/M210704/M210704_cover.jpg",
+    "entrance": "/room-photos/all/M210704/M210704_entrance.jpg",
+    "microphone": "/room-photos/all/M210704/M210704_microphone.jpg",
+    "projector": "/room-photos/all/M210704/M210704_projector.jpg",
+    "seating": "/room-photos/all/M210704/M210704_seating.jpg",
+    "เครื่องฟอกอากาศ": "/room-photos/all/M210704/M210704_%E0%B9%80%E0%B8%84%E0%B8%A3%E0%B8%B7%E0%B9%88%E0%B8%AD%E0%B8%87%E0%B8%9F%E0%B8%AD%E0%B8%81%E0%B8%AD%E0%B8%B2%E0%B8%81%E0%B8%B2%E0%B8%A8.jpg"
+  },
+  "M220401": {
+    "cover": "/room-photos/all/M220401/M220401_cover.jpg",
+    "entrance": "/room-photos/all/M220401/M220401_entrance.jpg",
+    "seating": "/room-photos/all/M220401/M220401_seating.jpg",
+    "tv": "/room-photos/all/M220401/M220401_tv.jpg"
+  },
+  "M230501": {
+    "cover": "/room-photos/all/M230501/M230501_cover.jpg",
+    "entrance": "/room-photos/all/M230501/M230501_entrance.jpg",
+    "seating": "/room-photos/all/M230501/M230501_seating.jpg"
+  },
+  "M230601": {
+    "cover": "/room-photos/all/M230601/M230601_cover.jpg",
+    "entrance": "/room-photos/all/M230601/M230601_entrance.jpg",
+    "projector": "/room-photos/all/M230601/M230601_projector.jpg",
+    "seating": "/room-photos/all/M230601/M230601_seating.jpg",
+    "whiteboard": "/room-photos/all/M230601/M230601_whiteboard.jpg"
+  },
+  "M240801": {
+    "cover": "/room-photos/all/M240801/M240801_cover.jpg",
+    "entrance": "/room-photos/all/M240801/M240801_entrance.jpg",
+    "projector": "/room-photos/all/M240801/M240801_projector.jpg",
+    "seating": "/room-photos/all/M240801/M240801_seating.jpg"
+  },
+  "M240901": {
+    "cover": "/room-photos/all/M240901/M240901_cover.jpg",
+    "entrance": "/room-photos/all/M240901/M240901_entrance.jpg",
+    "seating": "/room-photos/all/M240901/M240901_seating.jpg"
+  },
+  "M241001": {
+    "cover": "/room-photos/all/M241001/M241001_cover.jpg",
+    "entrance": "/room-photos/all/M241001/M241001_entrance.jpg",
+    "seating": "/room-photos/all/M241001/M241001_seating.jpg"
+  },
+  "M241101": {
+    "cover": "/room-photos/all/M241101/M241101_cover.jpg",
+    "entrance": "/room-photos/all/M241101/M241101_entrance.jpg",
+    "seating": "/room-photos/all/M241101/M241101_seating.jpg",
+    "tv": "/room-photos/all/M241101/M241101_tv.jpg",
+    "whiteboard": "/room-photos/all/M241101/M241101_whiteboard.jpg"
+  },
+  "M241201": {
+    "cover": "/room-photos/all/M241201/M241201_cover.jpg",
+    "entrance": "/room-photos/all/M241201/M241201_entrance.jpg",
+    "seating": "/room-photos/all/M241201/M241201_seating.jpg"
+  },
+  "M241202": {
+    "cover": "/room-photos/all/M241202/M241202_cover.jpg",
+    "entrance": "/room-photos/all/M241202/M241202_entrance.jpg",
+    "seating": "/room-photos/all/M241202/M241202_seating.jpg",
+    "tv": "/room-photos/all/M241202/M241202_tv.jpg"
+  },
+  "M2412A01": {
+    "cover": "/room-photos/all/M2412A01/M2412A01_cover.jpg",
+    "entrance": "/room-photos/all/M2412A01/M2412A01_entrance.jpg",
+    "seating": "/room-photos/all/M2412A01/M2412A01_seating.jpg",
+    "whiteboard": "/room-photos/all/M2412A01/M2412A01_whiteboard.jpg"
+  },
+  "M241401": {
+    "cover": "/room-photos/all/M241401/M241401_cover.jpg",
+    "entrance": "/room-photos/all/M241401/M241401_entrance.jpg",
+    "projector": "/room-photos/all/M241401/M241401_projector.jpg",
+    "seating": "/room-photos/all/M241401/M241401_seating.jpg",
+    "whiteboard": "/room-photos/all/M241401/M241401_whiteboard.jpg"
+  },
+  "M241501": {
+    "cover": "/room-photos/all/M241501/M241501_cover.jpg",
+    "entrance": "/room-photos/all/M241501/M241501_entrance.jpg",
+    "projector": "/room-photos/all/M241501/M241501_projector.jpg",
+    "seating": "/room-photos/all/M241501/M241501_seating.jpg",
+    "tv": "/room-photos/all/M241501/M241501_tv.jpg",
+    "videoconference": "/room-photos/all/M241501/M241501_videoconference.jpg"
+  },
+  "M241502": {
+    "cover": "/room-photos/all/M241502/M241502_cover.jpg",
+    "entrance": "/room-photos/all/M241502/M241502_entrance.jpg",
+    "projector": "/room-photos/all/M241502/M241502_projector.jpg",
+    "seating": "/room-photos/all/M241502/M241502_seating.jpg",
+    "tv": "/room-photos/all/M241502/M241502_tv.jpg",
+    "videoconference": "/room-photos/all/M241502/M241502_videoconference.jpg"
+  },
+  "M241503": {
+    "cover": "/room-photos/all/M241503/M241503_cover.jpg",
+    "entrance": "/room-photos/all/M241503/M241503_entrance.jpg",
+    "seating": "/room-photos/all/M241503/M241503_seating.jpg",
+    "videoconference": "/room-photos/all/M241503/M241503_videoconference.jpg"
+  },
+  "M241504": {
+    "cover": "/room-photos/all/M241504/M241504_cover.jpg",
+    "entrance": "/room-photos/all/M241504/M241504_entrance.jpg",
+    "projector": "/room-photos/all/M241504/M241504_projector.jpg",
+    "seating": "/room-photos/all/M241504/M241504_seating.jpg"
+  },
+  "M241601": {
+    "cover": "/room-photos/all/M241601/M241601_cover.jpg",
+    "entrance": "/room-photos/all/M241601/M241601_entrance.jpg",
+    "projector": "/room-photos/all/M241601/M241601_projector.jpg",
+    "seating": "/room-photos/all/M241601/M241601_seating.jpg"
+  },
+  "M241701": {
+    "cover": "/room-photos/all/M241701/M241701_cover.jpg",
+    "entrance": "/room-photos/all/M241701/M241701_entrance.jpg",
+    "seating": "/room-photos/all/M241701/M241701_seating.jpg",
+    "tv": "/room-photos/all/M241701/M241701_tv.jpg"
+  },
+  "M241702": {
+    "cover": "/room-photos/all/M241702/M241702_cover.jpg",
+    "entrance": "/room-photos/all/M241702/M241702_entrance.jpg",
+    "projector": "/room-photos/all/M241702/M241702_projector.jpg",
+    "seating": "/room-photos/all/M241702/M241702_seating.jpg"
+  },
+  "MMT0101": {
+    "cover": "/room-photos/all/MMT0101/MMT0101_cover.jpg",
+    "entrance": "/room-photos/all/MMT0101/MMT0101_entrance.jpg",
+    "seating": "/room-photos/all/MMT0101/MMT0101_seating.jpg",
+    "tv": "/room-photos/all/MMT0101/MMT0101_tv.jpg"
+  },
+  "S050201": {
+    "cover": "/room-photos/all/S050201/S050201_cover.jpg",
+    "entrance": "/room-photos/all/S050201/S050201_entrance.jpg",
+    "microphone": "/room-photos/all/S050201/S050201_microphone.jpg",
+    "seating": "/room-photos/all/S050201/S050201_seating.jpg"
+  },
+  "S050202": {
+    "cover": "/room-photos/all/S050202/S050202_cover.jpg",
+    "entrance": "/room-photos/all/S050202/S050202_entrance.jpg",
+    "projector": "/room-photos/all/S050202/S050202_projector.jpg",
+    "seating": "/room-photos/all/S050202/S050202_seating.jpg",
+    "videoconference": "/room-photos/all/S050202/S050202_videoconference.jpg"
+  },
+  "S070101": {
+    "cover": "/room-photos/all/S070101/S070101_cover.jpg",
+    "entrance": "/room-photos/all/S070101/S070101_entrance.jpg",
+    "seating": "/room-photos/all/S070101/S070101_seating.jpg",
+    "tv": "/room-photos/all/S070101/S070101_tv.jpg"
+  },
+  "S090701": {
+    "cover": "/room-photos/all/S090701/S090701_cover.jpg",
+    "entrance": "/room-photos/all/S090701/S090701_entrance.jpg",
+    "microphone": "/room-photos/all/S090701/S090701_microphone.jpg",
+    "projector": "/room-photos/all/S090701/S090701_projector.jpg",
+    "seating": "/room-photos/all/S090701/S090701_seating.jpg"
+  },
+  "S100201": {
+    "cover": "/room-photos/all/S100201/S100201_cover.jpg",
+    "entrance": "/room-photos/all/S100201/S100201_entrance.jpg",
+    "projector": "/room-photos/all/S100201/S100201_projector.jpg",
+    "seating": "/room-photos/all/S100201/S100201_seating.jpg",
+    "tv": "/room-photos/all/S100201/S100201_tv.jpg"
+  },
+  "S100302": {
+    "cover": "/room-photos/all/S100302/S100302_cover.jpg",
+    "entrance": "/room-photos/all/S100302/S100302_entrance.jpg",
+    "projector": "/room-photos/all/S100302/S100302_projector.jpg",
+    "seating": "/room-photos/all/S100302/S100302_seating.jpg",
+    "videoconference": "/room-photos/all/S100302/S100302_videoconference.jpg"
+  },
+  "S100303": {
+    "cover": "/room-photos/all/S100303/S100303_cover.jpg",
+    "entrance": "/room-photos/all/S100303/S100303_entrance.jpg",
+    "microphone": "/room-photos/all/S100303/S100303_microphone.jpg",
+    "projector": "/room-photos/all/S100303/S100303_projector.jpg",
+    "seating": "/room-photos/all/S100303/S100303_seating.jpg",
+    "tv": "/room-photos/all/S100303/S100303_tv.jpg",
+    "videoconference": "/room-photos/all/S100303/S100303_videoconference.jpg"
+  },
+  "S100304": {
+    "cover": "/room-photos/all/S100304/S100304_cover.jpg",
+    "entrance": "/room-photos/all/S100304/S100304_entrance.jpg",
+    "projector": "/room-photos/all/S100304/S100304_projector.jpg",
+    "seating": "/room-photos/all/S100304/S100304_seating.jpg",
+    "videoconference": "/room-photos/all/S100304/S100304_videoconference.jpg"
+  }
+}

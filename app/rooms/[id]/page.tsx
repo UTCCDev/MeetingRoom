@@ -8,7 +8,7 @@ import AppHeader from "@/app/components/AppHeader";
 import Dropdown from "@/app/components/Dropdown";
 import DatePicker from "@/app/components/DatePicker";
 import RoomGallery from "@/app/components/RoomGallery";
-import { parseRoomPhotos } from "@/lib/room-photos";
+import { roomImage, roomPhotos } from "@/lib/room-photos";
 import { SkeletonCards } from "@/app/components/Skeleton";
 import { useToast } from "@/app/components/Toast";
 import {
@@ -27,6 +27,7 @@ import {
 
 interface Room {
   id: string;
+  code?: string | null;
   name: string;
   description: string;
   capacity: number;
@@ -370,7 +371,7 @@ export default function RoomDetailPage() {
           <div className="lg:col-span-2 space-y-6">
             <div className="card p-0 sm:p-0 overflow-hidden">
               <RoomGallery
-                room={{ id: room.id, name: room.name, capacity: room.capacity, amenities: amenitiesList, image: room.image, photos: parseRoomPhotos(room.photos) }}
+                room={{ id: room.id, name: room.name, capacity: room.capacity, amenities: amenitiesList, image: roomImage(room), photos: roomPhotos(room) }}
               />
               <div className="p-4 sm:p-6">
                 {/* Room facts as aligned rows: icon + label column, value column (min-h keeps first lines level). */}

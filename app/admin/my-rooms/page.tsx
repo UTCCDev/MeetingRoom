@@ -5,8 +5,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import AppHeader from "@/app/components/AppHeader";
 import PhotoGuide from "@/app/components/PhotoGuide";
-import AmenityCheckboxes from "@/app/components/AmenityCheckboxes";
-import { PHOTO_SHOTS, PHOTO_URL_ERROR, amenityKeys, isPhotoUrl, parseRoomPhotos, type RoomPhotos } from "@/lib/room-photos";
+import AmenityCheckboxes, { AMENITY_OPTIONS } from "@/app/components/AmenityCheckboxes";
+import { PHOTO_URL_ERROR, amenityKeys, pruneAmenityPhotos, folderPhotos, isPhotoUrl, roomImage, parseRoomPhotos, type RoomPhotos } from "@/lib/room-photos";
 import { SkeletonCards } from "@/app/components/Skeleton";
 import { useToast } from "@/app/components/Toast";
 import { formatPricePerHour, roomLocation, roomTitle } from "@/lib/format";
@@ -77,7 +77,7 @@ export default function MyRoomsPage() {
 
   const handleSaveRoom = async () => {
     if (!editingRoomId) return;
-    if (!isPhotoUrl(editData.image || "") || PHOTO_SHOTS.some((shot) => !isPhotoUrl(editPhotos[shot] || ""))) {
+    if (!isPhotoUrl(editData.image || "") || Object.values(editPhotos).some((url) => !isPhotoUrl(url || ""))) {
       toast(`รูปห้องและอุปกรณ์${PHOTO_URL_ERROR}`, { type: "error" });
       return;
     }
@@ -102,7 +102,7 @@ export default function MyRoomsPage() {
           pricePerHour: editData.pricePerHour,
           image: editData.image,
           amenities: amenitiesArray,
-          photos: editPhotos,
+          photos: pruneAmenityPhotos(editPhotos, amenitiesArray),
         }),
       });
 
@@ -234,6 +234,10 @@ export default function MyRoomsPage() {
                       cover={editData.image || ""}
                       onCoverChange={(url) => setEditData((d) => ({ ...d, image: url }))}
                       photos={editPhotos}
+                      folder={folderPhotos(editData.code)}
+                      onRemoveAmenity={(a) =>
+                        setEditData((d) => ({ ...d, amenities: amenityKeys(d.amenities).filter((x) => x !== a) }))
+                      }
                       onPhotoChange={(shot, url) => setEditPhotos((p) => ({ ...p, [shot]: url }))}
                     />
 
@@ -257,8 +261,8 @@ export default function MyRoomsPage() {
                   // View Mode
                   <>
                     <div className="relative aspect-video card__media">
-                      {room.image ? (
-                        <img src={room.image} alt="" className="w-full h-full object-cover" />
+                      {roomImage(room) ? (
+                        <img src={roomImage(room)} alt="" className="w-full h-full object-cover" />
                       ) : (
                         <span className="absolute inset-0 flex items-center justify-center text-primary/40" aria-hidden="true">
                           <span className="icon icon--40">meeting_room</span>
@@ -310,7 +314,7 @@ export default function MyRoomsPage() {
                                 key={amenity}
                                 className="badge-primary"
                               >
-                                {amenity}
+                                {AMENITY_OPTIONS.find((o) => o.value === amenity)?.label ?? amenity}
                               </span>
                             ))}
                         </div>

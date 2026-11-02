@@ -8,6 +8,7 @@ import {
   PHOTO_URL_ERROR,
   SHOT_INFO,
   SHOT_MOCKUPS,
+  customShots,
   isPhotoUrl,
   type PhotoShot,
   type RoomPhoto,
@@ -46,20 +47,28 @@ function ShotCard({
   sample,
   title,
   tip,
+  folder,
+  onRemove,
 }: {
   id: string;
   value: string;
   onChange: (url: string) => void;
-  sample: RoomPhoto;
+  /** Mock-up shown while empty; custom amenities have none and show a placeholder. */
+  sample?: RoomPhoto;
   title: string;
   tip: string;
+  /** The room's photo-folder file for this shot, shown when nothing is uploaded. */
+  folder?: string;
+  /** Amenity slots: removes the amenity from the room, and with it this photo. */
+  onRemove?: () => void;
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const url = value.trim();
   const invalid = !isPhotoUrl(url);
-  const own = invalid ? "" : url;
+  // The folder photo wins, same as on the room pages (see roomImage).
+  const own = folder || (invalid ? "" : url);
 
   const onFile = async (file?: File) => {
     if (!file) return;
@@ -78,9 +87,15 @@ function ShotCard({
   return (
     <figure className="rounded-sm overflow-hidden ring-1 ring-line bg-canvas flex flex-col">
       <div className="relative aspect-video overflow-hidden bg-surface-variant">
-        <img src={own || sample.src} alt="" loading="lazy" className="w-full h-full object-cover" />
+        {own || sample ? (
+          <img src={own || sample?.src} alt="" loading="lazy" className="w-full h-full object-cover" />
+        ) : (
+          <span className="w-full h-full flex items-center justify-center text-ink-subtle">
+            <span className="icon icon--24" aria-hidden="true">add_photo_alternate</span>
+          </span>
+        )}
         <span className={`absolute top-2 left-2 shadow-sm ${own ? "badge--success" : "badge-neutral !bg-white/90"}`}>
-          {own ? "รูปจริง" : sample.source ? "ภาพตัวอย่าง" : "ภาพจำลอง"}
+          {own ? (folder ? "รูปจากโฟลเดอร์" : "รูปจริง") : !sample ? "ยังไม่มีรูป" : sample.source ? "ภาพตัวอย่าง" : "ภาพจำลอง"}
         </span>
         {uploading && (
           <span className="absolute inset-0 flex items-center justify-center bg-ink/50 text-white text-title-small">
@@ -91,7 +106,7 @@ function ShotCard({
       <figcaption className="p-2 flex flex-col gap-2 flex-1">
         <p className="text-title-small text-ink">{title}</p>
         <p className="text-body-small text-ink-muted flex-1">{tip}</p>
-        {!own && sample.source && (
+        {!own && sample?.source && (
           // CC BY / BY-SA samples must keep their credit.
           <a
             href={sample.source}
@@ -102,7 +117,7 @@ function ShotCard({
             ภาพตัวอย่าง: {sample.creator || "ไม่ระบุ"} · {sample.license}
           </a>
         )}
-        {!own && !sample.source && <p className="text-label-large text-ink-subtle">ภาพจำลองการถ่ายรูป</p>}
+        {!own && sample && !sample.source && <p className="text-label-large text-ink-subtle">ภาพจำลองการถ่ายรูป</p>}
 
         <input
           ref={fileRef}
@@ -123,7 +138,18 @@ function ShotCard({
             <span className="icon icon--20" aria-hidden="true">upload</span>
             {own ? "เปลี่ยนรูป" : "อัปโหลดรูป"}
           </button>
-          {url && (
+          {onRemove ? (
+            <button
+              type="button"
+              className="icon-button"
+              onClick={onRemove}
+              disabled={uploading}
+              aria-label={`ลบ${title}ออกจากห้อง`}
+              title="ลบรายการนี้ออกจากห้อง"
+            >
+              <span className="icon icon--20" aria-hidden="true">delete</span>
+            </button>
+          ) : url && (
             <button
               type="button"
               className="icon-button"
@@ -171,6 +197,8 @@ export default function PhotoGuide({
   onCoverChange,
   photos,
   onPhotoChange,
+  folder = {},
+  onRemoveAmenity,
 }: {
   /** Ticked amenities; their photo slots show. */
   amenities: string[];
@@ -178,14 +206,23 @@ export default function PhotoGuide({
   onCoverChange: (url: string) => void;
   photos: RoomPhotos;
   // Per shot, so the parent can update from fresh state: uploads finish out of order.
-  onPhotoChange: (shot: PhotoShot, url: string) => void;
+  // shot is a PhotoShot or a custom amenity's name.
+  onPhotoChange: (shot: string, url: string) => void;
+  /** The room's photo-folder files (see folderPhotos), shown behind empty slots. */
+  folder?: RoomPhotos & { cover?: string };
+  /** Unticks an amenity (built-in or custom); its photo is dropped on save. */
+  onRemoveAmenity: (amenity: string) => void;
 }) {
   const [open, setOpen] = useState(true);
-  // An unticked amenity keeps its slot while it still has a photo, so it can be removed.
-  const shown = (shot: PhotoShot) => !isAmenity(shot) || amenities.includes(shot) || !!photos[shot]?.trim();
+  // Amenity slots show only while the room lists the amenity, same as the gallery.
+  const shown = (shot: PhotoShot) => !isAmenity(shot) || amenities.includes(shot);
   const roomShots = PHOTO_SHOTS.filter((s) => !isAmenity(s));
   const equipmentShots = PHOTO_SHOTS.filter((s) => isAmenity(s) && shown(s));
-  const slots = [cover, ...[...roomShots, ...equipmentShots].map((s) => photos[s] || "")];
+  const customs = customShots(amenities);
+  const slots = [
+    folder.cover || cover,
+    ...[...roomShots, ...equipmentShots, ...customs].map((s) => folder[s] || photos[s] || ""),
+  ];
   const filled = slots.filter((u) => u.trim() && isPhotoUrl(u)).length;
 
   const card = (shot: PhotoShot) => (
@@ -197,6 +234,22 @@ export default function PhotoGuide({
       sample={SHOT_MOCKUPS[shot]}
       title={SHOT_INFO[shot].title}
       tip={SHOT_INFO[shot].tip}
+      folder={folder[shot]}
+      onRemove={isAmenity(shot) ? () => onRemoveAmenity(shot) : undefined}
+    />
+  );
+
+  // Ids by position: the names are free text (Thai, spaces).
+  const customCard = (name: string, i: number) => (
+    <ShotCard
+      key={name}
+      id={`room-photo-custom-${i}`}
+      value={photos[name] || ""}
+      onChange={(url) => onPhotoChange(name, url)}
+      title={name}
+      tip={`ถ่าย${name}ให้เห็นชัด ๆ และเห็นตำแหน่งที่ตั้งในห้อง`}
+      folder={folder[name]}
+      onRemove={() => onRemoveAmenity(name)}
     />
   );
 
@@ -241,13 +294,17 @@ export default function PhotoGuide({
               sample={COVER_MOCKUP}
               title={COVER_SHOT.title}
               tip={COVER_SHOT.tip}
+              folder={folder.cover}
             />
             {roomShots.map(card)}
           </div>
 
           <h3 className="text-title-medium text-ink pt-2">อุปกรณ์ภายในห้อง</h3>
-          {equipmentShots.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">{equipmentShots.map(card)}</div>
+          {equipmentShots.length + customs.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {equipmentShots.map(card)}
+              {customs.map(customCard)}
+            </div>
           ) : (
             <p className="flex items-center gap-2 p-3 rounded-sm bg-canvas text-body-small text-ink-muted">
               <span className="icon icon--20" aria-hidden="true">info</span>

@@ -8,6 +8,7 @@ import {
   ROOM_PHOTOS,
   SHOT_INFO,
   SHOT_MOCKUPS,
+  customShots,
   layoutTopic,
   pick,
   roomCover,
@@ -46,8 +47,7 @@ function hash(s: string): number {
 
 /**
  * One slide per topic: the room's own photo where it has one, else a mock-up (the whole-room
- * one matches the room card). Equipment topics show when the room lists that amenity or has a
- * real photo of it.
+ * one matches the room card). Equipment topics show only when the room lists that amenity.
  */
 function slidesFor(room: GalleryRoom): Slide[] {
   const seed = hash(room.id);
@@ -59,10 +59,13 @@ function slidesFor(room: GalleryRoom): Slide[] {
   ];
   for (const shot of PHOTO_SHOTS) {
     const isAmenity = (AMENITIES as readonly string[]).includes(shot);
-    if (!isAmenity || has(shot) || photos[shot]) {
+    if (!isAmenity || has(shot)) {
       topics.push({ mockup: SHOT_MOCKUPS[shot], title: SHOT_INFO[shot].title, own: photos[shot] });
     }
   }
+  // Custom amenities have no mock-up, so only the ones with a real photo get a slide.
+  const customs = customShots(room.amenities).filter((name) => photos[name]);
+  for (const name of customs) topics.push({ mockup: SHOT_MOCKUPS.entrance, title: name, own: photos[name] });
 
   return topics.map(({ mockup, title, own }) => {
     if (own) return { src: own, title, sample: false };

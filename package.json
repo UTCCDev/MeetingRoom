@@ -4,13 +4,16 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "predev": "node scripts/room-photo-manifest.mjs",
     "dev": "next dev -p 3001",
+    "prebuild": "node scripts/room-photo-manifest.mjs",
     "build": "next build",
     "start": "next start -p 3001",
     "lint": "next lint",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:studio": "prisma studio"
+    "prisma:studio": "prisma studio",
+    "photos": "node scripts/room-photo-manifest.mjs"
   },
   "keywords": [],
   "author": "",
