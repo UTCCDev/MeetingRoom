@@ -1,0 +1,23 @@
+# Runs the app beside an existing Laradock: joins its frontend network so Laradock's nginx can
+# proxy to http://meetingroom:3001. The database is the external DB server in DATABASE_URL.
+# The network name is <laradock folder name>_frontend; check with `docker network ls` and set
+# LARADOCK_NETWORK_PREFIX in .env if the folder isn't named "laradock".
+services:
+  meetingroom:
+    build: .
+    container_name: meetingroom
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      # Photos uploaded through the app; outside the image so rebuilds don't lose them.
+      - ./uploads:/app/uploads
+    # Lets DATABASE_URL use host.docker.internal when MySQL runs on this same machine (not in Docker).
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - frontend
+
+networks:
+  frontend:
+    external: true
+    name: ${LARADOCK_NETWORK_PREFIX:-laradock}_frontend
