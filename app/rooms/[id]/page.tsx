@@ -8,6 +8,7 @@ import AppHeader from "@/app/components/AppHeader";
 import Dropdown from "@/app/components/Dropdown";
 import DatePicker from "@/app/components/DatePicker";
 import RoomGallery from "@/app/components/RoomGallery";
+import RoomCalendar from "@/app/components/RoomCalendar";
 import { roomImage, roomPhotos } from "@/lib/room-photos";
 import { SkeletonCards } from "@/app/components/Skeleton";
 import { useToast } from "@/app/components/Toast";
@@ -261,6 +262,21 @@ export default function RoomDetailPage() {
     }
   };
 
+  const scrollToSchedule = () =>
+    document.getElementById("day-schedule")?.scrollIntoView({ behavior: "smooth", block: "start" });
+
+  // A free half hour clicked in the room calendar: jump the form to that day and
+  // start an hour-long booking there (30 minutes if the next half hour is taken).
+  const pickFromCalendar = (d: string, slot: string) => {
+    chooseDate(d);
+    setRangeNote("");
+    setAnchor(slot);
+    setStartTime(slot);
+    const oneHour = addMinutes(slot, 60);
+    setEndTime(conflicts(slot, oneHour, d) ? addMinutes(slot, 30) : oneHour);
+    scrollToSchedule();
+  };
+
   const handleBooking = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -447,8 +463,19 @@ export default function RoomDetailPage() {
               </div>
             </div>
 
+            <RoomCalendar
+              bookings={bookings}
+              selectedDate={date}
+              maxDate={MAX_DATE}
+              onPickDate={(d) => {
+                chooseDate(d);
+                scrollToSchedule();
+              }}
+              onPickSlot={pickFromCalendar}
+            />
+
             {/* Day schedule */}
-            <div className="card">
+            <div id="day-schedule" className="card scroll-mt-24">
               <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                 <h2 className="flex items-center gap-2 text-headline-small text-ink">
                   <span className="icon icon--24 text-primary" aria-hidden="true">calendar_month</span>
