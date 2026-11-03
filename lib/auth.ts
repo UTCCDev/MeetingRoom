@@ -9,6 +9,14 @@ import { isAllowedEmailDomain } from "@/lib/validation";
 
 const AZURE_AD_ID = "azure-ad";
 
+// Entra ID shows a GUID "Secret ID" next to the secret "Value"; only the Value works.
+if (/^[0-9a-f]{8}-([0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(process.env.AZURE_AD_CLIENT_SECRET?.trim() || "")) {
+  console.warn(
+    "[auth] AZURE_AD_CLIENT_SECRET looks like the client secret ID, not its Value. " +
+      "Microsoft 365 sign-in will fail with AADSTS7000215. Copy the Value column from Certificates & secrets."
+  );
+}
+
 // Microsoft 365 sign-in is only offered when the Entra ID app is configured.
 // The login page asks next-auth which providers exist before showing the button.
 const microsoftProvider: Provider[] =
@@ -143,4 +151,6 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
   },
+  // Logs the real OAuth error (e.g. AADSTS codes) in the dev terminal; the login page only shows a generic message.
+  debug: process.env.NODE_ENV === "development",
 };
