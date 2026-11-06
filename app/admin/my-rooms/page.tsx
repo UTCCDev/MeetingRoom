@@ -92,8 +92,8 @@ export default function MyRoomsPage() {
           ).filter((a: any) => a)
         : [];
 
-      const response = await fetch(`/api/rooms/${editingRoomId}`, {
-        method: "PUT",
+      const response = await fetch(`/api/rooms/${editingRoomId}/update`, {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: editData.name,

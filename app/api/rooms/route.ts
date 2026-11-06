@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: firstError(parsed.error) }, { status: 400 });
     }
 
-    const { roomType, roomNumber, code, name, description, capacity, pricePerHour, image, amenities, photos, roomAdminId, status } = parsed.data;
+    const { calendarEmail, roomType, roomNumber, code, name, description, capacity, pricePerHour, image, amenities, photos, roomAdminId, status } = parsed.data;
 
     const codeError = roomCodeMismatch(code, roomType ?? "MEETING");
     if (codeError) {
@@ -96,6 +96,7 @@ export async function POST(request: NextRequest) {
 
     const room = await prisma.room.create({
       data: {
+        calendarEmail: calendarEmail ?? null,
         roomType: roomType ?? undefined,
         roomNumber: roomNumber ?? null,
         code: code ?? null,

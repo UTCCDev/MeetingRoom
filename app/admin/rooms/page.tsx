@@ -24,6 +24,7 @@ interface Room {
   code?: string | null;
   roomType: RoomType;
   roomNumber?: string | null;
+  calendarEmail?: string | null;
   name: string;
   description?: string;
   capacity: number;
@@ -50,6 +51,7 @@ interface User {
 type RoomForm = {
   roomType: RoomType;
   roomNumber: string;
+  calendarEmail: string;
   name: string;
   department: string;
   building: string;
@@ -66,6 +68,7 @@ type RoomForm = {
 const EMPTY_FORM: RoomForm = {
   roomType: "MEETING",
   roomNumber: "",
+  calendarEmail: "",
   name: "",
   department: "",
   building: "",
@@ -187,6 +190,7 @@ export default function RoomsManagementPage() {
     setForm({
       roomType: room.roomType,
       roomNumber: room.roomNumber || "",
+      calendarEmail: room.calendarEmail || "",
       name: room.name,
       ...parseDescription(room.description),
       capacity: String(room.capacity),
@@ -218,6 +222,9 @@ export default function RoomsManagementPage() {
     if (!Number.isInteger(capacity) || capacity < 1) errors.capacity = "จำนวนที่นั่งต้องเป็นจำนวนเต็มตั้งแต่ 1";
     if (!Number.isInteger(pricePerHour) || pricePerHour < 0) errors.pricePerHour = "ราคาค่าเช่าต้องเป็นจำนวนเต็มตั้งแต่ 0";
     if (!form.roomAdminId) errors.roomAdminId = "กรุณาเลือกผู้ดูแลห้อง";
+    if (form.calendarEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.calendarEmail.trim())) {
+      errors.calendarEmail = "อีเมลปฏิทินห้องไม่ถูกต้อง";
+    }
     if (form.roomNumber.trim() && !roomCode) {
       if (!/^\d{1,2}$/.test(form.roomNumber.trim())) errors.roomNumber = "เลขห้องต้องเป็นตัวเลข 1–2 หลัก";
       else if (!/^\d{1,2}$/.test(form.building.trim())) errors.building = "อาคารต้องเป็นตัวเลข 1–2 หลักเพื่อสร้างรหัสห้อง";
@@ -235,12 +242,13 @@ export default function RoomsManagementPage() {
     const isCreate = editing === "new";
     setIsSaving(true);
     try {
-      const response = await fetch(isCreate ? "/api/rooms" : `/api/rooms/${editing.id}`, {
-        method: isCreate ? "POST" : "PUT",
+      const response = await fetch(isCreate ? "/api/rooms" : `/api/rooms/${editing.id}/update`, {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           roomType: form.roomType,
           roomNumber: form.roomNumber.trim(),
+          calendarEmail: form.calendarEmail.trim(),
           code: roomCode ?? "",
           name: form.name.trim(),
           description: composeDescription(form),
@@ -269,8 +277,8 @@ export default function RoomsManagementPage() {
   const toggleStatus = async (room: Room) => {
     setOpenMenuRoomId(null);
     try {
-      const response = await fetch(`/api/rooms/${room.id}`, {
-        method: "PUT",
+      const response = await fetch(`/api/rooms/${room.id}/update`, {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: !room.status }),
       });
@@ -288,8 +296,8 @@ export default function RoomsManagementPage() {
 
     setIsDeleting(true);
     try {
-      const response = await fetch(`/api/rooms/${roomPendingDelete.id}`, {
-        method: "DELETE",
+      const response = await fetch(`/api/rooms/${roomPendingDelete.id}/delete`, {
+        method: "POST",
       });
 
       const data = await response.json().catch(() => ({}));
@@ -608,6 +616,24 @@ export default function RoomsManagementPage() {
                     <p className="h-12 flex items-center font-mono text-title-medium text-ink tabular-nums" aria-live="polite">
                       {roomCode ?? <span className="font-sans text-body-small text-ink-subtle">กรอกอาคาร ชั้น และเลขห้อง</span>}
                     </p>
+                  </div>
+
+                  <div className="md:col-span-6">
+                    <label htmlFor="room-calendar-email" className="field-label">อีเมลปฏิทินห้อง (จอหน้าห้อง)</label>
+                    <input
+                      id="room-calendar-email"
+                      type="email"
+                      value={form.calendarEmail}
+                      onChange={(e) => updateField("calendarEmail", e.target.value)}
+                      className={fieldClass("calendarEmail")}
+                      aria-invalid={!!formErrors.calendarEmail}
+                      aria-describedby="room-calendar-email-hint"
+                      placeholder="เช่น room_241500@utcc.ac.th"
+                    />
+                    <p id="room-calendar-email-hint" className="text-body-small text-ink-subtle mt-1">
+                      เมื่ออนุมัติการจอง ระบบจะเพิ่มนัดหมายลงปฏิทิน Microsoft 365 ของอีเมลนี้ และลบออกเมื่อยกเลิก เว้นว่างได้ถ้าห้องไม่มีจอ
+                    </p>
+                    {errorText("calendarEmail")}
                   </div>
 
                   <div className="md:col-span-6">

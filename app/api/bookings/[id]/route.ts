@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendBookingNotification } from "@/lib/email";
+import { createRoomEvent, deleteRoomEvent, isRoomCalendarConfigured } from "@/lib/room-calendar";
 import { canDecide, canTransition, canView } from "@/lib/validation";
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -126,6 +127,17 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ error: "คำขอนี้ถูกตัดสินแล้ว" }, { status: 409 });
     }
 
+    // Show the approved booking on the display outside the room. A Graph failure
+    // must not undo the approval, so it is only logged.
+    if (status === "APPROVED" && booking.room.calendarEmail && isRoomCalendarConfigured()) {
+      try {
+        const graphEventId = await createRoomEvent(booking.room.calendarEmail, booking);
+        await prisma.booking.update({ where: { id }, data: { graphEventId } });
+      } catch (calendarError) {
+        console.error(`Room calendar sync failed for ${booking.room.calendarEmail}, but booking was approved:`, calendarError);
+      }
+    }
+
     const updatedBooking = await prisma.booking.findUnique({
       where: { id },
       include: {
@@ -166,6 +178,7 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
 
     const booking = await prisma.booking.findUnique({
       where: { id },
+      include: { room: { select: { calendarEmail: true } } },
     });
 
     if (!booking) {
@@ -197,6 +210,16 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
       where: { id, status: { in: ["PENDING", "APPROVED"] } },
       data: { status: "CANCELLED" },
     });
+
+    // Free the slot on the room display too.
+    if (booking.graphEventId && booking.room.calendarEmail && isRoomCalendarConfigured()) {
+      try {
+        await deleteRoomEvent(booking.room.calendarEmail, booking.graphEventId);
+        await prisma.booking.update({ where: { id }, data: { graphEventId: null } });
+      } catch (calendarError) {
+        console.error(`Room calendar removal failed for ${booking.room.calendarEmail}, but booking was cancelled:`, calendarError);
+      }
+    }
 
     return NextResponse.json({ message: "ยกเลิกการจองเรียบร้อยแล้ว" });
   } catch (error) {

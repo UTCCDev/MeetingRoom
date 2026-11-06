@@ -162,8 +162,8 @@ export default function UsersPage() {
             ...(form.password && { password: form.password }),
           };
 
-      const response = await fetch("/api/admin/users", {
-        method: isCreate ? "POST" : "PUT",
+      const response = await fetch(isCreate ? "/api/admin/users" : "/api/admin/users/update", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });

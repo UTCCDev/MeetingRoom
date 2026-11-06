@@ -36,8 +36,8 @@ interface Booking {
 const UNDO_MS = 5000;
 
 async function putStatus(id: string, body: object, keepalive = false) {
-  const response = await fetch(`/api/bookings/${id}`, {
-    method: "PUT",
+  const response = await fetch(`/api/bookings/${id}/decide`, {
+    method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
     keepalive,

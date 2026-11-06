@@ -68,6 +68,16 @@ export const roomSchema = z.object({
     // Drop empty fields so cleared photos fall back to the sample.
     .transform((p) => Object.fromEntries(Object.entries(p).filter(([, url]) => url)))
     .optional(),
+  // Room mailbox whose calendar feeds the display outside the room.
+  calendarEmail: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .email("อีเมลปฏิทินห้องไม่ถูกต้อง")
+    .max(191, "อีเมลปฏิทินห้องยาวเกินไป")
+    .optional()
+    .nullable()
+    .or(z.literal("").transform(() => null)),
   roomAdminId: z.string().min(1, "กรุณาเลือกผู้ดูแลห้อง"),
   status: z.boolean().optional(),
 });

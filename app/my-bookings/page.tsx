@@ -83,8 +83,8 @@ export default function MyBookingsPage() {
     setIsCancelling(true);
 
     try {
-      const response = await fetch(`/api/bookings/${pendingCancel.id}`, {
-        method: "DELETE",
+      const response = await fetch(`/api/bookings/${pendingCancel.id}/cancel`, {
+        method: "POST",
       });
       const data = await response.json().catch(() => ({}));
 

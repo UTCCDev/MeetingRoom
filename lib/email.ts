@@ -4,7 +4,7 @@ import { formatDate, formatTime } from "@/lib/format";
 const escapeHtml = (s: string) =>
   s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
-const transporter = nodemailer.createTransport({
+const smtp = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
   port: parseInt(process.env.EMAIL_PORT || "587"),
   secure: false,
@@ -13,6 +13,26 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASSWORD,
   },
 });
+
+// .env.example ships placeholder credentials; treat those as "email not set up"
+// instead of failing every send with 535 BadCredentials.
+const PLACEHOLDER_USERS = ["your-email@gmail.com"];
+const emailConfigured =
+  !!process.env.EMAIL_HOST &&
+  !!process.env.EMAIL_USER &&
+  !!process.env.EMAIL_PASSWORD &&
+  !PLACEHOLDER_USERS.includes(process.env.EMAIL_USER.trim().toLowerCase());
+
+if (!emailConfigured) {
+  console.warn("[email] EMAIL_USER/EMAIL_PASSWORD are not set (still the .env.example placeholders); booking emails are skipped.");
+}
+
+const transporter = {
+  sendMail: async (mail: nodemailer.SendMailOptions) => {
+    if (!emailConfigured) return;
+    await smtp.sendMail(mail);
+  },
+};
 
 export const sendBookingNotification = async (
   to: string,

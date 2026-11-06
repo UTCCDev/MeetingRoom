@@ -94,7 +94,15 @@ export async function PUT(
       return NextResponse.json({ error: firstError(parsed.error) }, { status: 400 });
     }
 
-    const { roomType, roomNumber, code, name, description, capacity, pricePerHour, image, amenities, photos, status, roomAdminId } = parsed.data;
+    const { calendarEmail, roomType, roomNumber, code, name, description, capacity, pricePerHour, image, amenities, photos, status, roomAdminId } = parsed.data;
+
+    // The app writes events into this mailbox, so only system admins may point it elsewhere.
+    if (calendarEmail !== undefined && calendarEmail !== room.calendarEmail && userRole !== "SYSTEM_ADMIN") {
+      return NextResponse.json(
+        { error: "เฉพาะผู้ดูแลระบบเท่านั้นที่เปลี่ยนอีเมลปฏิทินห้องได้" },
+        { status: 403 }
+      );
+    }
 
     const codeError = roomCodeMismatch(code, roomType ?? room.roomType);
     if (codeError) {
@@ -118,6 +126,7 @@ export async function PUT(
     const updatedRoom = await prisma.room.update({
       where: { id: id },
       data: {
+        ...(calendarEmail !== undefined && { calendarEmail }),
         ...(roomType && { roomType }),
         ...(roomNumber !== undefined && { roomNumber }),
         ...(code !== undefined && { code }),

@@ -117,8 +117,8 @@ export default function NotificationBell({ userId, isApprover }: { userId: strin
     }
     setBusy(n.id);
     try {
-      const res = await fetch(`/api/bookings/${n.bookingId}`, {
-        method: "PUT",
+      const res = await fetch(`/api/bookings/${n.bookingId}/decide`, {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(status === "APPROVED" ? { status } : { status, rejectionReason: reason.trim() }),
       });

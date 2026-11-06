@@ -4,6 +4,7 @@ import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { importDescription, ownerKey, parseRoomSheet } from "@/lib/room-import";
+import { deleteRoomEvent, isRoomCalendarConfigured } from "@/lib/room-calendar";
 
 const bodySchema = z.object({
   text: z.string().max(2_000_000, "ข้อมูลใหญ่เกินไป"),
@@ -56,11 +57,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "ยังมีแถวที่ไม่ถูกต้อง กรุณาแก้ไขก่อนนำเข้า", errors }, { status: 400 });
     }
 
+    // The sheet has no mailbox column: keep each room's calendar mailbox by code,
+    // and remember synced events so they can be cleared from the door displays.
+    const oldRooms = await prisma.room.findMany({
+      where: { calendarEmail: { not: null } },
+      select: {
+        code: true,
+        calendarEmail: true,
+        bookings: { where: { graphEventId: { not: null } }, select: { graphEventId: true } },
+      },
+    });
+    const calendarByCode = new Map(oldRooms.filter((r) => r.code).map((r) => [r.code!, r.calendarEmail]));
+
     const [deletedBookings, deletedRooms, created] = await prisma.$transaction([
       prisma.booking.deleteMany(),
       prisma.room.deleteMany(),
       prisma.room.createMany({
         data: assigned.map((room) => ({
+          calendarEmail: calendarByCode.get(room.code) ?? null,
           code: room.code,
           roomType: room.roomType,
           roomNumber: room.roomNumber,
@@ -73,6 +87,15 @@ export async function POST(request: NextRequest) {
         })),
       }),
     ]);
+
+    if (isRoomCalendarConfigured()) {
+      const events = oldRooms.flatMap((r) => r.bookings.map((b) => ({ mailbox: r.calendarEmail!, id: b.graphEventId! })));
+      await Promise.all(
+        events.map((e) =>
+          deleteRoomEvent(e.mailbox, e.id).catch((err) => console.error(`Room calendar removal failed for ${e.mailbox}:`, err))
+        )
+      );
+    }
 
     return NextResponse.json({
       created: created.count,
