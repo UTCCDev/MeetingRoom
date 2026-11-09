@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-type SessionUser = { id: string; role: string };
 
 export const PASSWORD_MIN_LENGTH = 8;
 
@@ -19,17 +18,63 @@ export function canTransition(from: string, to: string): boolean {
   return TRANSITIONS[from]?.includes(to) ?? false;
 }
 
-/** System admins decide any booking; room admins only bookings for their rooms. */
-export function canDecide(user: SessionUser, room: { roomAdminId: string }): boolean {
-  return user.role === "SYSTEM_ADMIN" || room.roomAdminId === user.id;
+export type Role = "USER" | "ROOM_ADMIN" | "SYSTEM_ADMIN";
+
+/** The acting user with the flags that decide approval. Load it from the DB (lib/actor.ts), not the JWT. */
+export type Actor = {
+  id: string;
+  role: Role;
+  isPresidentApprover: boolean;
+  autoApproveBooking: boolean;
+};
+
+export type RoomRule = { roomAdminId: string; requiresPresidentApproval: boolean };
+
+export type ApprovalRoute = "AUTO" | "ROOM_ADMIN" | "PRESIDENT";
+
+/**
+ * Who has to approve a new booking.
+ * President rooms: AUTO only when the booker (never the beneficiary) holds both flags.
+ * Normal rooms: AUTO when the booker or the beneficiary has autoApproveBooking.
+ */
+export function approvalRoute(booker: Actor, beneficiary: Actor | null, room: RoomRule): ApprovalRoute {
+  if (room.requiresPresidentApproval) {
+    return booker.autoApproveBooking && booker.isPresidentApprover ? "AUTO" : "PRESIDENT";
+  }
+  return booker.autoApproveBooking || beneficiary?.autoApproveBooking ? "AUTO" : "ROOM_ADMIN";
 }
 
-/** Owner, the room's admin, or a system admin may view a booking. */
+/**
+ * President rooms: only president approvers. Normal rooms: system admins, or the room's own admin.
+ * Deciding one's own request is allowed; approvedById records who did it.
+ */
+export function canDecide(user: Actor, room: RoomRule): boolean {
+  if (room.requiresPresidentApproval) return user.isPresidentApprover;
+  return user.role === "SYSTEM_ADMIN" || (user.role === "ROOM_ADMIN" && room.roomAdminId === user.id);
+}
+
+/** Booker, beneficiary, or anyone who may decide the booking. */
 export function canView(
-  user: SessionUser,
-  booking: { userId: string; room: { roomAdminId: string } }
+  user: Actor,
+  booking: { userId: string; bookedForId: string | null; room: RoomRule }
 ): boolean {
-  return booking.userId === user.id || canDecide(user, booking.room);
+  return booking.userId === user.id || booking.bookedForId === user.id || canDecide(user, booking.room);
+}
+
+/** Booker or beneficiary may cancel. */
+export function canCancel(userId: string, booking: { userId: string; bookedForId: string | null }): boolean {
+  return booking.userId === userId || booking.bookedForId === userId;
+}
+
+/** Booking for yourself is stored as no beneficiary. */
+export function normalizeBeneficiary(bookerId: string, bookedForId?: string | null): string | null {
+  return bookedForId && bookedForId !== bookerId ? bookedForId : null;
+}
+
+/** President approval is only for admin roles; a USER never keeps it. */
+export function presidentFlagFor(role: Role, requested: boolean | undefined, current: boolean): boolean {
+  if (role === "USER") return false;
+  return requested ?? current;
 }
 
 // Timestamps without an explicit offset are interpreted as Bangkok time so

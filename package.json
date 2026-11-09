@@ -18,7 +18,8 @@
     "db:dev:migrate": "dotenv -e .env.development.local -o -- prisma migrate dev",
     "db:dev:deploy": "dotenv -e .env.development.local -o -- prisma migrate deploy",
     "db:dev:studio": "dotenv -e .env.development.local -o -- prisma studio",
-    "db:dev:status": "dotenv -e .env.development.local -o -- prisma migrate status"
+    "db:dev:status": "dotenv -e .env.development.local -o -- prisma migrate status",
+    "test": "vitest run"
   },
   "keywords": [],
   "author": "",
@@ -42,6 +43,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "dotenv-cli": "^11.1.0"
+    "dotenv-cli": "^11.1.0",
+    "vitest": "^5.1.0"
   }
 }
