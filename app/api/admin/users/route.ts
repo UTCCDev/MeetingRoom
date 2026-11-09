@@ -4,7 +4,7 @@ import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import { emailSchema, firstError, nameSchema, passwordSchema } from "@/lib/validation";
+import { emailSchema, firstError, nameSchema, passwordSchema, presidentFlagFor } from "@/lib/validation";
 
 const ROLES = ["USER", "ROOM_ADMIN", "SYSTEM_ADMIN"] as const;
 const USER_FIELDS = {
@@ -13,6 +13,10 @@ const USER_FIELDS = {
   name: true,
   role: true,
   active: true,
+  isPresidentApprover: true,
+  autoApproveBooking: true,
+  departmentId: true,
+  department: { select: { id: true, name: true } },
   createdAt: true,
 } as const;
 const SERVER_ERROR = "เกิดข้อผิดพลาดที่เซิร์ฟเวอร์ กรุณาลองใหม่";
@@ -56,6 +60,9 @@ const updateUserSchema = z.object({
   email: emailSchema.optional(),
   password: passwordSchema.optional(),
   active: z.boolean().optional(),
+  isPresidentApprover: z.boolean().optional(),
+  autoApproveBooking: z.boolean().optional(),
+  departmentId: z.string().min(1).nullable().optional(),
 });
 
 // PUT update a user: role, name, email, password reset, enable/disable
@@ -69,7 +76,8 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: firstError(parsed.error) }, { status: 400 });
     }
 
-    const { userId, newRole, name, email, password, active } = parsed.data;
+    const { userId, newRole, name, email, password, active, isPresidentApprover, autoApproveBooking, departmentId } =
+      parsed.data;
     const isSelf = userId === auth.userId;
 
     if (isSelf && newRole && newRole !== "SYSTEM_ADMIN") {
@@ -87,6 +95,14 @@ export async function PUT(request: NextRequest) {
 
     if (!targetUser) {
       return NextResponse.json({ error: "ไม่พบผู้ใช้นี้" }, { status: 404 });
+    }
+
+    const finalRole = newRole ?? targetUser.role;
+    if (isPresidentApprover && finalRole === "USER") {
+      return NextResponse.json(
+        { error: "สิทธิ์อนุมัติแทนอธิการฯ ให้ได้เฉพาะผู้ดูแลห้องหรือผู้ดูแลระบบ" },
+        { status: 400 }
+      );
     }
 
     const losesAdmin =
@@ -121,6 +137,10 @@ export async function PUT(request: NextRequest) {
         ...(email && { email }),
         ...(password && { password: await bcrypt.hash(password, 10) }),
         ...(active !== undefined && { active }),
+        // Demoting to USER clears president approval in the same write.
+        isPresidentApprover: presidentFlagFor(finalRole, isPresidentApprover, targetUser.isPresidentApprover),
+        ...(autoApproveBooking !== undefined && { autoApproveBooking }),
+        ...(departmentId !== undefined && { departmentId }),
       },
       select: USER_FIELDS,
     });

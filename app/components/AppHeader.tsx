@@ -22,6 +22,7 @@ const NAV: { href: string; label: string; icon: string; roles?: string[]; authOn
   { href: "/admin/my-rooms", label: "ห้องของฉัน", icon: "edit_square", roles: ["ROOM_ADMIN"] },
   { href: "/admin/dashboard", label: "แดชบอร์ด", icon: "monitoring", roles: ["SYSTEM_ADMIN"] },
   { href: "/admin/users", label: "ผู้ใช้", icon: "group", roles: ["SYSTEM_ADMIN"] },
+  { href: "/admin/departments", label: "แผนก", icon: "apartment", roles: ["SYSTEM_ADMIN"] },
   { href: "/admin/rooms", label: "จัดการห้อง", icon: "domain", roles: ["SYSTEM_ADMIN"] },
 ];
 

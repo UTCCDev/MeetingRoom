@@ -25,6 +25,7 @@ interface Room {
   roomType: RoomType;
   roomNumber?: string | null;
   calendarEmail?: string | null;
+  requiresPresidentApproval?: boolean;
   name: string;
   description?: string;
   capacity: number;
@@ -52,6 +53,7 @@ type RoomForm = {
   roomType: RoomType;
   roomNumber: string;
   calendarEmail: string;
+  requiresPresidentApproval: boolean;
   name: string;
   department: string;
   building: string;
@@ -69,6 +71,7 @@ const EMPTY_FORM: RoomForm = {
   roomType: "MEETING",
   roomNumber: "",
   calendarEmail: "",
+  requiresPresidentApproval: false,
   name: "",
   department: "",
   building: "",
@@ -191,6 +194,7 @@ export default function RoomsManagementPage() {
       roomType: room.roomType,
       roomNumber: room.roomNumber || "",
       calendarEmail: room.calendarEmail || "",
+      requiresPresidentApproval: !!room.requiresPresidentApproval,
       name: room.name,
       ...parseDescription(room.description),
       capacity: String(room.capacity),
@@ -249,6 +253,7 @@ export default function RoomsManagementPage() {
           roomType: form.roomType,
           roomNumber: form.roomNumber.trim(),
           calendarEmail: form.calendarEmail.trim(),
+          requiresPresidentApproval: form.requiresPresidentApproval,
           code: roomCode ?? "",
           name: form.name.trim(),
           description: composeDescription(form),
@@ -634,6 +639,23 @@ export default function RoomsManagementPage() {
                       เมื่ออนุมัติการจอง ระบบจะเพิ่มนัดหมายลงปฏิทิน Microsoft 365 ของอีเมลนี้ และลบออกเมื่อยกเลิก เว้นว่างได้ถ้าห้องไม่มีจอ
                     </p>
                     {errorText("calendarEmail")}
+                  </div>
+
+                  <div className="md:col-span-6">
+                    <label className="flex items-start gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="mt-1"
+                        checked={form.requiresPresidentApproval}
+                        onChange={(e) => updateField("requiresPresidentApproval", e.target.checked)}
+                      />
+                      <span>
+                        <span className="text-title-small text-ink">ต้องให้อธิการฯ อนุมัติ</span>
+                        <span className="block text-body-small text-ink-subtle">
+                          ทุกการจองห้องนี้ต้องให้ผู้มีสิทธิ์อนุมัติแทนอธิการฯ เป็นผู้อนุมัติ ไม่ว่าผู้จองจะมีสิทธิ์ระดับใด
+                        </span>
+                      </span>
+                    </label>
                   </div>
 
                   <div className="md:col-span-6">

@@ -16,6 +16,10 @@ interface User {
   name: string;
   role: string;
   active: boolean;
+  isPresidentApprover?: boolean;
+  autoApproveBooking?: boolean;
+  departmentId?: string | null;
+  department?: { id: string; name: string } | null;
   createdAt: string;
 }
 
@@ -47,8 +51,26 @@ const ROLE_ICONS: Record<string, string> = {
   USER: "person",
 };
 
-type FormState = { name: string; email: string; password: string; role: string; active: boolean };
-const EMPTY_FORM: FormState = { name: "", email: "", password: "", role: "USER", active: true };
+type FormState = {
+  name: string;
+  email: string;
+  password: string;
+  role: string;
+  active: boolean;
+  departmentId: string;
+  isPresidentApprover: boolean;
+  autoApproveBooking: boolean;
+};
+const EMPTY_FORM: FormState = {
+  name: "",
+  email: "",
+  password: "",
+  role: "USER",
+  active: true,
+  departmentId: "",
+  isPresidentApprover: false,
+  autoApproveBooking: false,
+};
 
 function validate(form: FormState, isCreate: boolean): Partial<Record<keyof FormState, string>> {
   const errors: Partial<Record<keyof FormState, string>> = {};
@@ -76,6 +98,14 @@ export default function UsersPage() {
   const [formErrors, setFormErrors] = useState<Partial<Record<keyof FormState, string>>>({});
   const [formError, setFormError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    fetch("/api/admin/departments")
+      .then((r) => (r.ok ? r.json() : []))
+      .then(setDepartments)
+      .catch(() => {});
+  }, []);
   const router = useRouter();
   const pathname = usePathname();
   const toast = useToast();
@@ -130,7 +160,16 @@ export default function UsersPage() {
 
   const openEdit = (user: User) => {
     setEditing(user);
-    setForm({ name: user.name, email: user.email, password: "", role: user.role, active: user.active });
+    setForm({
+      name: user.name,
+      email: user.email,
+      password: "",
+      role: user.role,
+      active: user.active,
+      departmentId: user.departmentId || "",
+      isPresidentApprover: !!user.isPresidentApprover,
+      autoApproveBooking: !!user.autoApproveBooking,
+    });
     setFormErrors({});
     setFormError("");
   };
@@ -159,6 +198,10 @@ export default function UsersPage() {
             email: form.email.trim(),
             newRole: form.role,
             active: form.active,
+            departmentId: form.departmentId || null,
+            // A USER can never hold president approval; the API clears it on demotion too.
+            isPresidentApprover: form.role !== "USER" && form.isPresidentApprover,
+            autoApproveBooking: form.autoApproveBooking,
             ...(form.password && { password: form.password }),
           };
 
@@ -282,6 +325,9 @@ export default function UsersPage() {
                           <span className="icon icon--20" aria-hidden="true">{ROLE_ICONS[user.role] || "person"}</span>
                           {ROLE_LABELS[user.role] || user.role}
                         </span>
+                        {user.isPresidentApprover && <span className="badge-neutral ml-1">อนุมัติแทนอธิการฯ</span>}
+                        {user.autoApproveBooking && <span className="badge-neutral ml-1">อนุมัติทันที</span>}
+                        {user.department && <div className="text-body-small text-ink-subtle mt-1">{user.department.name}</div>}
                       </td>
                       <td>
                         {user.active ? (
@@ -425,6 +471,43 @@ export default function UsersPage() {
                 </div>
                 {isSelf && <p className="field-hint">แก้ไขบทบาทตัวเองไม่ได้</p>}
               </fieldset>
+
+              {editing !== "new" && (
+                <>
+                  <div>
+                    <label htmlFor="user-department" className="field-label">แผนก</label>
+                    <select
+                      id="user-department"
+                      className="input-field"
+                      value={form.departmentId}
+                      onChange={(e) => updateField("departmentId", e.target.value)}
+                    >
+                      <option value="">ไม่ระบุ</option>
+                      {departments.map((d) => (
+                        <option key={d.id} value={d.id}>{d.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <label className="checkbox">
+                    <input
+                      type="checkbox"
+                      checked={form.autoApproveBooking}
+                      onChange={(e) => updateField("autoApproveBooking", e.target.checked)}
+                    />
+                    จองแล้วอนุมัติทันที (ยกเว้นห้องที่ต้องให้อธิการฯ อนุมัติ)
+                  </label>
+                  <label className="checkbox">
+                    <input
+                      type="checkbox"
+                      checked={form.role !== "USER" && form.isPresidentApprover}
+                      onChange={(e) => updateField("isPresidentApprover", e.target.checked)}
+                      disabled={form.role === "USER"}
+                    />
+                    อนุมัติแทนอธิการฯ (ห้องไทรทอง, อาคาร 24 ชั้น 8 ฯลฯ)
+                    {form.role === "USER" && <span className="field-hint block">ให้ได้เฉพาะผู้ดูแลห้องหรือผู้ดูแลระบบ</span>}
+                  </label>
+                </>
+              )}
 
               {editing !== "new" && (
                 <label className="checkbox">

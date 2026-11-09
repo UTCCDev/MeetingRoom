@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { DUPLICATE_ROOM_CODE_ERROR, isDuplicateRoomCode, roomCodeMismatch, roomSchema } from "@/lib/room-schema";
 import { firstError } from "@/lib/validation";
+import { defaultRequiresPresidentApproval } from "@/lib/room-code";
 
 // GET active rooms (public). Includes upcoming booked time ranges only, so the
 // search page can filter by availability without exposing booking details.
@@ -75,7 +76,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: firstError(parsed.error) }, { status: 400 });
     }
 
-    const { calendarEmail, roomType, roomNumber, code, name, description, capacity, pricePerHour, image, amenities, photos, roomAdminId, status } = parsed.data;
+    const { calendarEmail, requiresPresidentApproval, roomType, roomNumber, code, name, description, capacity, pricePerHour, image, amenities, photos, roomAdminId, status } = parsed.data;
 
     const codeError = roomCodeMismatch(code, roomType ?? "MEETING");
     if (codeError) {
@@ -97,6 +98,7 @@ export async function POST(request: NextRequest) {
     const room = await prisma.room.create({
       data: {
         calendarEmail: calendarEmail ?? null,
+        requiresPresidentApproval: requiresPresidentApproval ?? defaultRequiresPresidentApproval({ name, code }),
         roomType: roomType ?? undefined,
         roomNumber: roomNumber ?? null,
         code: code ?? null,

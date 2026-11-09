@@ -33,3 +33,11 @@ export function buildRoomCode(
   if (!/^\d{1,2}$/.test(b) || !/^[0-9A-Z]{1,3}$/.test(f) || !/^\d{1,2}$/.test(r)) return null;
   return `${ROOM_TYPE_PREFIX[roomType]}${b.padStart(2, "0")}${f.padStart(2, "0")}${r.padStart(2, "0")}`;
 }
+
+/**
+ * Rooms that need the president's approval unless an admin says otherwise: ห้องไทรทอง and
+ * every room in building 24, floor 08. Same rule as the 20261109 migration.
+ */
+export function defaultRequiresPresidentApproval(room: { name: string; code?: string | null }): boolean {
+  return room.name.includes("ไทรทอง") || /^[MES]2408\d{2}$/.test(room.code ?? "");
+}
