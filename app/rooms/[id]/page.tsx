@@ -704,7 +704,7 @@ export default function RoomDetailPage() {
                 <label htmlFor="booking-for" className="field-label">
                   จองเพื่อ
                 </label>
-                <UserPicker inputId="booking-for" value={bookedFor} onChange={setBookedFor} />
+                <UserPicker inputId="booking-for" value={bookedFor} onChange={setBookedFor} selfId={(session?.user as any)?.id} />
               </div>
 
               <div>

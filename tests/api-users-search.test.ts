@@ -24,16 +24,23 @@ describe("GET /api/users/search", () => {
     expect((await call("สม")).status).toBe(401);
   });
 
-  it("returns [] for a query under 2 characters without hitting the DB", async () => {
-    expect(await (await call("ส")).json()).toEqual([]);
-    expect(prisma.user.findMany).not.toHaveBeenCalled();
+  it("empty query lists the first 20 active users for the dropdown", async () => {
+    await call("");
+    const args = prisma.user.findMany.mock.calls[0][0];
+    expect(args.take).toBe(20);
+    expect(args.where).toEqual({ active: true });
   });
 
-  it("searches active users, max 10, flattening the department name", async () => {
+  it("a 1-character query filters too", async () => {
+    await call("ส");
+    expect(prisma.user.findMany.mock.calls[0][0].where.OR).toBeTruthy();
+  });
+
+  it("searches active users, max 20, flattening the department name", async () => {
     const res = await call("สม");
     expect(await res.json()).toEqual([{ id: "u2", name: "สมชาย", email: "s@utcc.ac.th", department: "บัญชี" }]);
     const args = prisma.user.findMany.mock.calls[0][0];
-    expect(args.take).toBe(10);
+    expect(args.take).toBe(20);
     expect(args.where.active).toBe(true);
   });
 });
