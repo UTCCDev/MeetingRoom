@@ -9,6 +9,7 @@ import Dropdown from "@/app/components/Dropdown";
 import DatePicker from "@/app/components/DatePicker";
 import RoomGallery from "@/app/components/RoomGallery";
 import RoomCalendar from "@/app/components/RoomCalendar";
+import UserPicker, { type PickedUser } from "@/app/components/UserPicker";
 import { roomImage, roomPhotos } from "@/lib/room-photos";
 import { SkeletonCards } from "@/app/components/Skeleton";
 import { useToast } from "@/app/components/Toast";
@@ -106,6 +107,7 @@ export default function RoomDetailPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [attendees, setAttendees] = useState("1");
+  const [bookedFor, setBookedFor] = useState<PickedUser | null>(null);
   const [date, setDate] = useState(todayKey());
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
@@ -317,6 +319,7 @@ export default function RoomDetailPage() {
           // Explicit +07:00 offset so the server never guesses the timezone.
           startTime: bangkokISO(date, startTime),
           endTime: bangkokISO(date, endTime),
+          bookedForId: bookedFor?.id,
         }),
       });
 
@@ -332,7 +335,13 @@ export default function RoomDetailPage() {
         return;
       }
 
-      toast("ส่งคำขอจองแล้ว รอการอนุมัติจากผู้ดูแลห้อง", { type: "success" });
+      const created = await response.json().catch(() => ({}));
+      toast(
+        created.status === "APPROVED"
+          ? "จองสำเร็จ อนุมัติอัตโนมัติตามสิทธิ์ผู้จอง"
+          : "ส่งคำขอจองแล้ว รอการอนุมัติ",
+        { type: "success" }
+      );
       router.push("/my-bookings");
     } catch (err) {
       setError("ไม่สามารถสร้างการจองได้ กรุณาลองใหม่");
@@ -689,6 +698,13 @@ export default function RoomDetailPage() {
                   aria-describedby="booking-title-error"
                 />
                 <FieldError id="booking-title-error" message={fieldErrors.title} />
+              </div>
+
+              <div>
+                <label htmlFor="booking-for" className="field-label">
+                  จองเพื่อ
+                </label>
+                <UserPicker inputId="booking-for" value={bookedFor} onChange={setBookedFor} />
               </div>
 
               <div>
