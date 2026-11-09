@@ -14,7 +14,8 @@ export async function GET(request: NextRequest) {
   try {
     let where: any = { status: true };
 
-    if (request.nextUrl.searchParams.get("all") === "1") {
+    const manage = request.nextUrl.searchParams.get("all") === "1";
+    if (manage) {
       const session = await getServerSession(authOptions);
       const user = session?.user as any;
       if (user?.role === "SYSTEM_ADMIN") where = {};
@@ -35,7 +36,8 @@ export async function GET(request: NextRequest) {
           select: { startTime: true, endTime: true, status: true },
         },
       },
-      orderBy: [{ code: "asc" }, { name: "asc" }],
+      // Room search: smallest rooms first so people see the best fit. Admin lists (?all=1) stay by code.
+      orderBy: manage ? [{ code: "asc" }, { name: "asc" }] : [{ capacity: "asc" }, { code: "asc" }],
     });
 
     return NextResponse.json(rooms);
