@@ -131,6 +131,11 @@ export async function POST(request: NextRequest) {
               })
             ).map((u) => u.email)
           : [room.roomAdmin.email];
+      if (approvers.length === 0 && route === "PRESIDENT") {
+        console.warn(
+          `[booking] ${booking.id} in ${room.name} needs a president approver, but no active ROOM_ADMIN/SYSTEM_ADMIN has isPresidentApprover; it will stay PENDING.`
+        );
+      }
       if (approvers.length > 0) {
         sendApprovalRequest(approvers, booking, room.name, booking.user.name).catch((err) =>
           console.error("Approval request email failed:", err)

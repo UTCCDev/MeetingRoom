@@ -86,6 +86,15 @@ describe("POST /api/bookings", () => {
     expect((email.sendApprovalRequest.mock.calls[0] as any[])[0]).toEqual(["pres@utcc.ac.th"]);
   });
 
+  it("president room with no president approver logs a warning", async () => {
+    prisma.room.findUnique.mockResolvedValue(room({ requiresPresidentApproval: true }));
+    prisma.user.findMany.mockResolvedValue([]);
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    await call(body());
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("president approver"));
+    warn.mockRestore();
+  });
+
   it("auto-approved booking still gets 409 on overlap", async () => {
     users.u1.autoApproveBooking = true;
     prisma.booking.findFirst.mockResolvedValue({ id: "other" });
