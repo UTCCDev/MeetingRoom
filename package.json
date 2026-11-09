@@ -13,7 +13,12 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
-    "photos": "node scripts/room-photo-manifest.mjs"
+    "photos": "node scripts/room-photo-manifest.mjs",
+    "db:dev:up": "docker compose -f docker-compose.dev.yml up -d",
+    "db:dev:migrate": "dotenv -e .env.development.local -o -- prisma migrate dev",
+    "db:dev:deploy": "dotenv -e .env.development.local -o -- prisma migrate deploy",
+    "db:dev:studio": "dotenv -e .env.development.local -o -- prisma studio",
+    "db:dev:status": "dotenv -e .env.development.local -o -- prisma migrate status"
   },
   "keywords": [],
   "author": "",
@@ -35,5 +40,8 @@
     "tailwindcss": "^3.4.0",
     "typescript": "^5.7.0",
     "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "dotenv-cli": "^11.1.0"
   }
 }
