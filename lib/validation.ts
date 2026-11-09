@@ -108,6 +108,7 @@ export const createBookingSchema = z
       .min(1, "ต้องมีผู้เข้าร่วมอย่างน้อย 1 คน"),
     startTime: bangkokDate,
     endTime: bangkokDate,
+    bookedForId: z.string().optional().nullable(),
   })
   .refine((d) => d.endTime > d.startTime, {
     message: "เวลาสิ้นสุดต้องหลังเวลาเริ่มต้น",

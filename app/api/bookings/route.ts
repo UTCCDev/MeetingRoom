@@ -2,12 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { loadActor } from "@/lib/actor";
+import { onBookingApproved } from "@/lib/booking-approval";
 import { sendApprovalRequest } from "@/lib/email";
-import { createBookingSchema, firstError } from "@/lib/validation";
+import { approvalRoute, createBookingSchema, firstError, normalizeBeneficiary } from "@/lib/validation";
 
 const USER_PUBLIC = { select: { id: true, name: true, email: true } } as const;
+const SERVER_ERROR = "เกิดข้อผิดพลาดที่เซิร์ฟเวอร์ กรุณาลองใหม่";
 
-// GET all bookings for the authenticated user
+// GET bookings the signed-in user made or that were made for them
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -16,34 +19,27 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "ไม่ได้รับอนุญาต" }, { status: 401 });
     }
 
+    const me = (session.user as any).id as string;
     const bookings = await prisma.booking.findMany({
-      where: {
-        userId: (session.user as any).id,
-      },
-      include: {
-        room: true,
-      },
-      orderBy: {
-        startTime: "asc",
-      },
+      where: { OR: [{ userId: me }, { bookedForId: me }] },
+      include: { room: true, user: USER_PUBLIC, bookedFor: USER_PUBLIC },
+      orderBy: { startTime: "asc" },
     });
 
     return NextResponse.json(bookings);
   } catch (error) {
     console.error("Error fetching bookings:", error);
-    return NextResponse.json(
-      { error: "เกิดข้อผิดพลาดที่เซิร์ฟเวอร์ กรุณาลองใหม่" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: SERVER_ERROR }, { status: 500 });
   }
 }
 
-// POST create a new booking
+// POST create a new booking; approval route depends on the room and the booker's/beneficiary's flags
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
+    const booker = await loadActor(session as any);
 
-    if (!session || !session.user) {
+    if (!booker) {
       return NextResponse.json({ error: "ไม่ได้รับอนุญาต" }, { status: 401 });
     }
 
@@ -58,6 +54,15 @@ export async function POST(request: NextRequest) {
     }
 
     const data = parsed.data;
+
+    const bookedForId = normalizeBeneficiary(booker.id, data.bookedForId);
+    const beneficiary = bookedForId ? await loadActor({ user: { id: bookedForId } }) : null;
+    if (bookedForId && !beneficiary) {
+      return NextResponse.json(
+        { error: "ไม่พบผู้ใช้ที่ต้องการจองให้ หรือบัญชีถูกปิดใช้งาน", field: "bookedForId" },
+        { status: 400 }
+      );
+    }
 
     const room = await prisma.room.findUnique({
       where: { id: data.roomId },
@@ -93,37 +98,49 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const route = approvalRoute(booker, beneficiary, room);
+    const auto = route === "AUTO";
+
     const booking = await prisma.booking.create({
       data: {
-        userId: (session.user as any).id,
+        userId: booker.id,
+        bookedForId,
         roomId: data.roomId,
         title: data.title,
         description: data.description || null,
         attendees: data.attendees,
         startTime: data.startTime,
         endTime: data.endTime,
-        status: "PENDING",
+        status: auto ? "APPROVED" : "PENDING",
+        autoApproved: auto,
+        approvedById: auto ? booker.id : null,
       },
-      include: {
-        room: true,
-        user: USER_PUBLIC,
-      },
+      include: { room: true, user: USER_PUBLIC, bookedFor: USER_PUBLIC },
     });
 
-    // Let the room admin know (in-app via /api/notifications; here by email).
-    // Not awaited: a slow or unconfigured mail server must not delay the booking.
-    if (room.roomAdmin.id !== booking.userId) {
-      sendApprovalRequest(room.roomAdmin.email, booking, room.name, booking.user.name).catch((err) =>
-        console.error("Approval request email failed:", err)
-      );
+    if (auto) {
+      await onBookingApproved(booking.id);
+    } else {
+      // Tell whoever can approve. Not awaited: a slow mail server must not delay the booking.
+      const approvers =
+        route === "PRESIDENT"
+          ? (
+              await prisma.user.findMany({
+                where: { isPresidentApprover: true, active: true, role: { in: ["ROOM_ADMIN", "SYSTEM_ADMIN"] } },
+                select: { email: true },
+              })
+            ).map((u) => u.email)
+          : [room.roomAdmin.email];
+      if (approvers.length > 0) {
+        sendApprovalRequest(approvers, booking, room.name, booking.user.name).catch((err) =>
+          console.error("Approval request email failed:", err)
+        );
+      }
     }
 
     return NextResponse.json(booking, { status: 201 });
   } catch (error) {
     console.error("Error creating booking:", error);
-    return NextResponse.json(
-      { error: "เกิดข้อผิดพลาดที่เซิร์ฟเวอร์ กรุณาลองใหม่" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: SERVER_ERROR }, { status: 500 });
   }
 }
