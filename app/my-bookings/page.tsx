@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import AppHeader from "@/app/components/AppHeader";
 import BookingProgress from "@/app/components/BookingProgress";
 import ConfirmDialog from "@/app/components/ConfirmDialog";
@@ -25,6 +26,9 @@ interface Booking {
   attendees: number;
   rejectionReason?: string | null;
   createdAt?: string;
+  autoApproved?: boolean;
+  user?: { id: string; name: string };
+  bookedFor?: { id: string; name: string } | null;
 }
 
 
@@ -48,6 +52,7 @@ function timeUntil(start: Date, end: Date, now: Date): { label: string; urgent: 
 const STATUS_CLASS = STATUS_BADGE;
 
 export default function MyBookingsPage() {
+  const { data: session } = useSession();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -225,6 +230,14 @@ export default function MyBookingsPage() {
                           <span className="icon icon--20 text-ink-subtle" aria-hidden="true">location_on</span>
                           {roomLabel(booking.room)}
                         </p>
+                        {booking.bookedFor && (
+                          <p className="flex items-center gap-2 card__body mt-1">
+                            <span className="icon icon--20 text-ink-subtle" aria-hidden="true">person</span>
+                            {booking.bookedFor.id === (session?.user as any)?.id
+                              ? `จองให้คุณโดย ${booking.user?.name ?? "-"}`
+                              : `จองเพื่อ ${booking.bookedFor.name}`}
+                          </p>
+                        )}
                         <p className="flex items-center gap-2 card__body">
                           <span className="icon icon--20 text-ink-subtle" aria-hidden="true">group</span>
                           <span className="tabular-nums">{booking.attendees}</span> คน

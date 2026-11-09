@@ -2,41 +2,32 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { loadActor } from "@/lib/actor";
+import { bookingRecipients, onBookingApproved } from "@/lib/booking-approval";
 import { sendBookingNotification } from "@/lib/email";
-import { createRoomEvent, deleteRoomEvent, isRoomCalendarConfigured } from "@/lib/room-calendar";
-import { canDecide, canTransition, canView } from "@/lib/validation";
+import { deleteRoomEvent, isRoomCalendarConfigured } from "@/lib/room-calendar";
+import { canCancel, canDecide, canTransition, canView } from "@/lib/validation";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
 // Never include the full user row: it carries the password hash.
 const USER_PUBLIC = { select: { id: true, name: true, email: true } } as const;
+const INCLUDE = { room: true, user: USER_PUBLIC, bookedFor: USER_PUBLIC, approvedBy: USER_PUBLIC } as const;
 
 const SERVER_ERROR = "เกิดข้อผิดพลาดที่เซิร์ฟเวอร์ กรุณาลองใหม่";
+const UNAUTHORIZED = () => NextResponse.json({ error: "ไม่ได้รับอนุญาต" }, { status: 401 });
 
-function sessionUser(session: any) {
-  return { id: session.user.id as string, role: session.user.role as string };
-}
-
-// GET a specific booking (owner, room admin of that room, or system admin)
+// GET a specific booking (booker, beneficiary, or anyone who may decide it)
 export async function GET(request: NextRequest, { params }: RouteContext) {
   try {
     const { id } = await params;
-    const session = await getServerSession(authOptions);
+    const actor = await loadActor((await getServerSession(authOptions)) as any);
+    if (!actor) return UNAUTHORIZED();
 
-    if (!session || !session.user) {
-      return NextResponse.json({ error: "ไม่ได้รับอนุญาต" }, { status: 401 });
-    }
-
-    const booking = await prisma.booking.findUnique({
-      where: { id },
-      include: {
-        room: true,
-        user: USER_PUBLIC,
-      },
-    });
+    const booking = await prisma.booking.findUnique({ where: { id }, include: INCLUDE });
 
     // Respond 404 rather than 403 so booking ids can't be probed.
-    if (!booking || !canView(sessionUser(session), booking)) {
+    if (!booking || !canView(actor, booking)) {
       return NextResponse.json({ error: "ไม่พบการจองนี้" }, { status: 404 });
     }
 
@@ -47,20 +38,17 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
   }
 }
 
-// PUT update booking status (approve/reject)
+// PUT approve/reject. Approvers may decide their own requests; approvedById records who decided.
 export async function PUT(request: NextRequest, { params }: RouteContext) {
   try {
     const { id } = await params;
-    const session = await getServerSession(authOptions);
-
-    if (!session || !session.user) {
-      return NextResponse.json({ error: "ไม่ได้รับอนุญาต" }, { status: 401 });
-    }
+    const actor = await loadActor((await getServerSession(authOptions)) as any);
+    if (!actor) return UNAUTHORIZED();
 
     const body = await request.json().catch(() => ({}));
     const status = body?.status;
-    const rejectionReason =
-      typeof body?.rejectionReason === "string" ? body.rejectionReason.trim() : "";
+    const rejectionReason = typeof body?.rejectionReason === "string" ? body.rejectionReason.trim() : "";
+    const decisionNote = typeof body?.decisionNote === "string" ? body.decisionNote.trim() : "";
 
     if (!status || !["APPROVED", "REJECTED"].includes(status)) {
       return NextResponse.json({ error: "สถานะไม่ถูกต้อง" }, { status: 400 });
@@ -70,35 +58,23 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ error: "กรุณาระบุเหตุผลในการปฏิเสธ" }, { status: 400 });
     }
 
-    if (rejectionReason.length > 500) {
-      return NextResponse.json({ error: "เหตุผลยาวเกิน 500 ตัวอักษร" }, { status: 400 });
+    if (rejectionReason.length > 500 || decisionNote.length > 500) {
+      return NextResponse.json({ error: "ข้อความยาวเกิน 500 ตัวอักษร" }, { status: 400 });
     }
 
-    const booking = await prisma.booking.findUnique({
-      where: { id },
-      include: {
-        room: true,
-        user: USER_PUBLIC,
-      },
-    });
+    const booking = await prisma.booking.findUnique({ where: { id }, include: INCLUDE });
 
     if (!booking) {
       return NextResponse.json({ error: "ไม่พบการจองนี้" }, { status: 404 });
     }
 
-    const user = sessionUser(session);
-
-    if (!canDecide(user, booking.room)) {
+    if (!canDecide(actor, booking.room)) {
       return NextResponse.json(
-        { error: "คุณไม่มีสิทธิ์อนุมัติหรือปฏิเสธการจองนี้" },
-        { status: 403 }
-      );
-    }
-
-    // Separation of duties: nobody decides on their own request.
-    if (booking.userId === user.id) {
-      return NextResponse.json(
-        { error: "ไม่สามารถอนุมัติหรือปฏิเสธคำขอของตัวเองได้ กรุณาให้ผู้ดูแลท่านอื่นเป็นผู้ตัดสิน" },
+        {
+          error: booking.room.requiresPresidentApproval
+            ? "ห้องนี้ต้องให้ผู้มีสิทธิ์อนุมัติแทนอธิการฯ เป็นผู้อนุมัติ"
+            : "คุณไม่มีสิทธิ์อนุมัติหรือปฏิเสธการจองนี้",
+        },
         { status: 403 }
       );
     }
@@ -114,12 +90,14 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
       );
     }
 
-    // Conditional update guards against two admins deciding at the same time.
+    // Conditional update guards against two approvers deciding at the same time.
     const { count } = await prisma.booking.updateMany({
       where: { id, status: "PENDING" },
       data: {
         status,
         rejectionReason: status === "REJECTED" ? rejectionReason : null,
+        approvedById: actor.id,
+        decisionNote: decisionNote || null,
       },
     });
 
@@ -127,38 +105,24 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ error: "คำขอนี้ถูกตัดสินแล้ว" }, { status: 409 });
     }
 
-    // Show the approved booking on the display outside the room. A Graph failure
-    // must not undo the approval, so it is only logged.
-    if (status === "APPROVED" && booking.room.calendarEmail && isRoomCalendarConfigured()) {
+    if (status === "APPROVED") {
+      await onBookingApproved(id);
+    } else {
       try {
-        const graphEventId = await createRoomEvent(booking.room.calendarEmail, booking);
-        await prisma.booking.update({ where: { id }, data: { graphEventId } });
-      } catch (calendarError) {
-        console.error(`Room calendar sync failed for ${booking.room.calendarEmail}, but booking was approved:`, calendarError);
+        await sendBookingNotification(
+          bookingRecipients(booking),
+          booking.title,
+          "REJECTED",
+          booking.room.name,
+          booking.startTime,
+          rejectionReason
+        );
+      } catch (emailError) {
+        console.error("Email notification failed, but booking was updated:", emailError);
       }
     }
 
-    const updatedBooking = await prisma.booking.findUnique({
-      where: { id },
-      include: {
-        room: true,
-        user: USER_PUBLIC,
-      },
-    });
-
-    try {
-      await sendBookingNotification(
-        booking.user.email,
-        booking.title,
-        status,
-        booking.room.name,
-        booking.startTime,
-        status === "REJECTED" ? rejectionReason : undefined
-      );
-    } catch (emailError) {
-      console.error("Email notification failed, but booking was updated:", emailError);
-    }
-
+    const updatedBooking = await prisma.booking.findUnique({ where: { id }, include: INCLUDE });
     return NextResponse.json(updatedBooking);
   } catch (error) {
     console.error("Error updating booking:", error);
@@ -166,15 +130,12 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
   }
 }
 
-// DELETE cancel a booking (owner only; pending or approved, not yet finished)
+// DELETE cancel a booking (booker or beneficiary; pending or approved, not yet finished)
 export async function DELETE(request: NextRequest, { params }: RouteContext) {
   try {
     const { id } = await params;
-    const session = await getServerSession(authOptions);
-
-    if (!session || !session.user) {
-      return NextResponse.json({ error: "ไม่ได้รับอนุญาต" }, { status: 401 });
-    }
+    const actor = await loadActor((await getServerSession(authOptions)) as any);
+    if (!actor) return UNAUTHORIZED();
 
     const booking = await prisma.booking.findUnique({
       where: { id },
@@ -185,9 +146,9 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ error: "ไม่พบการจองนี้" }, { status: 404 });
     }
 
-    if (booking.userId !== (session.user as any).id) {
+    if (!canCancel(actor.id, booking)) {
       return NextResponse.json(
-        { error: "คุณสามารถยกเลิกการจองของคุณเองเท่านั้น" },
+        { error: "ยกเลิกได้เฉพาะผู้จอง หรือผู้ที่ถูกจองให้เท่านั้น" },
         { status: 403 }
       );
     }

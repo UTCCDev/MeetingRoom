@@ -54,7 +54,7 @@ describe("POST /api/bookings", () => {
     const res = await call(body());
     expect(res.status).toBe(201);
     expect(created().status).toBe("PENDING");
-    expect(email.sendApprovalRequest.mock.calls[0][0]).toEqual(["admin1@utcc.ac.th"]);
+    expect((email.sendApprovalRequest.mock.calls[0] as any[])[0]).toEqual(["admin1@utcc.ac.th"]);
     expect(approval.onBookingApproved).not.toHaveBeenCalled();
   });
 
@@ -83,7 +83,7 @@ describe("POST /api/bookings", () => {
     users.u1.autoApproveBooking = true;
     await call(body());
     expect(created().status).toBe("PENDING");
-    expect(email.sendApprovalRequest.mock.calls[0][0]).toEqual(["pres@utcc.ac.th"]);
+    expect((email.sendApprovalRequest.mock.calls[0] as any[])[0]).toEqual(["pres@utcc.ac.th"]);
   });
 
   it("auto-approved booking still gets 409 on overlap", async () => {

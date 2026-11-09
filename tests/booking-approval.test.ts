@@ -65,7 +65,7 @@ describe("loadActor", () => {
 
   it("returns the DB flags, not the session", async () => {
     prisma.user.findUnique.mockResolvedValue({ id: "u1", role: "ROOM_ADMIN", active: true, isPresidentApprover: true, autoApproveBooking: false });
-    expect(await loadActor({ user: { id: "u1", role: "USER" } })).toEqual({
+    expect(await loadActor({ user: { id: "u1", role: "USER" } } as any)).toEqual({
       id: "u1",
       role: "ROOM_ADMIN",
       isPresidentApprover: true,

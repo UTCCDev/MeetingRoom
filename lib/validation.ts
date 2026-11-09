@@ -53,6 +53,15 @@ export function canDecide(user: Actor, room: RoomRule): boolean {
   return user.role === "SYSTEM_ADMIN" || (user.role === "ROOM_ADMIN" && room.roomAdminId === user.id);
 }
 
+/** Prisma room filter matching canDecide: the rooms whose bookings this user may decide. Null = none. */
+export function decidableRoomWhere(user: Actor): { OR: Record<string, unknown>[] } | null {
+  const OR: Record<string, unknown>[] = [];
+  if (user.role === "SYSTEM_ADMIN") OR.push({ requiresPresidentApproval: false });
+  else if (user.role === "ROOM_ADMIN") OR.push({ requiresPresidentApproval: false, roomAdminId: user.id });
+  if (user.isPresidentApprover) OR.push({ requiresPresidentApproval: true });
+  return OR.length ? { OR } : null;
+}
+
 /** Booker, beneficiary, or anyone who may decide the booking. */
 export function canView(
   user: Actor,

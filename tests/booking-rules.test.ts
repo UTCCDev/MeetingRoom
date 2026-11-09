@@ -104,3 +104,24 @@ describe("presidentFlagFor", () => {
   it("keeps current when not requested", () => expect(presidentFlagFor("ROOM_ADMIN", undefined, true)).toBe(true));
   it("demotion to USER clears it", () => expect(presidentFlagFor("USER", undefined, true)).toBe(false));
 });
+
+import { decidableRoomWhere } from "@/lib/validation";
+
+describe("decidableRoomWhere", () => {
+  it("USER decides nothing", () => {
+    expect(decidableRoomWhere(actor())).toBeNull();
+  });
+  it("SYSTEM_ADMIN: every normal room", () => {
+    expect(decidableRoomWhere(actor({ role: "SYSTEM_ADMIN" }))).toEqual({ OR: [{ requiresPresidentApproval: false }] });
+  });
+  it("ROOM_ADMIN: own normal rooms", () => {
+    expect(decidableRoomWhere(actor({ id: "a", role: "ROOM_ADMIN" }))).toEqual({
+      OR: [{ requiresPresidentApproval: false, roomAdminId: "a" }],
+    });
+  });
+  it("president approver adds president rooms", () => {
+    expect(decidableRoomWhere(actor({ id: "a", role: "ROOM_ADMIN", isPresidentApprover: true }))).toEqual({
+      OR: [{ requiresPresidentApproval: false, roomAdminId: "a" }, { requiresPresidentApproval: true }],
+    });
+  });
+});
