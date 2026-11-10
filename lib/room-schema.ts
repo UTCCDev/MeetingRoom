@@ -80,4 +80,6 @@ export const roomSchema = z.object({
     .or(z.literal("").transform(() => null)),
   roomAdminId: z.string().min(1, "กรุณาเลือกผู้ดูแลห้อง"),
   status: z.boolean().optional(),
+  // Bookings need a president approver (e.g. ห้องไทรทอง). System admins only.
+  requiresPresidentApproval: z.boolean().optional(),
 });

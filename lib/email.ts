@@ -35,7 +35,7 @@ const transporter = {
 };
 
 export const sendBookingNotification = async (
-  to: string,
+  to: string | string[],
   bookingTitle: string,
   status: "APPROVED" | "REJECTED",
   roomName: string,
@@ -71,7 +71,7 @@ export const sendBookingNotification = async (
 
 /** Tells a room admin a new request is waiting, with a button to the approval page. */
 export const sendApprovalRequest = async (
-  to: string,
+  to: string | string[],
   booking: { title: string; attendees: number; startTime: Date; endTime: Date },
   roomName: string,
   requesterName: string

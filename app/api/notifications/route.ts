@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import type { NotificationItem, NotificationType } from "@/lib/notifications";
+import { loadActor } from "@/lib/actor";
+import { decidableRoomWhere } from "@/lib/validation";
 
 const DAY = 24 * 60 * 60 * 1000;
 const HISTORY_DAYS = 30;
@@ -20,6 +22,7 @@ type Row = {
   updatedAt: Date;
   createdAt: Date;
   rejectionReason: string | null;
+  autoApproved?: boolean;
   room: { id: string; name: string; description: string | null; capacity: number };
   user?: { name: string; email: string };
 };
@@ -40,6 +43,7 @@ function item(type: NotificationType, at: Date, b: Row): NotificationItem {
     attendees: b.attendees,
     requester: b.user,
     reason: type === "rejected" ? b.rejectionReason : undefined,
+    autoApproved: b.autoApproved,
   };
 }
 
@@ -50,23 +54,23 @@ function item(type: NotificationType, at: Date, b: Row): NotificationItem {
  */
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    const actor = await loadActor((await getServerSession(authOptions)) as any);
+    if (!actor) {
       return NextResponse.json({ error: "ไม่ได้รับอนุญาต" }, { status: 401 });
     }
 
-    const me = (session.user as any).id as string;
-    const role = (session.user as any).role as string;
+    const me = actor.id;
+    const rooms = decidableRoomWhere(actor);
     const now = new Date();
     const since = new Date(now.getTime() - HISTORY_DAYS * DAY);
     const items: NotificationItem[] = [];
 
-    if (role === "ROOM_ADMIN" || role === "SYSTEM_ADMIN") {
-      // System admins see every room; room admins only their own.
-      const scope = role === "ROOM_ADMIN" ? { room: { roomAdminId: me } } : {};
+    if (rooms) {
+      // Same scope as canDecide. Own requests are included: approvers may approve themselves.
+      const scope = { room: rooms };
 
       const pending = await prisma.booking.findMany({
-        where: { ...scope, status: "PENDING", startTime: { gt: now }, userId: { not: me } },
+        where: { ...scope, status: "PENDING", startTime: { gt: now } },
         include: { room: ROOM, user: REQUESTER },
         orderBy: { createdAt: "desc" },
         take: LIMIT,
@@ -84,7 +88,7 @@ export async function GET() {
 
     const mine = await prisma.booking.findMany({
       where: {
-        userId: me,
+        AND: [{ OR: [{ userId: me }, { bookedForId: me }] }],
         OR: [
           { status: { in: ["APPROVED", "REJECTED"] }, updatedAt: { gte: since } },
           { status: "APPROVED", startTime: { gt: now, lt: new Date(now.getTime() + DAY) } },

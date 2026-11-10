@@ -15,7 +15,7 @@ interface Step {
  * Rejected / cancelled / never-approved bookings stop at the step where they ended.
  */
 function bookingSteps(
-  b: { status: string; startTime: string; endTime: string; createdAt?: string },
+  b: { status: string; startTime: string; endTime: string; createdAt?: string; autoApproved?: boolean },
   now: Date
 ): Step[] {
   const start = new Date(b.startTime);
@@ -42,12 +42,12 @@ function bookingSteps(
         review.icon = "timer_off";
       } else {
         review.state = "current";
-        review.caption = "รอผู้ดูแลห้องอนุมัติ";
+        review.caption = "รอการอนุมัติ";
       }
       break;
     case "APPROVED":
       review.state = "done";
-      review.caption = "อนุมัติแล้ว";
+      review.caption = b.autoApproved ? "อนุมัติอัตโนมัติตามสิทธิ์ผู้จอง" : "อนุมัติแล้ว";
       if (finished) {
         ready.state = "done";
         meeting.state = "done";

@@ -21,12 +21,15 @@ interface Booking {
     id: string;
     name: string;
     email: string;
+    department?: { name: string } | null;
   };
+  bookedFor?: { id: string; name: string; email: string; department?: { name: string } | null } | null;
   room: {
     id: string;
     name: string;
     description?: string;
     capacity: number;
+    requiresPresidentApproval?: boolean;
   };
   startTime: string;
   endTime: string;
@@ -55,6 +58,8 @@ export default function PendingApprovalsPage() {
   const [error, setError] = useState("");
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
+  // Optional note saved with an approval, e.g. "อนุมัติแทนอธิการฯ ตามบันทึกที่ ..."
+  const notes = useRef<Record<string, string>>({});
   const [rejectError, setRejectError] = useState("");
   const [isRejecting, setIsRejecting] = useState(false);
   const [roomFilter, setRoomFilter] = useState("");
@@ -143,7 +148,7 @@ export default function PendingApprovalsPage() {
     async (booking: Booking) => {
       pendingApprovals.current.delete(booking.id);
       try {
-        await putStatus(booking.id, { status: "APPROVED" });
+        await putStatus(booking.id, { status: "APPROVED", decisionNote: notes.current[booking.id] || undefined });
       } catch (err) {
         restore(booking);
         toast(`อนุมัติ "${booking.title}" ไม่สำเร็จ: ${(err as Error).message}`, { type: "error" });
@@ -229,7 +234,7 @@ export default function PendingApprovalsPage() {
     .filter((b) => new Date(b.startTime) <= now && matchesFilters(b))
     .sort((a, b) => b.startTime.localeCompare(a.startTime));
 
-  const selectable = visible.filter((b) => b.user.id !== myId);
+  const selectable = visible;
   const allSelected = selectable.length > 0 && selectable.every((b) => selected.has(b.id));
 
   const toggle = (id: string) =>
@@ -332,12 +337,17 @@ export default function PendingApprovalsPage() {
                         className="mt-1"
                         checked={selected.has(booking.id)}
                         onChange={() => toggle(booking.id)}
-                        disabled={isOwn}
                         aria-label={`เลือก ${booking.title}`}
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap justify-between items-start gap-2">
                           <h3 className="card__title">{booking.title}</h3>
+                          {booking.room.requiresPresidentApproval && (
+                            <span className="badge-booked">
+                              <span className="icon icon--20" aria-hidden="true">workspace_premium</span>
+                              ห้องพิเศษ (อธิการฯ)
+                            </span>
+                          )}
                           <span className="badge-pending">
                             <span className="icon icon--20" aria-hidden="true">hourglass_top</span>
                             รอการตัดสินใจ
@@ -359,6 +369,15 @@ export default function PendingApprovalsPage() {
                         <p className="text-body-small text-ink-subtle">ผู้ขอ</p>
                         <p className="text-title-small text-ink">{booking.user.name}</p>
                         <p className="text-body-small text-ink-subtle break-all">{booking.user.email}</p>
+                        {booking.bookedFor && (
+                          <>
+                            <p className="text-body-small text-ink-subtle mt-2">จองเพื่อ</p>
+                            <p className="text-title-small text-ink">{booking.bookedFor.name}</p>
+                            <p className="text-body-small text-ink-subtle break-all">
+                              {booking.bookedFor.department?.name || "ไม่ระบุแผนก"} · {booking.bookedFor.email}
+                            </p>
+                          </>
+                        )}
                       </div>
                       <div>
                         <p className="text-body-small text-ink-subtle">จำนวนผู้เข้าร่วม</p>
@@ -382,12 +401,27 @@ export default function PendingApprovalsPage() {
                       </div>
                     )}
   
-                    {isOwn ? (
-                      <p className="flex items-center gap-2 text-body-small text-ink-subtle sm:pl-8">
+                    {isOwn && (
+                      <p className="flex items-center gap-2 text-body-small text-ink-subtle sm:pl-8 mb-3">
                         <span className="icon icon--20" aria-hidden="true">info</span>
-                        คำขอของคุณเอง — ต้องให้ผู้ดูแลท่านอื่นเป็นผู้อนุมัติ
+                        อนุมัติคำขอของตนเอง — ระบบบันทึกชื่อคุณเป็นผู้อนุมัติ
                       </p>
-                    ) : rejectingId === booking.id ? (
+                    )}
+                    {booking.room.requiresPresidentApproval && rejectingId !== booking.id && (
+                      <div className="mb-3 sm:pl-8">
+                        <label htmlFor={`note-${booking.id}`} className="field-label">
+                          หมายเหตุการอนุมัติ (ถ้ามี)
+                        </label>
+                        <input
+                          id={`note-${booking.id}`}
+                          className="input-field"
+                          maxLength={500}
+                          placeholder="เช่น อนุมัติแทนอธิการฯ ตามบันทึกที่ ..."
+                          onChange={(e) => (notes.current[booking.id] = e.target.value)}
+                        />
+                      </div>
+                    )}
+                    {rejectingId === booking.id ? (
                       <div className="p-4 bg-error-container rounded-sm sm:ml-8">
                         <label htmlFor={`reason-${booking.id}`} className="field-label">
                           เหตุผลในการปฏิเสธ *

@@ -29,6 +29,8 @@ export default function Dropdown({
   searchPlaceholder = "ค้นหา",
   searchable: searchableProp,
   className = "",
+  onQueryChange,
+  selectedLabel,
   "aria-describedby": describedBy,
 }: {
   id: string;
@@ -42,6 +44,10 @@ export default function Dropdown({
   /** Defaults to a search box above 10 options; pass false for lists like times. */
   searchable?: boolean;
   className?: string;
+  /** Server-side search: called on every keystroke (and with "" on open); options are shown as given, not filtered here. */
+  onQueryChange?: (query: string) => void;
+  /** Trigger text when the selected value is not among the current options (e.g. after a server search). */
+  selectedLabel?: string;
   "aria-describedby"?: string;
 }) {
   const menuId = useId();
@@ -56,14 +62,16 @@ export default function Dropdown({
   const placement = usePopoverPlacement(open, triggerRef, menuRef);
 
   const selected = options.find((o) => o.value === value);
-  const searchable = searchableProp ?? options.length > SEARCH_FROM;
+  const searchable = searchableProp ?? (!!onQueryChange || options.length > SEARCH_FROM);
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return q ? options.filter((o) => `${o.label} ${o.hint || ""}`.toLowerCase().includes(q)) : options;
-  }, [options, query]);
+    if (onQueryChange || !q) return options;
+    return options.filter((o) => `${o.label} ${o.hint || ""}`.toLowerCase().includes(q));
+  }, [options, query, onQueryChange]);
 
   const openMenu = () => {
     setQuery("");
+    onQueryChange?.("");
     setActive(Math.max(0, options.findIndex((o) => o.value === value)));
     setOpen(true);
   };
@@ -150,7 +158,7 @@ export default function Dropdown({
         onClick={() => (open ? close() : openMenu())}
       >
         <span className={`dropdown__value ${selected ? "" : "dropdown__value--placeholder"}`}>
-          {selected ? selected.label : placeholder}
+          {selected ? selected.label : selectedLabel || placeholder}
         </span>
         <span className="icon icon--24" aria-hidden="true">expand_more</span>
       </button>
@@ -170,6 +178,7 @@ export default function Dropdown({
                 value={query}
                 onChange={(e) => {
                   setQuery(e.target.value);
+                  onQueryChange?.(e.target.value);
                   setActive(0);
                 }}
               />

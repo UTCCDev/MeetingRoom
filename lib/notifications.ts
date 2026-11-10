@@ -15,6 +15,7 @@ export interface NotificationItem {
   attendees: number;
   requester?: { name: string; email: string };
   reason?: string | null;
+  autoApproved?: boolean;
 }
 
 /** "เมื่อสักครู่", "5 นาทีที่แล้ว", "3 ชม.ที่แล้ว", "2 วันที่แล้ว" */

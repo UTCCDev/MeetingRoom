@@ -18,14 +18,28 @@ model User {
   password  String
   role      UserRole   @default(USER)
   active    Boolean    @default(true) // false = account disabled, cannot sign in
+  isPresidentApprover Boolean @default(false) // approves president rooms; ROOM_ADMIN/SYSTEM_ADMIN only
+  autoApproveBooking  Boolean @default(false) // bookings by or for this user approve immediately (not president rooms)
+  departmentId String?
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 
   // Relations
-  bookings  Booking[]
+  department Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  bookings  Booking[]  @relation("BookedBy")
+  bookingsFor Booking[] @relation("BookedFor")
+  bookingsApproved Booking[] @relation("ApprovedBy")
   roomsAsAdmin Room[] // Rooms this user administers
 
   @@map("users")
+}
+
+model Department {
+  id    String @id @default(cuid())
+  name  String @unique
+  users User[]
+
+  @@map("departments")
 }
 
 enum UserRole {
@@ -50,6 +64,7 @@ model Room {
   calendarEmail String? // Room mailbox (e.g. room_241500@utcc.ac.th) synced via Microsoft Graph on approval
   roomAdminId String
   status      Boolean  @default(true) // true = active, false = inactive
+  requiresPresidentApproval Boolean @default(false) // e.g. ห้องไทรทอง, building 24 floor 8
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -79,11 +94,17 @@ model Booking {
   status        BookingStatus @default(PENDING)
   rejectionReason String?
   graphEventId  String? // Microsoft Graph calendar event id in the room mailbox, set when approved
+  bookedForId   String? // beneficiary when booked on someone else's behalf; null = the booker
+  approvedById  String?
+  autoApproved  Boolean       @default(false)
+  decisionNote  String?       @db.Text
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
   // Relations
-  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User          @relation("BookedBy", fields: [userId], references: [id], onDelete: Cascade)
+  bookedFor     User?         @relation("BookedFor", fields: [bookedForId], references: [id], onDelete: SetNull)
+  approvedBy    User?         @relation("ApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
   room          Room          @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
   @@map("bookings")

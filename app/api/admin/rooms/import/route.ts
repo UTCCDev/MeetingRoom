@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { importDescription, ownerKey, parseRoomSheet } from "@/lib/room-import";
 import { deleteRoomEvent, isRoomCalendarConfigured } from "@/lib/room-calendar";
+import { defaultRequiresPresidentApproval } from "@/lib/room-code";
 
 const bodySchema = z.object({
   text: z.string().max(2_000_000, "ข้อมูลใหญ่เกินไป"),
@@ -68,6 +69,12 @@ export async function POST(request: NextRequest) {
       },
     });
     const calendarByCode = new Map(oldRooms.filter((r) => r.code).map((r) => [r.code!, r.calendarEmail]));
+    // Keep each room's president-approval setting by code; new rooms get the default rule.
+    const presidentByCode = new Map(
+      (await prisma.room.findMany({ where: { code: { not: null } }, select: { code: true, requiresPresidentApproval: true } })).map(
+        (r) => [r.code!, r.requiresPresidentApproval]
+      )
+    );
 
     const [deletedBookings, deletedRooms, created] = await prisma.$transaction([
       prisma.booking.deleteMany(),
@@ -75,6 +82,7 @@ export async function POST(request: NextRequest) {
       prisma.room.createMany({
         data: assigned.map((room) => ({
           calendarEmail: calendarByCode.get(room.code) ?? null,
+          requiresPresidentApproval: presidentByCode.get(room.code) ?? defaultRequiresPresidentApproval(room),
           code: room.code,
           roomType: room.roomType,
           roomNumber: room.roomNumber,

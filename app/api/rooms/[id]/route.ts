@@ -94,9 +94,17 @@ export async function PUT(
       return NextResponse.json({ error: firstError(parsed.error) }, { status: 400 });
     }
 
-    const { calendarEmail, roomType, roomNumber, code, name, description, capacity, pricePerHour, image, amenities, photos, status, roomAdminId } = parsed.data;
+    const { calendarEmail, requiresPresidentApproval, roomType, roomNumber, code, name, description, capacity, pricePerHour, image, amenities, photos, status, roomAdminId } = parsed.data;
 
     // The app writes events into this mailbox, so only system admins may point it elsewhere.
+    if (
+      requiresPresidentApproval !== undefined &&
+      requiresPresidentApproval !== room.requiresPresidentApproval &&
+      userRole !== "SYSTEM_ADMIN"
+    ) {
+      return NextResponse.json({ error: "เฉพาะผู้ดูแลระบบเท่านั้นที่ตั้งค่าห้องที่ต้องให้อธิการฯ อนุมัติได้" }, { status: 403 });
+    }
+
     if (calendarEmail !== undefined && calendarEmail !== room.calendarEmail && userRole !== "SYSTEM_ADMIN") {
       return NextResponse.json(
         { error: "เฉพาะผู้ดูแลระบบเท่านั้นที่เปลี่ยนอีเมลปฏิทินห้องได้" },
@@ -127,6 +135,7 @@ export async function PUT(
       where: { id: id },
       data: {
         ...(calendarEmail !== undefined && { calendarEmail }),
+        ...(requiresPresidentApproval !== undefined && { requiresPresidentApproval }),
         ...(roomType && { roomType }),
         ...(roomNumber !== undefined && { roomNumber }),
         ...(code !== undefined && { code }),
