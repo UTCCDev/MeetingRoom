@@ -53,3 +53,12 @@ build/
 
 # uploaded room photos
 /uploads
+
+# Playwright MCP browser-test artifacts
+.playwright-mcp/
+
+# Legacy system data (contains personal data)
+old/
+
+# TypeScript incremental build cache
+tsconfig.tsbuildinfo

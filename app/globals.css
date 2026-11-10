@@ -760,3 +760,8 @@
   .badge--info { background: #E1F6FD; color: #003A52; }
   .badge-primary { background: var(--color-primary-container); color: #151757; }
 }
+
+/* Hover marquee for long booking titles (see app/components/MarqueeText.tsx). */
+.marquee-run { animation: marquee-run 4s ease-in-out 0.3s infinite alternate; }
+@keyframes marquee-run { 0%, 10% { transform: translateX(0); } 90%, 100% { transform: translateX(var(--marquee-shift, 0)); } }
+@media (prefers-reduced-motion: reduce) { .marquee-run { animation: none; } }

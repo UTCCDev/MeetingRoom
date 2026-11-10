@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import MarqueeText from "@/app/components/MarqueeText";
+import { BookingDetailDialog } from "@/app/components/BookingDetails";
 import { addDays, bangkokISO, formatTime, TIME_SLOTS, todayKey } from "@/lib/format";
 
 export interface CalendarBooking {
@@ -71,6 +73,7 @@ function hoursLabel(mins: number): string {
 export default function RoomCalendar({ bookings, selectedDate, maxDate, onPickDate, onPickSlot }: Props) {
   const today = todayKey();
   const [view, setView] = useState<View>("week");
+  const [openId, setOpenId] = useState<string | null>(null);
   const [cursor, setCursor] = useState(selectedDate);
   // Re-render every minute so the "now" line and past shading stay current.
   const [now, setNow] = useState(() => Date.now());
@@ -165,6 +168,7 @@ export default function RoomCalendar({ bookings, selectedDate, maxDate, onPickDa
           bookingsOn={bookingsOn}
           onPickDate={onPickDate}
           onPickSlot={onPickSlot}
+          onOpenBooking={setOpenId}
         />
       ) : (
         <MonthGrid
@@ -175,8 +179,11 @@ export default function RoomCalendar({ bookings, selectedDate, maxDate, onPickDa
           now={now}
           bookingsOn={bookingsOn}
           onPickDate={onPickDate}
+          onOpenBooking={setOpenId}
         />
       )}
+
+      <BookingDetailDialog bookingId={openId} onClose={() => setOpenId(null)} />
 
       <div className="flex flex-wrap gap-x-5 gap-y-2 mt-4 text-body-small text-ink-subtle">
         <span className="flex items-center gap-2"><span className="w-4 h-4 rounded-xs bg-success-95 border border-success-80" /> ว่าง</span>
@@ -197,6 +204,7 @@ function WeekGrid({
   bookingsOn,
   onPickDate,
   onPickSlot,
+  onOpenBooking,
 }: {
   days: string[];
   today: string;
@@ -206,6 +214,7 @@ function WeekGrid({
   bookingsOn: (day: string) => CalendarBooking[];
   onPickDate: (date: string) => void;
   onPickSlot: (date: string, time: string) => void;
+  onOpenBooking: (id: string) => void;
 }) {
   const minutesFromTop = (iso: string | number, day: string) =>
     (new Date(iso).getTime() - new Date(bangkokISO(day, DAY_FROM)).getTime()) / 60000;
@@ -299,23 +308,37 @@ function WeekGrid({
                     if (bottom <= top) return null;
                     const approved = b.status === "APPROVED";
                     const height = ((bottom - top) / 60) * HOUR_PX;
-                    return (
-                      <div
-                        key={b.id}
-                        className={`absolute left-1 right-1 rounded-xs border-l-4 px-1.5 py-0.5 overflow-hidden pointer-events-none ${
-                          approved
-                            ? "bg-primary-container border-primary text-on-primary-container"
-                            : "bg-highlight-container border-highlight text-on-highlight-container"
-                        }`}
-                        style={{ top: (top / 60) * HOUR_PX + 1, height: height - 2 }}
-                        title={`${formatTime(b.startTime)}–${formatTime(b.endTime)} ${b.title || "มีการจองแล้ว"}`}
-                      >
-                        <p className="text-label-small tabular-nums leading-tight">
+                    const label = b.title || "มีการจองแล้ว";
+                    const tone = approved
+                      ? "bg-primary-container border-primary text-on-primary-container"
+                      : "bg-highlight-container border-highlight text-on-highlight-container";
+                    const body = (
+                      <>
+                        <span className="block text-label-small tabular-nums leading-tight">
                           {formatTime(b.startTime)}–{formatTime(b.endTime)}
-                        </p>
-                        {height > 36 && (
-                          <p className="text-label-small font-normal leading-tight truncate">{b.title || "มีการจองแล้ว"}</p>
-                        )}
+                        </span>
+                        {height > 36 && <MarqueeText text={label} className="text-label-small font-normal leading-tight" />}
+                      </>
+                    );
+                    const box = `absolute left-1 right-1 rounded-xs border-l-4 px-1.5 py-0.5 overflow-hidden ${tone}`;
+                    const style = { top: (top / 60) * HOUR_PX + 1, height: height - 2 };
+                    const tip = `${formatTime(b.startTime)}–${formatTime(b.endTime)} ${label}`;
+                    // Titles are only sent to signed-in users, so only those blocks open the details popup.
+                    return b.title ? (
+                      <button
+                        key={b.id}
+                        type="button"
+                        onClick={() => onOpenBooking(b.id)}
+                        className={`${box} text-left hover:shadow-md hover:z-10 focus-visible:z-10 transition-shadow`}
+                        style={style}
+                        title={tip}
+                        aria-haspopup="dialog"
+                      >
+                        {body}
+                      </button>
+                    ) : (
+                      <div key={b.id} className={`${box} pointer-events-none`} style={style} title={tip}>
+                        {body}
                       </div>
                     );
                   })}
@@ -345,6 +368,7 @@ function MonthGrid({
   now,
   bookingsOn,
   onPickDate,
+  onOpenBooking,
 }: {
   monthStart: string;
   today: string;
@@ -353,6 +377,7 @@ function MonthGrid({
   now: number;
   bookingsOn: (day: string) => CalendarBooking[];
   onPickDate: (date: string) => void;
+  onOpenBooking: (id: string) => void;
 }) {
   const gridStart = startOfWeek(monthStart);
   const month = monthStart.slice(0, 7);
@@ -413,16 +438,38 @@ function MonthGrid({
                     <span className="block h-full bg-success-60" style={{ width: `${Math.min(100, (free / total) * 100)}%` }} />
                   </span>
                   <span className="hidden sm:flex flex-col gap-0.5 mt-0.5">
-                    {dayBookings.slice(0, 2).map((b) => (
-                      <span
-                        key={b.id}
-                        className={`truncate rounded-xs px-1 text-label-small font-normal tabular-nums border-l-2 ${
-                          b.status === "APPROVED" ? "bg-primary-container border-primary" : "bg-highlight-container border-highlight"
-                        }`}
-                      >
-                        {formatTime(b.startTime)} {b.title || "จองแล้ว"}
-                      </span>
-                    ))}
+                    {dayBookings.slice(0, 2).map((b) => {
+                      const cls = `rounded-xs px-1 text-label-small font-normal tabular-nums border-l-2 ${
+                        b.status === "APPROVED" ? "bg-primary-container border-primary" : "bg-highlight-container border-highlight"
+                      }`;
+                      const text = `${formatTime(b.startTime)} ${b.title || "จองแล้ว"}`;
+                      // The cell itself is a button, so the item is a span with link-like behaviour.
+                      return b.title ? (
+                        <span
+                          key={b.id}
+                          role="button"
+                          aria-haspopup="dialog"
+                          tabIndex={0}
+                          className={`${cls} hover:underline cursor-pointer`}
+                          title={text}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onOpenBooking(b.id);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              onOpenBooking(b.id);
+                            }
+                          }}
+                        >
+                          <MarqueeText text={text} />
+                        </span>
+                      ) : (
+                        <span key={b.id} className={`${cls} truncate`}>{text}</span>
+                      );
+                    })}
                     {dayBookings.length > 2 && (
                       <span className="text-label-small text-ink-subtle">+{dayBookings.length - 2} รายการ</span>
                     )}
