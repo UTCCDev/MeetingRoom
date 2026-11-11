@@ -28,6 +28,10 @@ const prisma = new PrismaClient();
 
 async function main() {
   if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is not set");
+  const host = new URL(process.env.DATABASE_URL).hostname;
+  if (host !== "localhost" && host !== "127.0.0.1") {
+    throw new Error(`refusing to seed non-local DB host "${host}"`);
+  }
   console.log(`target DB: ${process.env.DATABASE_URL.replace(/:[^:@/]*@/, ":***@")}`);
   for (const [department, items] of Object.entries(CATALOG)) {
     for (const [i, [name, returnable]] of items.entries()) {

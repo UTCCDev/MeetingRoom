@@ -187,7 +187,7 @@ model ServiceRequest {
   borrowedAt       DateTime?
   returnedAt       DateTime?
   internalNote     String?           @db.Text
-  rejectionReason  String?
+  rejectionReason  String?           @db.VarChar(500)
   decidedAt        DateTime? // last status change by department (accept/reject/progress/done)
   cancelledAt      DateTime?
   createdAt        DateTime          @default(now())

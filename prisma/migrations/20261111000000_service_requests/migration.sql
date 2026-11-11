@@ -43,7 +43,7 @@ CREATE TABLE `service_requests` (
     `borrowedAt` DATETIME(3) NULL,
     `returnedAt` DATETIME(3) NULL,
     `internalNote` TEXT NULL,
-    `rejectionReason` VARCHAR(191) NULL,
+    `rejectionReason` VARCHAR(500) NULL,
     `decidedAt` DATETIME(3) NULL,
     `cancelledAt` DATETIME(3) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
