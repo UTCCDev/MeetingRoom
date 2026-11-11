@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { sendBookingNotification } from "@/lib/email";
+import { onBookingApprovedServices } from "@/lib/service-booking-sync";
 import { createRoomEvent, isRoomCalendarConfigured } from "@/lib/room-calendar";
 
 const PERSON = { select: { name: true, email: true } } as const;
@@ -20,6 +21,8 @@ export async function onBookingApproved(bookingId: string): Promise<void> {
     include: { room: true, user: PERSON, bookedFor: PERSON },
   });
   if (!booking) return;
+
+  await onBookingApprovedServices(bookingId);
 
   if (booking.room.calendarEmail && isRoomCalendarConfigured()) {
     try {

@@ -6,9 +6,11 @@ const prisma = vi.hoisted(() => ({
 }));
 const session = vi.hoisted(() => ({ value: { user: { id: "booker" } } as any }));
 const approval = vi.hoisted(() => ({ onBookingApproved: vi.fn(async () => {}), bookingRecipients: vi.fn(() => ["x@utcc.ac.th"]) }));
+const sync = vi.hoisted(() => ({ onBookingApprovedServices: vi.fn(async () => {}), onBookingClosedServices: vi.fn(async () => {}) }));
 const email = vi.hoisted(() => ({ sendBookingNotification: vi.fn(async () => {}) }));
 
 vi.mock("@/lib/prisma", () => ({ prisma }));
+vi.mock("@/lib/service-booking-sync", () => sync);
 vi.mock("next-auth", () => ({ getServerSession: vi.fn(async () => session.value) }));
 vi.mock("@/lib/auth", () => ({ authOptions: {} }));
 vi.mock("@/lib/booking-approval", () => approval);
@@ -106,5 +108,23 @@ describe("PUT /api/bookings/[id] (decide)", () => {
   it("note over 500 characters → 400", async () => {
     as("admin1");
     expect((await put({ status: "APPROVED", decisionNote: "x".repeat(501) })).status).toBe(400);
+  });
+});
+
+describe("service request sync", () => {
+  it("reject calls onBookingClosedServices(b1, REJECTED)", async () => {
+    as("admin1");
+    prisma.booking.findUnique.mockResolvedValue(booking());
+    prisma.booking.updateMany.mockResolvedValue({ count: 1 });
+    expect((await put({ status: "REJECTED", rejectionReason: "เต็ม" })).status).toBe(200);
+    expect(sync.onBookingClosedServices).toHaveBeenCalledWith("b1", "REJECTED");
+  });
+
+  it("cancel calls onBookingClosedServices(b1, CANCELLED), even if sync throws", async () => {
+    as("booker");
+    prisma.booking.findUnique.mockResolvedValue(booking());
+    sync.onBookingClosedServices.mockRejectedValueOnce(new Error("boom"));
+    expect((await DELETE({} as any, ctx)).status).toBe(200);
+    expect(sync.onBookingClosedServices).toHaveBeenCalledWith("b1", "CANCELLED");
   });
 });

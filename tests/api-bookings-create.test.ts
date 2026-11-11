@@ -10,6 +10,7 @@ const email = vi.hoisted(() => ({ sendApprovalRequest: vi.fn(async () => {}) }))
 const approval = vi.hoisted(() => ({ onBookingApproved: vi.fn(async () => {}) }));
 
 vi.mock("@/lib/prisma", () => ({ prisma }));
+vi.mock("@/lib/service-booking-sync", () => ({ onBookingApprovedServices: vi.fn(async () => {}), onBookingClosedServices: vi.fn(async () => {}) }));
 vi.mock("next-auth", () => ({ getServerSession: vi.fn(async () => session.value) }));
 vi.mock("@/lib/auth", () => ({ authOptions: {} }));
 vi.mock("@/lib/email", () => email);

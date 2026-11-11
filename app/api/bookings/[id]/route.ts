@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { loadActor } from "@/lib/actor";
 import { bookingRecipients, onBookingApproved } from "@/lib/booking-approval";
+import { onBookingClosedServices } from "@/lib/service-booking-sync";
 import { sendBookingNotification } from "@/lib/email";
 import { deleteRoomEvent, isRoomCalendarConfigured } from "@/lib/room-calendar";
 import { canCancel, canDecide, canTransition, canView } from "@/lib/validation";
@@ -109,6 +110,11 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
       await onBookingApproved(id);
     } else {
       try {
+        await onBookingClosedServices(id, "REJECTED");
+      } catch (syncError) {
+        console.error("Service request sync failed, but booking was rejected:", syncError);
+      }
+      try {
         await sendBookingNotification(
           bookingRecipients(booking),
           booking.title,
@@ -171,6 +177,12 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
       where: { id, status: { in: ["PENDING", "APPROVED"] } },
       data: { status: "CANCELLED" },
     });
+
+    try {
+      await onBookingClosedServices(id, "CANCELLED");
+    } catch (syncError) {
+      console.error("Service request sync failed, but booking was cancelled:", syncError);
+    }
 
     // Free the slot on the room display too.
     if (booking.graphEventId && booking.room.calendarEmail && isRoomCalendarConfigured()) {

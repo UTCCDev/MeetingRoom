@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const prisma = vi.hoisted(() => ({ booking: { findMany: vi.fn() }, user: { findUnique: vi.fn() } }));
 const session = vi.hoisted(() => ({ value: { user: { id: "u1" } } as any }));
 vi.mock("@/lib/prisma", () => ({ prisma }));
+vi.mock("@/lib/service-booking-sync", () => ({ onBookingApprovedServices: vi.fn(async () => {}), onBookingClosedServices: vi.fn(async () => {}) }));
 vi.mock("next-auth", () => ({ getServerSession: vi.fn(async () => session.value) }));
 vi.mock("@/lib/auth", () => ({ authOptions: {} }));
 

@@ -11,6 +11,7 @@ const calendar = vi.hoisted(() => ({
 const email = vi.hoisted(() => ({ sendBookingNotification: vi.fn() }));
 
 vi.mock("@/lib/prisma", () => ({ prisma }));
+vi.mock("@/lib/service-booking-sync", () => ({ onBookingApprovedServices: vi.fn(async () => {}), onBookingClosedServices: vi.fn(async () => {}) }));
 vi.mock("@/lib/room-calendar", () => calendar);
 vi.mock("@/lib/email", () => email);
 
