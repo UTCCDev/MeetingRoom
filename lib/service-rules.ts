@@ -21,6 +21,14 @@ export const SERVICE_STATUS_LABEL: Record<SStatus, string> = {
   CANCELLED: "ยกเลิก",
 };
 
+// URL segment <-> department ("av", "housekeeping").
+export function deptFromParam(s: string): Dept | null {
+  return s === "av" ? "AV" : s === "housekeeping" ? "HOUSEKEEPING" : null;
+}
+export function deptParam(d: Dept): string {
+  return d === "AV" ? "av" : "housekeeping";
+}
+
 export const LEAD_DAYS = 3;
 export const CANCEL_CUTOFF_HOURS = 24;
 

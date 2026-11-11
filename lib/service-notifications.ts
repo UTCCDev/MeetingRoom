@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { DEPT_LABEL, type Dept, type Membership } from "@/lib/service-rules";
+import { DEPT_LABEL, deptParam as seg, type Dept, type Membership } from "@/lib/service-rules";
 import type { ServiceNotificationItem, ServiceNotificationType } from "@/lib/notifications";
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -65,7 +65,6 @@ export async function serviceNotifications(
   const add = (i: ServiceNotificationItem) => {
     if (!out.has(i.id)) out.set(i.id, i);
   };
-  const seg = (d: Dept) => (d === "AV" ? "av" : "housekeeping");
   const inRoom = { booking: { select: { room: { select: { name: true } } } } } as const;
   const include = { ...INCLUDE, ...inRoom };
 

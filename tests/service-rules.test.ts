@@ -5,6 +5,8 @@ import {
   canTransitionService,
   canViewRequest,
   canWork,
+  deptFromParam,
+  deptParam,
   meetsLeadTime,
   membershipIn,
   queueWhere,
@@ -110,5 +112,18 @@ describe("helpers", () => {
     expect(canWork("u", ms, { department: "AV", assigneeId: "u" })).toBe(true);
     expect(canWork("u", ms, { department: "AV", assigneeId: "x" })).toBe(false);
     expect(canWork("u", [{ department: "AV", role: "ADMIN" }], { department: "AV", assigneeId: null })).toBe(true);
+  });
+});
+
+describe("dept URL param", () => {
+  it("deptFromParam maps lowercase segments and rejects the rest", () => {
+    expect(deptFromParam("av")).toBe("AV");
+    expect(deptFromParam("housekeeping")).toBe("HOUSEKEEPING");
+    for (const bad of ["AV", "Housekeeping", "", "x", "HOUSEKEEPING"]) expect(deptFromParam(bad)).toBeNull();
+  });
+  it("deptParam is the inverse", () => {
+    expect(deptParam("AV")).toBe("av");
+    expect(deptParam("HOUSEKEEPING")).toBe("housekeeping");
+    for (const d of ["AV", "HOUSEKEEPING"] as const) expect(deptFromParam(deptParam(d))).toBe(d);
   });
 });
