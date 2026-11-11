@@ -79,7 +79,7 @@ export default function BookingServices({
   }, [load]);
 
   if (rows === null) return null;
-  const requested = new Set(rows.filter((r) => r.status !== "CANCELLED").map((r) => r.department));
+  const requested = new Set(rows.map((r) => r.department));
   const available = canRequest ? DEPTS.filter((d) => !requested.has(d)) : [];
   if (rows.length === 0 && available.length === 0) return null;
 
