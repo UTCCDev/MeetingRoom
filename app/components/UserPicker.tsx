@@ -21,12 +21,15 @@ export default function UserPicker({
   onChange,
   inputId = "booking-for",
   selfId,
+  selfLabel = "ตัวฉันเอง",
 }: {
   value: PickedUser | null;
   onChange: (user: PickedUser | null) => void;
   inputId?: string;
   /** Signed-in user's id, hidden from the list since "ตัวฉันเอง" covers it. */
   selfId?: string;
+  /** Text of the null (no one picked) option. */
+  selfLabel?: string;
 }) {
   const [users, setUsers] = useState<PickedUser[]>([]);
   const [query, setQuery] = useState<string | null>(null);
@@ -51,7 +54,7 @@ export default function UserPicker({
   const onQueryChange = useCallback((q: string) => setQuery(q), []);
 
   const options: DropdownOption[] = [
-    { value: SELF, label: "ตัวฉันเอง" },
+    { value: SELF, label: selfLabel },
     ...users
       .filter((u) => u.id !== selfId)
       .map((u) => ({ value: u.id, label: u.name, hint: u.department ? `${u.email} · ${u.department}` : u.email })),

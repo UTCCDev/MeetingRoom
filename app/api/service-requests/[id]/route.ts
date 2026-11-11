@@ -20,7 +20,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     const r = await prisma.serviceRequest.findUnique({
       where: { id },
       include: {
-        items: { include: { catalogItem: { select: { name: true } } } },
+        items: { include: { catalogItem: { select: { name: true, returnable: true } } } },
         attachments: true,
         requester: USER_PUBLIC,
         assignee: USER_PUBLIC,

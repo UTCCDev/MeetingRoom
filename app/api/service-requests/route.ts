@@ -186,7 +186,7 @@ export async function GET(request: NextRequest) {
     const rows = await prisma.serviceRequest.findMany({
       where,
       include: {
-        items: { include: { catalogItem: { select: { name: true } } } },
+        items: { include: { catalogItem: { select: { name: true, returnable: true } } } },
         requester: USER_PUBLIC,
         assignee: USER_PUBLIC,
         booking: { select: { id: true, title: true, room: { select: { name: true } } } },

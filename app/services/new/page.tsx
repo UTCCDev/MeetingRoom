@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import AppHeader from "@/app/components/AppHeader";
 import ServiceRequestForm from "@/app/components/ServiceRequestForm";
@@ -18,15 +18,26 @@ import {
   type ServiceFormErrors,
   type ServiceFormValue,
 } from "@/lib/service-form";
-import { DEPT_LABEL, meetsLeadTime, type Dept, type Membership } from "@/lib/service-rules";
+import { DEPT_LABEL, deptFromParam, meetsLeadTime, type Dept, type Membership } from "@/lib/service-rules";
 
 const DEPTS: Dept[] = ["AV", "HOUSEKEEPING"];
 
+// useSearchParams needs a Suspense boundary for static rendering.
 export default function NewServiceRequestPage() {
+  return (
+    <Suspense fallback={null}>
+      <NewServiceRequestForm />
+    </Suspense>
+  );
+}
+
+function NewServiceRequestForm() {
   const router = useRouter();
   const toast = useToast();
   const { data: session } = useSession();
-  const [dept, setDept] = useState<Dept>("AV");
+  const searchParams = useSearchParams();
+  // ?dept=av|housekeeping preselects the department (used by the queue's "สร้างคำร้อง").
+  const [dept, setDept] = useState<Dept>(() => deptFromParam(searchParams.get("dept") ?? "") ?? "AV");
   const [values, setValues] = useState<Record<Dept, ServiceFormValue>>({
     AV: emptyServiceForm(),
     HOUSEKEEPING: emptyServiceForm(),

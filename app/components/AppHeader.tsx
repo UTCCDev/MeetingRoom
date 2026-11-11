@@ -7,6 +7,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import LogoutButton from "./LogoutButton";
 import NotificationBell from "./NotificationBell";
 import BackToTop from "./BackToTop";
+import { useMemberships } from "./useMemberships";
+import { DEPT_LABEL, deptParam, type Dept } from "@/lib/service-rules";
 
 const ROLE_LABELS: Record<string, string> = {
   USER: "ผู้ใช้ทั่วไป",
@@ -24,7 +26,10 @@ const NAV: { href: string; label: string; icon: string; roles?: string[]; authOn
   { href: "/admin/users", label: "ผู้ใช้", icon: "group", roles: ["SYSTEM_ADMIN"] },
   { href: "/admin/departments", label: "แผนก", icon: "apartment", roles: ["SYSTEM_ADMIN"] },
   { href: "/admin/rooms", label: "จัดการห้อง", icon: "domain", roles: ["SYSTEM_ADMIN"] },
+  { href: "/admin/service-members", label: "สมาชิกงานบริการ", icon: "manage_accounts", roles: ["SYSTEM_ADMIN"] },
 ];
+
+type NavItem = (typeof NAV)[number];
 
 /**
  * Where the main menu lives: "sidebar" = fixed primary-blue panel on the left (≥1280px) and a
@@ -81,7 +86,27 @@ export default function AppHeader({
   const [menuOpen, setMenuOpen] = useState(false);
   const user = session?.user as any;
   const role = user?.role as string | undefined;
-  const items = NAV.filter((n) => (!n.roles || (role && n.roles.includes(role))) && (!n.authOnly || !!user));
+  const memberships = useMemberships(!!user);
+  // Service links: the user's own requests, plus one link per department membership
+  // (ADMIN -> the queue, STAFF -> their assigned work).
+  const serviceItems: NavItem[] = user
+    ? [
+        { href: "/services/mine", label: "คำร้องบริการของฉัน", icon: "support_agent" },
+        ...(memberships ?? []).map((m) => ({
+          href: m.role === "ADMIN" ? `/services/${deptParam(m.department as Dept)}` : `/services/${deptParam(m.department as Dept)}/assigned`,
+          label: `งาน${DEPT_LABEL[m.department as Dept]}`,
+          icon: m.department === "AV" ? "videocam" : "cleaning_services",
+        })),
+      ]
+    : [];
+  const baseItems = NAV.filter((n) => (!n.roles || (role && n.roles.includes(role))) && (!n.authOnly || !!user));
+  // Service links go after "การจองของฉัน", before the admin group.
+  const firstAdmin = baseItems.findIndex((n) => isAdminItem(n.href));
+  const items = [
+    ...baseItems.slice(0, firstAdmin === -1 ? baseItems.length : firstAdmin),
+    ...serviceItems,
+    ...(firstAdmin === -1 ? [] : baseItems.slice(firstAdmin)),
+  ];
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname === href || pathname?.startsWith(href + "/");
