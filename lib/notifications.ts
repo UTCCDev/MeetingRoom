@@ -20,6 +20,7 @@ export interface ServiceNotificationInfo {
   location: string;
   requesterName: string;
   reason?: string | null;
+  href: string; // where a click goes; decided server-side from the recipient's role
 }
 
 export interface NotificationItem {

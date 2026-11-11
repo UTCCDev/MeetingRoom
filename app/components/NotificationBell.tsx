@@ -59,23 +59,6 @@ function serviceHeadline(n: ServiceNotificationItem): string {
   }
 }
 
-function serviceHref(n: ServiceNotificationItem): string {
-  const seg = n.service.department === "AV" ? "av" : "housekeeping";
-  switch (n.type) {
-    case "svc_new":
-    case "svc_overdue":
-      return `/services/${seg}`;
-    case "svc_assigned":
-    case "svc_soon":
-      return `/services/${seg}/assigned`;
-    case "svc_cancelled":
-      // Admins and the assignee both get this; staff-only users cannot open the admin queue.
-      return `/services/${seg}`;
-    default:
-      return "/services/mine";
-  }
-}
-
 function headline(n: BookingNotificationItem): React.ReactNode {
   const t = <span className="font-medium text-ink">“{n.title}”</span>;
   switch (n.type) {
@@ -354,7 +337,7 @@ export default function NotificationBell({ userId, isApprover }: { userId: strin
                     isServiceItem(n) ? (
                       <li key={n.id}>
                         <Link
-                          href={serviceHref(n)}
+                          href={n.service.href}
                           onClick={() => setOpen(false)}
                           className={`flex gap-3 px-5 py-4 border-b border-line hover:bg-surface-variant ${isNew(n) ? "bg-primary-99" : ""}`}
                         >

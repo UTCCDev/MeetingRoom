@@ -28,7 +28,7 @@ type Row = {
   booking?: { room: { name: string } } | null;
 };
 
-function make(type: ServiceNotificationType, at: Date, r: Row): ServiceNotificationItem {
+function make(type: ServiceNotificationType, at: Date, r: Row, href: string): ServiceNotificationItem {
   return {
     id: `${type}:${r.id}`,
     type,
@@ -41,6 +41,7 @@ function make(type: ServiceNotificationType, at: Date, r: Row): ServiceNotificat
       location: r.location ?? r.booking?.room.name ?? "",
       requesterName: r.requester?.name ?? "",
       reason: type === "svc_rejected" ? r.rejectionReason : undefined,
+      href,
     },
   };
 }
@@ -60,7 +61,11 @@ export async function serviceNotifications(
   const since = new Date(now.getTime() - HISTORY_DAYS * DAY);
   const soon = new Date(now.getTime() + DAY);
   const out = new Map<string, ServiceNotificationItem>();
-  const add = (i: ServiceNotificationItem) => out.set(i.id, i);
+  // First entry wins; roles are processed admin, assignee, requester, so admin links take priority.
+  const add = (i: ServiceNotificationItem) => {
+    if (!out.has(i.id)) out.set(i.id, i);
+  };
+  const seg = (d: Dept) => (d === "AV" ? "av" : "housekeeping");
   const inRoom = { booking: { select: { room: { select: { name: true } } } } } as const;
   const include = { ...INCLUDE, ...inRoom };
 
@@ -82,14 +87,14 @@ export async function serviceNotifications(
     })) as unknown as Row[];
     for (const r of rows) {
       if (!r.visibleAt || !adminDepts.includes(r.department)) continue;
-      if (r.status === "PENDING" && r.visibleAt >= since) add(make("svc_new", r.visibleAt, r));
-      else if (r.status === "CANCELLED" && r.cancelledAt && r.cancelledAt >= since) add(make("svc_cancelled", r.cancelledAt, r));
+      if (r.status === "PENDING" && r.visibleAt >= since) add(make("svc_new", r.visibleAt, r, `/services/${seg(r.department)}`));
+      else if (r.status === "CANCELLED" && r.cancelledAt && r.cancelledAt >= since) add(make("svc_cancelled", r.cancelledAt, r, `/services/${seg(r.department)}`));
       else if (
         r.status === "IN_PROGRESS" &&
         r.endTime < now &&
         r.items.some((i) => i.catalogItem?.returnable)
       ) {
-        add(make("svc_overdue", r.endTime, r));
+        add(make("svc_overdue", r.endTime, r, `/services/${seg(r.department)}`));
       }
     }
   }
@@ -108,12 +113,12 @@ export async function serviceNotifications(
     take: LIMIT,
   })) as unknown as (Row & { assigneeId?: string | null })[];
   for (const r of mine) {
-    if (r.assignedAt && r.assignedAt >= since && r.status !== "CANCELLED") add(make("svc_assigned", r.assignedAt, r));
-    if (r.status === "CANCELLED" && r.cancelledAt && r.cancelledAt >= since) add(make("svc_cancelled", r.cancelledAt, r));
+    if (r.assignedAt && r.assignedAt >= since && r.status !== "CANCELLED") add(make("svc_assigned", r.assignedAt, r, `/services/${seg(r.department)}/assigned`));
+    if (r.status === "CANCELLED" && r.cancelledAt && r.cancelledAt >= since) add(make("svc_cancelled", r.cancelledAt, r, `/services/${seg(r.department)}/assigned`));
     if ((r.status === "ACCEPTED" || r.status === "IN_PROGRESS") && r.startTime > now && r.startTime < soon) {
       // Arrives 24 h before start (or at assignment, if later).
       const at = new Date(Math.max(r.startTime.getTime() - DAY, r.assignedAt?.getTime() ?? 0));
-      add(make("svc_soon", at, r));
+      add(make("svc_soon", at, r, `/services/${seg(r.department)}/assigned`));
     }
   }
 
@@ -126,7 +131,7 @@ export async function serviceNotifications(
   for (const r of decided) {
     if (!r.decidedAt || r.decidedAt < since) continue;
     const type = r.status === "ACCEPTED" ? "svc_accepted" : r.status === "REJECTED" ? "svc_rejected" : r.status === "DONE" ? "svc_done" : null;
-    if (type) add(make(type, r.decidedAt, r));
+    if (type) add(make(type, r.decidedAt, r, "/services/mine"));
   }
 
   return [...out.values()].sort((a, b) => b.at.localeCompare(a.at)).slice(0, LIMIT);

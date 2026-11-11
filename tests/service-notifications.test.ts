@@ -111,4 +111,24 @@ describe("serviceNotifications", () => {
     expect(out).toHaveLength(40);
     expect(out[0].id).toBe("svc_new:r0");
   });
+
+  it("assignee-only svc_cancelled links to /assigned", async () => {
+    rows({ assignee: [req({ status: "CANCELLED", assigneeId: "st", cancelledAt: ago(1) })] });
+    const out = await serviceNotifications("st", [{ department: "AV", role: "STAFF" }] as any, now);
+    expect(out).toHaveLength(1);
+    expect(out[0].service.href).toBe("/services/av/assigned");
+  });
+
+  it("admin who is also assignee gets one item with the admin href", async () => {
+    const r = req({ status: "CANCELLED", assigneeId: "adm", cancelledAt: ago(1) });
+    rows({ admin: [r], assignee: [r] });
+    const out = await serviceNotifications("adm", adminMs, now);
+    expect(out).toHaveLength(1);
+    expect(out[0].service.href).toBe("/services/av");
+  });
+
+  it("requester items link to /services/mine", async () => {
+    rows({ requester: [req({ status: "DONE", decidedAt: ago(1) })] });
+    expect((await serviceNotifications("req", [], now))[0].service.href).toBe("/services/mine");
+  });
 });
