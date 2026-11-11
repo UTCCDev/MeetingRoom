@@ -1,3 +1,6 @@
+import { z } from "zod";
+import { bangkokDate } from "@/lib/validation";
+
 // Pure rules for service requests (AV / HOUSEKEEPING). No prisma import.
 
 export type Dept = "AV" | "HOUSEKEEPING";
@@ -79,3 +82,44 @@ export function queueWhere(userId: string, m: Membership): Record<string, unknow
   if (m.role === "STAFF") where.assigneeId = userId;
   return where;
 }
+
+// ---- create schema ----
+const itemSchema = z
+  .object({
+    catalogItemId: z.string().min(1).optional().nullable(),
+    otherText: z.string().trim().max(100, "ข้อความอื่น ๆ ยาวเกิน 100 ตัวอักษร").optional().nullable(),
+    qty: z.coerce
+      .number({ invalid_type_error: "จำนวนไม่ถูกต้อง" })
+      .int("จำนวนต้องเป็นจำนวนเต็ม")
+      .min(1, "จำนวนต้องอย่างน้อย 1")
+      .max(999, "จำนวนต้องไม่เกิน 999"),
+  })
+  .refine((i) => !!i.catalogItemId !== !!i.otherText, {
+    message: "แต่ละรายการต้องเลือกอุปกรณ์หรือระบุข้อความอื่น ๆ อย่างใดอย่างหนึ่ง",
+  });
+
+export const createServiceSchema = z
+  .object({
+    department: z.enum(["AV", "HOUSEKEEPING"], { required_error: "กรุณาเลือกแผนก", invalid_type_error: "แผนกไม่ถูกต้อง" }),
+    bookingId: z.string().min(1).optional().nullable(),
+    location: z.string().trim().max(200, "สถานที่ยาวเกิน 200 ตัวอักษร").optional().nullable(),
+    startTime: bangkokDate.optional().nullable(),
+    endTime: bangkokDate.optional().nullable(),
+    contactPhone: z
+      .string({ required_error: "กรุณากรอกเบอร์ติดต่อ" })
+      .trim()
+      .min(1, "กรุณากรอกเบอร์ติดต่อ")
+      .max(30, "เบอร์ติดต่อยาวเกิน 30 ตัวอักษร"),
+    note: z.string().trim().max(1000, "หมายเหตุยาวเกิน 1000 ตัวอักษร").optional().nullable(),
+    requesterId: z.string().min(1).optional().nullable(),
+    items: z.array(itemSchema, { required_error: "กรุณาเลือกรายการอย่างน้อย 1 รายการ" }).min(1, "กรุณาเลือกรายการอย่างน้อย 1 รายการ"),
+  })
+  .superRefine((d, ctx) => {
+    if (d.bookingId) return;
+    if (!d.location) ctx.addIssue({ code: "custom", path: ["location"], message: "กรุณาระบุสถานที่" });
+    if (!d.startTime) ctx.addIssue({ code: "custom", path: ["startTime"], message: "กรุณาระบุเวลาเริ่มต้น" });
+    if (!d.endTime) ctx.addIssue({ code: "custom", path: ["endTime"], message: "กรุณาระบุเวลาสิ้นสุด" });
+    if (d.startTime && d.endTime && d.endTime <= d.startTime) {
+      ctx.addIssue({ code: "custom", path: ["endTime"], message: "เวลาสิ้นสุดต้องหลังเวลาเริ่มต้น" });
+    }
+  });
