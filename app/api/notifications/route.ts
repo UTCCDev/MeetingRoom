@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import type { NotificationItem, NotificationType } from "@/lib/notifications";
 import { loadActor } from "@/lib/actor";
 import { decidableRoomWhere } from "@/lib/validation";
+import { serviceNotifications } from "@/lib/service-notifications";
+import type { Membership } from "@/lib/service-rules";
 
 const DAY = 24 * 60 * 60 * 1000;
 const HISTORY_DAYS = 30;
@@ -107,10 +109,17 @@ export async function GET() {
       }
     }
 
+    const memberships = (await prisma.serviceMember.findMany({ where: { userId: me } })).map((m) => ({
+      department: m.department,
+      role: m.role,
+    })) as Membership[];
+    items.push(...(await serviceNotifications(me, memberships, now)));
+
     items.sort((a, b) => b.at.localeCompare(a.at));
     return NextResponse.json({
       items: items.slice(0, LIMIT),
       pendingCount: items.filter((i) => i.type === "approval").length,
+      serviceCount: items.filter((i) => i.type === "svc_new").length,
       serverTime: now.toISOString(),
     });
   } catch (error) {

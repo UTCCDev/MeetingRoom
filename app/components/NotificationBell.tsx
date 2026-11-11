@@ -3,8 +3,16 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useToast } from "./Toast";
-import { formatRange, roomLocation } from "@/lib/format";
-import { timeAgo, type NotificationItem, type NotificationType } from "@/lib/notifications";
+import { formatDate, formatRange, formatTime, roomLocation } from "@/lib/format";
+import {
+  timeAgo,
+  isBookingItem,
+  isServiceItem,
+  type BookingNotificationItem,
+  type NotificationItem,
+  type NotificationType,
+  type ServiceNotificationItem,
+} from "@/lib/notifications";
 
 const POLL_MS = 60_000;
 /** Fired after a decision so open pages (e.g. อนุมัติการจอง) can refetch. */
@@ -16,9 +24,59 @@ const LOOK: Record<NotificationType, { icon: string; tone: string }> = {
   rejected: { icon: "cancel", tone: "bg-error-container text-on-error-container" },
   cancelled: { icon: "event_busy", tone: "bg-surface-variant text-ink-muted" },
   reminder: { icon: "alarm", tone: "bg-primary-container text-on-primary-container" },
+  svc_new: { icon: "", tone: "bg-highlight-container text-on-highlight-container" },
+  svc_accepted: { icon: "", tone: "bg-success-container text-on-success-container" },
+  svc_rejected: { icon: "", tone: "bg-error-container text-on-error-container" },
+  svc_done: { icon: "", tone: "bg-success-container text-on-success-container" },
+  svc_assigned: { icon: "", tone: "bg-primary-container text-on-primary-container" },
+  svc_cancelled: { icon: "", tone: "bg-surface-variant text-ink-muted" },
+  svc_soon: { icon: "", tone: "bg-primary-container text-on-primary-container" },
+  svc_overdue: { icon: "", tone: "bg-error-container text-on-error-container" },
 };
 
-function headline(n: NotificationItem): React.ReactNode {
+// Service items are icon'd by department (build = โสต, cleaning_services = กองอาคาร).
+const SERVICE_ICON = { AV: "build", HOUSEKEEPING: "cleaning_services" } as const;
+const iconFor = (n: NotificationItem) => (n.service ? SERVICE_ICON[n.service.department] : LOOK[n.type].icon);
+
+function serviceHeadline(n: ServiceNotificationItem): string {
+  switch (n.type) {
+    case "svc_new":
+      return `คำร้องใหม่ (${n.service.deptLabel})`;
+    case "svc_accepted":
+      return "รับงานแล้ว";
+    case "svc_rejected":
+      return "คำร้องถูกปฏิเสธ";
+    case "svc_done":
+      return "งานเสร็จสิ้น";
+    case "svc_assigned":
+      return "ได้รับมอบหมายงาน";
+    case "svc_cancelled":
+      return "คำร้องถูกยกเลิก";
+    case "svc_soon":
+      return "งานเริ่มภายใน 24 ชม.";
+    case "svc_overdue":
+      return "อุปกรณ์ยังไม่คืน";
+  }
+}
+
+function serviceHref(n: ServiceNotificationItem): string {
+  const seg = n.service.department === "AV" ? "av" : "housekeeping";
+  switch (n.type) {
+    case "svc_new":
+    case "svc_overdue":
+      return `/services/${seg}`;
+    case "svc_assigned":
+    case "svc_soon":
+      return `/services/${seg}/assigned`;
+    case "svc_cancelled":
+      // Admins and the assignee both get this; staff-only users cannot open the admin queue.
+      return `/services/${seg}`;
+    default:
+      return "/services/mine";
+  }
+}
+
+function headline(n: BookingNotificationItem): React.ReactNode {
   const t = <span className="font-medium text-ink">“{n.title}”</span>;
   switch (n.type) {
     case "approval":
@@ -110,7 +168,7 @@ export default function NotificationBell({ userId, isApprover }: { userId: strin
     setOpen((o) => !o);
   };
 
-  const decide = async (n: NotificationItem, status: "APPROVED" | "REJECTED") => {
+  const decide = async (n: BookingNotificationItem, status: "APPROVED" | "REJECTED") => {
     if (status === "REJECTED" && !reason.trim()) {
       setReasonError("กรุณาระบุเหตุผลในการปฏิเสธ");
       return;
@@ -138,7 +196,7 @@ export default function NotificationBell({ userId, isApprover }: { userId: strin
   };
 
   const unread = items.filter((i) => new Date(i.at).getTime() > seenAt).length;
-  const approvals = items.filter((i) => i.type === "approval");
+  const approvals = items.filter(isBookingItem).filter((i) => i.type === "approval");
   const updates = items.filter((i) => i.type !== "approval");
   const isNew = (n: NotificationItem) => new Date(n.at).getTime() > highlightAfter;
 
@@ -292,31 +350,60 @@ export default function NotificationBell({ userId, isApprover }: { userId: strin
                 </p>
               ) : (
                 <ul>
-                  {updates.map((n) => (
-                    <li key={n.id}>
-                      <Link
-                        href={n.type === "cancelled" ? `/rooms/${n.roomId}` : "/my-bookings"}
-                        onClick={() => setOpen(false)}
-                        className={`flex gap-3 px-5 py-4 border-b border-line hover:bg-surface-variant ${isNew(n) ? "bg-primary-99" : ""}`}
-                      >
-                        <span className={`icon-tile ${LOOK[n.type].tone}`} aria-hidden="true">
-                          <span className="icon icon--24">{LOOK[n.type].icon}</span>
-                        </span>
-                        <span className="min-w-0 flex-1">
-                          <span className="block text-body-medium text-ink-muted">{headline(n)}</span>
-                          <span className="block mt-1 text-body-small text-ink-subtle tabular-nums">
-                            {n.roomName}
-                            {roomLocation(n.roomDescription) && ` · ${roomLocation(n.roomDescription)}`} · {formatRange(n.startTime, n.endTime)}
+                  {updates.map((n) =>
+                    isServiceItem(n) ? (
+                      <li key={n.id}>
+                        <Link
+                          href={serviceHref(n)}
+                          onClick={() => setOpen(false)}
+                          className={`flex gap-3 px-5 py-4 border-b border-line hover:bg-surface-variant ${isNew(n) ? "bg-primary-99" : ""}`}
+                        >
+                          <span className={`icon-tile ${LOOK[n.type].tone}`} aria-hidden="true">
+                            <span className="icon icon--24">{iconFor(n)}</span>
                           </span>
-                          {n.type === "rejected" && n.reason && (
-                            <span className="block mt-1 text-body-medium text-on-error-container">เหตุผล: {n.reason}</span>
-                          )}
-                          <span className="block text-body-small text-ink-subtle">{timeAgo(n.at)}</span>
-                        </span>
-                        {isNew(n) && <span className="w-2.5 h-2.5 mt-2 flex-none rounded-full bg-primary" aria-label="ใหม่" />}
-                      </Link>
-                    </li>
-                  ))}
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-body-medium text-ink">{serviceHeadline(n)}</span>
+                            <span className="block mt-1 text-body-small text-ink-muted">
+                              {n.service.requesterName} · {n.service.deptLabel}
+                            </span>
+                            <span className="block text-body-small text-ink-subtle tabular-nums">
+                              {n.service.location && `${n.service.location} · `}
+                              {formatDate(n.service.startTime)} {formatTime(n.service.startTime)} น.
+                            </span>
+                            {n.type === "svc_rejected" && n.service.reason && (
+                              <span className="block mt-1 text-body-medium text-on-error-container">เหตุผล: {n.service.reason}</span>
+                            )}
+                            <span className="block text-body-small text-ink-subtle">{timeAgo(n.at)}</span>
+                          </span>
+                          {isNew(n) && <span className="w-2.5 h-2.5 mt-2 flex-none rounded-full bg-primary" aria-label="ใหม่" />}
+                        </Link>
+                      </li>
+                    ) : isBookingItem(n) ? (
+                      <li key={n.id}>
+                        <Link
+                          href={n.type === "cancelled" ? `/rooms/${n.roomId}` : "/my-bookings"}
+                          onClick={() => setOpen(false)}
+                          className={`flex gap-3 px-5 py-4 border-b border-line hover:bg-surface-variant ${isNew(n) ? "bg-primary-99" : ""}`}
+                        >
+                          <span className={`icon-tile ${LOOK[n.type].tone}`} aria-hidden="true">
+                            <span className="icon icon--24">{LOOK[n.type].icon}</span>
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-body-medium text-ink-muted">{headline(n)}</span>
+                            <span className="block mt-1 text-body-small text-ink-subtle tabular-nums">
+                              {n.roomName}
+                              {roomLocation(n.roomDescription) && ` · ${roomLocation(n.roomDescription)}`} · {formatRange(n.startTime, n.endTime)}
+                            </span>
+                            {n.type === "rejected" && n.reason && (
+                              <span className="block mt-1 text-body-medium text-on-error-container">เหตุผล: {n.reason}</span>
+                            )}
+                            <span className="block text-body-small text-ink-subtle">{timeAgo(n.at)}</span>
+                          </span>
+                          {isNew(n) && <span className="w-2.5 h-2.5 mt-2 flex-none rounded-full bg-primary" aria-label="ใหม่" />}
+                        </Link>
+                      </li>
+                    ) : null,
+                  )}
                 </ul>
               )}
             </section>

@@ -96,3 +96,21 @@ export const sendApprovalRequest = async (
 
   await transporter.sendMail({ from: process.env.EMAIL_FROM, to, subject, html: message });
 };
+
+/** Generic service-request email: Thai subject, a list of detail lines and a button to `link`. */
+export const sendServiceEmail = async (to: string[], subject: string, lines: string[], link: string) => {
+  const recipients = [...new Set(to.filter(Boolean))];
+  if (recipients.length === 0) return;
+
+  const message = `
+    <h2>${escapeHtml(subject)}</h2>
+    ${lines.map((l) => `<p>${escapeHtml(l)}</p>`).join("\n    ")}
+    <p style="margin-top:24px">
+      <a href="${escapeHtml(link)}" style="background:#2E3192;color:#fff;padding:12px 28px;border-radius:4px;text-decoration:none;display:inline-block">
+        เปิดดูคำร้อง
+      </a>
+    </p>
+  `;
+
+  await transporter.sendMail({ from: process.env.EMAIL_FROM, to: recipients, subject, html: message });
+};
