@@ -16,3 +16,15 @@ export function imageType(b: Uint8Array): { ext: "jpg" | "png" | "webp"; mime: s
     return { ext: "webp", mime: "image/webp" };
   return null;
 }
+
+/** Service-request attachments: private, served only to people who can view the request. */
+export const SERVICE_UPLOAD_DIR = path.join(process.cwd(), "uploads", "service");
+export const SERVICE_UPLOAD_NAME = /^[0-9a-f-]{36}\.(jpg|png|webp|pdf)$/;
+
+/** Detect JPG / PNG / WebP / PDF from the file's first bytes. */
+export function fileType(
+  b: Uint8Array
+): { ext: "jpg" | "png" | "webp" | "pdf"; mime: string } | null {
+  if (String.fromCharCode(b[0], b[1], b[2], b[3], b[4]) === "%PDF-") return { ext: "pdf", mime: "application/pdf" };
+  return imageType(b);
+}
