@@ -109,11 +109,16 @@ export async function GET() {
       }
     }
 
-    const memberships = (await prisma.serviceMember.findMany({ where: { userId: me } })).map((m) => ({
-      department: m.department,
-      role: m.role,
-    })) as Membership[];
-    items.push(...(await serviceNotifications(me, memberships, now)));
+    // Service notifications must never take the booking bell down with them.
+    try {
+      const memberships = (await prisma.serviceMember.findMany({ where: { userId: me } })).map((m) => ({
+        department: m.department,
+        role: m.role,
+      })) as Membership[];
+      items.push(...(await serviceNotifications(me, memberships, now)));
+    } catch (err) {
+      console.error("Error loading service notifications:", err);
+    }
 
     items.sort((a, b) => b.at.localeCompare(a.at));
     return NextResponse.json({

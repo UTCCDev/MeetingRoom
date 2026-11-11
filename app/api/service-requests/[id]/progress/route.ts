@@ -20,7 +20,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const now = new Date();
     const { count } = await prisma.serviceRequest.updateMany({
       where: { id, status: "ACCEPTED" },
-      data: { status: "IN_PROGRESS", borrowedAt: parsed.data.borrowedAt ?? now, decidedAt: now },
+      data: { status: "IN_PROGRESS", borrowedAt: parsed.data.borrowedAt ?? now },
     });
     if (count === 0) return fail(CONFLICT, 409);
 

@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { loadServiceActor } from "@/lib/service-actor";
-import { canViewRequest } from "@/lib/service-rules";
+import { canViewRequest, membershipIn, type Dept } from "@/lib/service-rules";
 
 const USER_PUBLIC = { select: { id: true, name: true, email: true } } as const;
 const SERVER_ERROR = "เกิดข้อผิดพลาดที่เซิร์ฟเวอร์ กรุณาลองใหม่";
@@ -31,8 +31,12 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ error: NOT_FOUND }, { status: 404 });
     }
 
+    // internalNote is for the department only, never the requester.
+    const { internalNote, ...rest } = r;
+    const isMember = !!membershipIn(actor.memberships, r.department as Dept);
     return NextResponse.json({
-      ...r,
+      ...rest,
+      ...(isMember ? { internalNote } : {}),
       waitingRoom: r.visibleAt === null && r.status === "PENDING",
       attachments: r.attachments.map((a) => ({
         ...a,

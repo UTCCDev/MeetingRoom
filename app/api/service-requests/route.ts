@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { unlink } from "fs/promises";
+import path from "path";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { loadActor } from "@/lib/actor";
 import { loadServiceActor } from "@/lib/service-actor";
 import { UploadError, saveServiceFiles } from "@/lib/service-attachments";
+import { SERVICE_UPLOAD_DIR } from "@/lib/uploads";
 import { notifyNewRequest } from "@/lib/service-notify";
 import {
   DEPT_LABEL,
@@ -21,6 +24,7 @@ const USER_PUBLIC = { select: { id: true, name: true, email: true } } as const;
 const SERVER_ERROR = "เกิดข้อผิดพลาดที่เซิร์ฟเวอร์ กรุณาลองใหม่";
 const bad = (error: string, status = 400, extra: Record<string, unknown> = {}) =>
   NextResponse.json({ error, ...extra }, { status });
+const STATUSES = ["PENDING", "ACCEPTED", "IN_PROGRESS", "DONE", "REJECTED", "CANCELLED"];
 const isDept = (v: unknown): v is Dept => v === "AV" || v === "HOUSEKEEPING";
 
 // POST multipart: field "data" (JSON) + "files" (attachments)
@@ -126,8 +130,32 @@ export async function POST(request: NextRequest) {
         },
       });
     } catch (err: any) {
+      await Promise.all(saved.map((f) => unlink(path.join(SERVICE_UPLOAD_DIR, f.fileName)).catch(() => {})));
       if (err?.code === "P2002") return bad(`การจองนี้มีคำร้อง${DEPT_LABEL[dept]}อยู่แล้ว`, 409);
       throw err;
+    }
+
+    // Race: the booking may have been decided between our read and the insert.
+    if (bookingId) {
+      try {
+        const fresh = await prisma.booking.findUnique({ where: { id: bookingId } });
+        if (fresh?.status === "APPROVED" && created.visibleAt === null) {
+          const { count } = await prisma.serviceRequest.updateMany({
+            where: { id: created.id, visibleAt: null },
+            data: { visibleAt: new Date() },
+          });
+          if (count === 1) {
+            notifyNewRequest(created.id).catch((err) => console.error("Service request notify failed:", err));
+          }
+        } else if (fresh && ["REJECTED", "CANCELLED"].includes(fresh.status)) {
+          await prisma.serviceRequest.updateMany({
+            where: { id: created.id, status: "PENDING" },
+            data: { status: "CANCELLED", cancelledAt: new Date() },
+          });
+        }
+      } catch (err) {
+        console.error("Service request booking re-check failed:", err);
+      }
     }
 
     if (visibleAt) {
@@ -172,7 +200,10 @@ export async function GET(request: NextRequest) {
     }
 
     const status = sp.get("status");
-    if (status) where.status = status;
+    if (status) {
+      if (!STATUSES.includes(status)) return bad("สถานะไม่ถูกต้อง");
+      where.status = status;
+    }
     const range: Record<string, Date> = {};
     for (const [key, op] of [["from", "gte"], ["to", "lte"]] as const) {
       const v = sp.get(key);
@@ -194,7 +225,12 @@ export async function GET(request: NextRequest) {
       orderBy: { startTime: "asc" },
     });
 
-    return NextResponse.json(rows.map((r) => ({ ...r, waitingRoom: r.visibleAt === null && r.status === "PENDING" })));
+    return NextResponse.json(
+      rows.map(({ internalNote, ...r }) => ({
+        ...(scope === "queue" ? { ...r, internalNote } : r),
+        waitingRoom: r.visibleAt === null && r.status === "PENDING",
+      }))
+    );
   } catch (error) {
     console.error("Error listing service requests:", error);
     return bad(SERVER_ERROR, 500);

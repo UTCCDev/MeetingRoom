@@ -74,6 +74,11 @@ describe("GET attachment", () => {
     session.value = null;
     expect((await call()).status).toBe(401);
   });
+  it("404 for AV ADMIN on a hidden request", async () => {
+    session.value = { user: { id: "avadmin" } };
+    prisma.serviceMember.findMany.mockResolvedValue([{ department: "AV", role: "ADMIN" }]);
+    expect((await call()).status).toBe(404);
+  });
   it("404 for stranger", async () => {
     session.value = { user: { id: "stranger" } };
     expect((await call()).status).toBe(404);

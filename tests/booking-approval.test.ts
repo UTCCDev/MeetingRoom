@@ -11,7 +11,8 @@ const calendar = vi.hoisted(() => ({
 const email = vi.hoisted(() => ({ sendBookingNotification: vi.fn() }));
 
 vi.mock("@/lib/prisma", () => ({ prisma }));
-vi.mock("@/lib/service-booking-sync", () => ({ onBookingApprovedServices: vi.fn(async () => {}), onBookingClosedServices: vi.fn(async () => {}) }));
+const sync = vi.hoisted(() => ({ onBookingApprovedServices: vi.fn(async () => {}), onBookingClosedServices: vi.fn(async () => {}) }));
+vi.mock("@/lib/service-booking-sync", () => sync);
 vi.mock("@/lib/room-calendar", () => calendar);
 vi.mock("@/lib/email", () => email);
 
@@ -35,6 +36,12 @@ describe("onBookingApproved", () => {
     prisma.booking.findUnique.mockResolvedValue(booking());
     await onBookingApproved("b1");
     expect(email.sendBookingNotification.mock.calls[0][0]).toEqual(["a@utcc.ac.th", "b@utcc.ac.th"]);
+  });
+
+  it("syncs service requests for the booking", async () => {
+    prisma.booking.findUnique.mockResolvedValue(booking());
+    await onBookingApproved("b1");
+    expect(sync.onBookingApprovedServices).toHaveBeenCalledWith("b1");
   });
 
   it("emails only the booker when there is no beneficiary", async () => {

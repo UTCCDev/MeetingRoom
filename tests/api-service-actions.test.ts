@@ -61,6 +61,12 @@ describe("accept", () => {
     expect((await res.json()).error).toBe("ผู้รับผิดชอบต้องเป็นเจ้าหน้าที่ของแผนกโสต");
   });
 
+  it("inactive assignee is rejected with 400 (lookup requires active user)", async () => {
+    prisma.serviceMember.findFirst.mockResolvedValue(null);
+    expect((await call(ACCEPT, { assigneeId: "gone" })).status).toBe(400);
+    expect(prisma.serviceMember.findFirst.mock.calls[0][0].where.user).toEqual({ active: true });
+  });
+
   it("STAFF → 403", async () => {
     as("staff");
     const res = await call(ACCEPT, { assigneeId: "staff" });
@@ -128,6 +134,7 @@ describe("progress", () => {
     expect(updated().where).toEqual({ id: "s1", status: "ACCEPTED" });
     expect(updated().data.status).toBe("IN_PROGRESS");
     expect(updated().data.borrowedAt).toBeInstanceOf(Date);
+    expect(updated().data).not.toHaveProperty("decidedAt");
   });
   it("other STAFF → 404", async () => {
     as("staff2");

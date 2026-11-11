@@ -49,7 +49,7 @@ export async function readBody(request: Request): Promise<any> {
 /** Assignee must be a member (ADMIN or STAFF) of the department. Returns an error response or null. */
 export async function checkAssignee(assigneeId: string, department: Dept) {
   const m = await prisma.serviceMember.findFirst({
-    where: { userId: assigneeId, department, role: { in: ["ADMIN", "STAFF"] } },
+    where: { userId: assigneeId, department, role: { in: ["ADMIN", "STAFF"] }, user: { active: true } },
   });
   return m ? null : fail(`ผู้รับผิดชอบต้องเป็นเจ้าหน้าที่ของ${DEPT_LABEL[department]}`, 400);
 }

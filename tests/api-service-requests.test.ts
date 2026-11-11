@@ -5,8 +5,9 @@ const prisma = vi.hoisted(() => ({
   serviceMember: { findMany: vi.fn() },
   booking: { findUnique: vi.fn() },
   serviceCatalogItem: { findMany: vi.fn() },
-  serviceRequest: { create: vi.fn(), findFirst: vi.fn(), findMany: vi.fn(), findUnique: vi.fn() },
+  serviceRequest: { create: vi.fn(), findFirst: vi.fn(), findMany: vi.fn(), findUnique: vi.fn(), updateMany: vi.fn() },
 }));
+const fsp = vi.hoisted(() => ({ unlink: vi.fn(async (_p: string) => {}) }));
 const session = vi.hoisted(() => ({ value: { user: { id: "u1" } } as any }));
 const notify = vi.hoisted(() => ({ notifyNewRequest: vi.fn(async () => {}) }));
 const files = vi.hoisted(() => ({
@@ -14,6 +15,7 @@ const files = vi.hoisted(() => ({
   UploadError: class UploadError extends Error {},
 }));
 
+vi.mock("fs/promises", () => ({ ...fsp, default: fsp }));
 vi.mock("@/lib/prisma", () => ({ prisma }));
 vi.mock("next-auth", () => ({ getServerSession: vi.fn(async () => session.value) }));
 vi.mock("@/lib/auth", () => ({ authOptions: {} }));
@@ -66,6 +68,7 @@ beforeEach(() => {
   prisma.serviceCatalogItem.findMany.mockResolvedValue([{ id: "c1" }]);
   prisma.booking.findUnique.mockResolvedValue(booking());
   prisma.serviceRequest.findFirst.mockResolvedValue(null);
+  prisma.serviceRequest.updateMany.mockResolvedValue({ count: 1 });
   prisma.serviceRequest.create.mockImplementation(async ({ data }: any) => ({ id: "s1", ...data }));
 });
 
@@ -117,6 +120,54 @@ describe("POST /api/service-requests", () => {
     expect(notify.notifyNewRequest).toHaveBeenCalledWith("s1");
   });
 
+  it("booking approved during create → visibleAt set conditionally and notified", async () => {
+    prisma.booking.findUnique
+      .mockResolvedValueOnce(booking({ status: "PENDING" }))
+      .mockResolvedValueOnce(booking({ status: "APPROVED" }));
+    const res = await call(payload({ bookingId: "b1", location: undefined, startTime: undefined, endTime: undefined }));
+    expect(res.status).toBe(201);
+    const arg = prisma.serviceRequest.updateMany.mock.calls[0][0];
+    expect(arg.where).toEqual({ id: "s1", visibleAt: null });
+    expect(arg.data.visibleAt).toBeInstanceOf(Date);
+    expect(notify.notifyNewRequest).toHaveBeenCalledWith("s1");
+  });
+
+  it("booking approved during create but row already visible (count 0) → no notify", async () => {
+    prisma.booking.findUnique
+      .mockResolvedValueOnce(booking({ status: "PENDING" }))
+      .mockResolvedValueOnce(booking({ status: "APPROVED" }));
+    prisma.serviceRequest.updateMany.mockResolvedValue({ count: 0 });
+    await call(payload({ bookingId: "b1", location: undefined, startTime: undefined, endTime: undefined }));
+    expect(notify.notifyNewRequest).not.toHaveBeenCalled();
+  });
+
+  it("booking cancelled during create → row cancelled, no notify", async () => {
+    prisma.booking.findUnique
+      .mockResolvedValueOnce(booking({ status: "PENDING" }))
+      .mockResolvedValueOnce(booking({ status: "CANCELLED" }));
+    const res = await call(payload({ bookingId: "b1", location: undefined, startTime: undefined, endTime: undefined }));
+    expect(res.status).toBe(201);
+    const arg = prisma.serviceRequest.updateMany.mock.calls[0][0];
+    expect(arg.data.status).toBe("CANCELLED");
+    expect(arg.data.cancelledAt).toBeInstanceOf(Date);
+    expect(notify.notifyNewRequest).not.toHaveBeenCalled();
+  });
+
+  it("re-check failure never fails the response", async () => {
+    prisma.booking.findUnique.mockResolvedValueOnce(booking({ status: "PENDING" })).mockRejectedValueOnce(new Error("db"));
+    const res = await call(payload({ bookingId: "b1", location: undefined, startTime: undefined, endTime: undefined }));
+    expect(res.status).toBe(201);
+  });
+
+  it("DB create failure (P2002) unlinks saved files", async () => {
+    files.saveServiceFiles.mockResolvedValueOnce([{ fileName: "a.pdf" }, { fileName: "b.png" }] as any);
+    prisma.serviceRequest.create.mockRejectedValue({ code: "P2002" });
+    const res = await call(payload({ bookingId: "b1" }));
+    expect(res.status).toBe(409);
+    expect(fsp.unlink).toHaveBeenCalledTimes(2);
+    expect(String(fsp.unlink.mock.calls[0][0])).toContain("a.pdf");
+  });
+
   it("someone else's booking → 404", async () => {
     prisma.booking.findUnique.mockResolvedValue(booking({ userId: "other" }));
     const res = await call(payload({ bookingId: "b1" }));
@@ -160,6 +211,23 @@ describe("GET /api/service-requests", () => {
       { id: "s2", status: "ACCEPTED", visibleAt: new Date() },
     ])
   );
+
+  it("invalid status → 400", async () => {
+    const res = await list("scope=mine&status=BOGUS");
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toBe("สถานะไม่ถูกต้อง");
+    expect(prisma.serviceRequest.findMany).not.toHaveBeenCalled();
+  });
+
+  it("scope=mine and scope=booking omit internalNote; queue keeps it", async () => {
+    prisma.serviceRequest.findMany.mockResolvedValue([{ id: "s1", status: "PENDING", visibleAt: null, internalNote: "secret" }]);
+    expect((await (await list("scope=mine")).json())[0]).not.toHaveProperty("internalNote");
+    prisma.booking.findUnique.mockResolvedValue(booking());
+    expect((await (await list("scope=booking&bookingId=b1")).json())[0]).not.toHaveProperty("internalNote");
+    as("avadmin");
+    members.avadmin = [{ department: "AV", role: "ADMIN" }];
+    expect((await (await list("scope=queue&dept=AV")).json())[0].internalNote).toBe("secret");
+  });
 
   it("scope=mine filters by requester and flags waitingRoom", async () => {
     const res = await list("scope=mine");
@@ -216,6 +284,15 @@ describe("GET /api/service-requests/[id]", () => {
     members.avadmin = [{ department: "AV", role: "ADMIN" }];
     prisma.serviceRequest.findUnique.mockResolvedValue(row());
     expect((await one()).status).toBe(404);
+  });
+
+  it("requester's GET has no internalNote; dept admin's has it", async () => {
+    prisma.serviceRequest.findUnique.mockResolvedValue(row({ internalNote: "secret" }));
+    expect(await (await one()).json()).not.toHaveProperty("internalNote");
+    as("avadmin");
+    members.avadmin = [{ department: "AV", role: "ADMIN" }];
+    prisma.serviceRequest.findUnique.mockResolvedValue(row({ internalNote: "secret", visibleAt: new Date() }));
+    expect((await (await one()).json()).internalNote).toBe("secret");
   });
 
   it("requester sees it, attachments get urls", async () => {
