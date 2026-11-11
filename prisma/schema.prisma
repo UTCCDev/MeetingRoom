@@ -30,6 +30,10 @@ model User {
   bookingsFor Booking[] @relation("BookedFor")
   bookingsApproved Booking[] @relation("ApprovedBy")
   roomsAsAdmin Room[] // Rooms this user administers
+  serviceMembers ServiceMember[]
+  serviceRequestsRequested ServiceRequest[] @relation("ServiceRequester")
+  serviceRequestsCreated ServiceRequest[] @relation("ServiceCreatedBy")
+  serviceRequestsAssigned ServiceRequest[] @relation("ServiceAssignee")
 
   @@map("users")
 }
@@ -106,6 +110,7 @@ model Booking {
   bookedFor     User?         @relation("BookedFor", fields: [bookedForId], references: [id], onDelete: SetNull)
   approvedBy    User?         @relation("ApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
   room          Room          @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  serviceRequests ServiceRequest[]
 
   @@map("bookings")
 }
@@ -115,4 +120,113 @@ enum BookingStatus {
   APPROVED
   REJECTED
   CANCELLED
+}
+
+enum ServiceDepartment {
+  AV
+  HOUSEKEEPING
+}
+
+enum ServiceMemberRole {
+  ADMIN
+  STAFF
+}
+
+enum ServiceStatus {
+  PENDING
+  ACCEPTED
+  IN_PROGRESS
+  DONE
+  REJECTED
+  CANCELLED
+}
+
+model ServiceMember {
+  id         String            @id @default(cuid())
+  userId     String
+  department ServiceDepartment
+  role       ServiceMemberRole
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, department])
+  @@map("service_members")
+}
+
+model ServiceCatalogItem {
+  id         String            @id @default(cuid())
+  department ServiceDepartment
+  name       String
+  returnable Boolean           @default(false)
+  active     Boolean           @default(true)
+  sortOrder  Int               @default(0)
+
+  requestItems ServiceRequestItem[]
+
+  @@unique([department, name])
+  @@map("service_catalog_items")
+}
+
+model ServiceRequest {
+  id               String            @id @default(cuid())
+  department       ServiceDepartment
+  status           ServiceStatus     @default(PENDING)
+  requesterId      String
+  createdById      String // differs from requester when a dept admin files it
+  bookingId        String?
+  location         String? // required when bookingId is null
+  startTime        DateTime // copied from booking when linked
+  endTime          DateTime
+  contactPhone     String
+  note             String?           @db.Text
+  visibleAt        DateTime? // when the department could first see it; null = hidden
+  assigneeId       String?
+  assignedAt       DateTime?
+  coordinatorName  String?
+  coordinatorPhone String?
+  borrowedAt       DateTime?
+  returnedAt       DateTime?
+  internalNote     String?           @db.Text
+  rejectionReason  String?
+  decidedAt        DateTime? // last status change by department (accept/reject/progress/done)
+  cancelledAt      DateTime?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  requester   User                @relation("ServiceRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  createdBy   User                @relation("ServiceCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
+  assignee    User?               @relation("ServiceAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  booking     Booking?            @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  items       ServiceRequestItem[]
+  attachments ServiceAttachment[]
+
+  @@unique([bookingId, department])
+  @@index([department, status, startTime])
+  @@map("service_requests")
+}
+
+model ServiceRequestItem {
+  id            String  @id @default(cuid())
+  requestId     String
+  catalogItemId String? // null = "อื่น ๆ"
+  otherText     String?
+  qty           Int
+
+  request     ServiceRequest      @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  catalogItem ServiceCatalogItem? @relation(fields: [catalogItemId], references: [id], onDelete: SetNull)
+
+  @@map("service_request_items")
+}
+
+model ServiceAttachment {
+  id           String @id @default(cuid())
+  requestId    String
+  fileName     String // stored name: uuid.ext
+  originalName String
+  mime         String
+  size         Int
+
+  request ServiceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@map("service_attachments")
 }
