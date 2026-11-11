@@ -12,6 +12,15 @@ export const DEPT_LABEL: Record<Dept, string> = {
   HOUSEKEEPING: "กองอาคาร",
 };
 
+export const SERVICE_STATUS_LABEL: Record<SStatus, string> = {
+  PENDING: "รอรับงาน",
+  ACCEPTED: "รับงานแล้ว",
+  IN_PROGRESS: "กำลังดำเนินการ",
+  DONE: "เสร็จสิ้น",
+  REJECTED: "ปฏิเสธ",
+  CANCELLED: "ยกเลิก",
+};
+
 export const LEAD_DAYS = 3;
 export const CANCEL_CUTOFF_HOURS = 24;
 

@@ -10,6 +10,19 @@ import DatePicker from "@/app/components/DatePicker";
 import RoomGallery from "@/app/components/RoomGallery";
 import RoomCalendar from "@/app/components/RoomCalendar";
 import UserPicker, { type PickedUser } from "@/app/components/UserPicker";
+import ServiceRequestForm from "@/app/components/ServiceRequestForm";
+import {
+  buildServicePayload,
+  emptyServiceForm,
+  hasErrors,
+  isServiceFormFilled,
+  LEAD_HINT,
+  submitServiceRequest,
+  validateServiceForm,
+  type ServiceFormErrors,
+  type ServiceFormValue,
+} from "@/lib/service-form";
+import { DEPT_LABEL, meetsLeadTime, type Dept } from "@/lib/service-rules";
 import { roomImage, roomPhotos } from "@/lib/room-photos";
 import { SkeletonCards } from "@/app/components/Skeleton";
 import { useToast } from "@/app/components/Toast";
@@ -119,6 +132,16 @@ export default function RoomDetailPage() {
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<Field, string>>>({});
   const router = useRouter();
   const toast = useToast();
+  // Optional service requests (AV / HOUSEKEEPING) sent along with the booking.
+  const [svcOpen, setSvcOpen] = useState(false);
+  const [svcTab, setSvcTab] = useState<Dept>("AV");
+  const [svcValues, setSvcValues] = useState<Record<Dept, ServiceFormValue>>({
+    AV: emptyServiceForm(),
+    HOUSEKEEPING: emptyServiceForm(),
+  });
+  const [svcErrors, setSvcErrors] = useState<Record<Dept, ServiceFormErrors>>({ AV: {}, HOUSEKEEPING: {} });
+  const bookingStart = date && startTime ? new Date(bangkokISO(date, startTime)) : null;
+  const svcBlocked = !!bookingStart && !meetsLeadTime(bookingStart, new Date());
 
   // Prefill from the room search filters (?date=&start=&end=).
   useEffect(() => {
@@ -305,6 +328,25 @@ export default function RoomDetailPage() {
     setFieldErrors(errors);
     if (Object.keys(errors).length > 0) return;
 
+    // Validate filled service tabs first, so a bad request never leaves a booking behind.
+    const filledDepts = svcBlocked
+      ? []
+      : (["AV", "HOUSEKEEPING"] as Dept[]).filter((d) => isServiceFormFilled(svcValues[d]));
+    if (filledDepts.length > 0) {
+      const next: Record<Dept, ServiceFormErrors> = { AV: {}, HOUSEKEEPING: {} };
+      for (const d of filledDepts) {
+        next[d] = validateServiceForm(svcValues[d], { standalone: false, start: bookingStart, now: new Date() });
+      }
+      setSvcErrors(next);
+      const bad = filledDepts.find((d) => hasErrors(next[d]));
+      if (bad) {
+        setSvcOpen(true);
+        setSvcTab(bad);
+        setError("กรุณาตรวจสอบข้อมูลคำขอบริการเพิ่มเติม");
+        return;
+      }
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -342,7 +384,24 @@ export default function RoomDetailPage() {
           : "ส่งคำขอจองแล้ว รอการอนุมัติ",
         { type: "success" }
       );
-      router.push("/my-bookings");
+
+      // One request per filled tab. A failure keeps the booking and tells the user.
+      const failures: { label: string; error: string }[] = [];
+      if (created.id) {
+        for (const d of filledDepts) {
+          const v = svcValues[d];
+          const res = await submitServiceRequest(buildServicePayload(d, v, { bookingId: created.id }), v.files);
+          if (res.ok === false) failures.push({ label: DEPT_LABEL[d], error: res.error });
+        }
+      }
+      for (const f of failures) {
+        toast(`จองห้องสำเร็จ แต่ส่งคำร้อง${f.label}ไม่สำเร็จ: ${f.error}`, {
+          type: "error",
+          duration: 10000,
+          action: { label: "ดูรายละเอียดการจอง", onClick: () => router.push(`/my-bookings/${created.id}`) },
+        });
+      }
+      router.push(failures.length > 0 && created.id ? `/my-bookings/${created.id}` : "/my-bookings");
     } catch (err) {
       setError("ไม่สามารถสร้างการจองได้ กรุณาลองใหม่");
     } finally {
@@ -824,6 +883,60 @@ export default function RoomDetailPage() {
                   ระยะเวลา {durationLabel(startTime, endTime)}
                 </p>
               )}
+
+              <div className="rounded-sm border border-line">
+                <button
+                  type="button"
+                  onClick={() => setSvcOpen((o) => !o)}
+                  aria-expanded={svcOpen}
+                  aria-controls="svc-section"
+                  className="w-full flex items-center gap-2 px-4 py-3 text-title-small text-ink text-left"
+                >
+                  <span className="icon icon--24 text-primary" aria-hidden="true">support_agent</span>
+                  <span className="flex-1">ขอบริการเพิ่มเติม</span>
+                  <span className="icon icon--24 text-ink-subtle" aria-hidden="true">
+                    {svcOpen ? "expand_less" : "expand_more"}
+                  </span>
+                </button>
+                {svcOpen && (
+                  <div id="svc-section" className="px-4 pb-4 space-y-4 border-t border-line pt-4">
+                    {svcBlocked ? (
+                      <p className="field-hint flex items-center gap-2">
+                        <span className="icon icon--20" aria-hidden="true">info</span>
+                        {LEAD_HINT}
+                      </p>
+                    ) : (
+                      <>
+                        <div role="tablist" aria-label="แผนก" className="flex gap-2">
+                          {(["AV", "HOUSEKEEPING"] as Dept[]).map((d) => (
+                            <button
+                              key={d}
+                              type="button"
+                              role="tab"
+                              aria-selected={svcTab === d}
+                              onClick={() => setSvcTab(d)}
+                              className={svcTab === d ? "btn-primary" : "btn-secondary"}
+                            >
+                              {DEPT_LABEL[d]}
+                              {isServiceFormFilled(svcValues[d]) && (
+                                <span className="icon icon--20" aria-hidden="true">check</span>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                        <ServiceRequestForm
+                          key={svcTab}
+                          department={svcTab}
+                          mode="embedded"
+                          value={svcValues[svcTab]}
+                          onChange={(next) => setSvcValues((prev) => ({ ...prev, [svcTab]: next }))}
+                          errors={svcErrors[svcTab]}
+                        />
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
 
               <button
                 type="submit"

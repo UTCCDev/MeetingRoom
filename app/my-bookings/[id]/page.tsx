@@ -4,6 +4,7 @@ import { use } from "react";
 import Link from "next/link";
 import AppHeader from "@/app/components/AppHeader";
 import { BookingDetailBody, useBookingDetail } from "@/app/components/BookingDetails";
+import BookingServices from "@/app/components/BookingServices";
 import { SkeletonCards } from "@/app/components/Skeleton";
 
 // Standalone booking page (e.g. for links in emails/notifications).
@@ -45,6 +46,13 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
               </Link>
             </div>
           </div>
+        )}
+        {booking && (
+          <BookingServices
+            bookingId={booking.id}
+            bookingStart={booking.startTime}
+            canRequest={["PENDING", "APPROVED"].includes(booking.status) && new Date(booking.endTime) > new Date()}
+          />
         )}
       </div>
     </div>
