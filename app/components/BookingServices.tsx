@@ -1,5 +1,6 @@
 "use client";
 
+import { useSession } from "next-auth/react";
 import { useCallback, useEffect, useState } from "react";
 import ConfirmDialog from "@/app/components/ConfirmDialog";
 import ServiceRequestForm from "@/app/components/ServiceRequestForm";
@@ -26,6 +27,7 @@ interface ServiceRow {
   department: Dept;
   status: SStatus;
   bookingId: string | null;
+  requesterId: string;
   startTime: string;
   waitingRoom: boolean;
   items: { id: string; qty: number; otherText: string | null; catalogItem: { name: string } | null }[];
@@ -54,6 +56,8 @@ export default function BookingServices({
   canRequest: boolean;
 }) {
   const toast = useToast();
+  const { data: session } = useSession();
+  const myId = (session?.user as any)?.id as string | undefined;
   const [rows, setRows] = useState<ServiceRow[] | null>(null);
   const [adding, setAdding] = useState<Dept | null>(null);
   const [value, setValue] = useState<ServiceFormValue>(emptyServiceForm());
@@ -64,10 +68,10 @@ export default function BookingServices({
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
-    const res = await fetch("/api/service-requests?scope=mine").catch(() => null);
+    const res = await fetch(`/api/service-requests?scope=booking&bookingId=${encodeURIComponent(bookingId)}`).catch(() => null);
     if (!res?.ok) return setRows([]);
     const all: ServiceRow[] = await res.json().catch(() => []);
-    setRows(all.filter((r) => r.bookingId === bookingId));
+    setRows(all);
   }, [bookingId]);
 
   useEffect(() => {
@@ -75,7 +79,7 @@ export default function BookingServices({
   }, [load]);
 
   if (rows === null) return null;
-  const requested = new Set(rows.map((r) => r.department));
+  const requested = new Set(rows.filter((r) => r.status !== "CANCELLED").map((r) => r.department));
   const available = canRequest ? DEPTS.filter((d) => !requested.has(d)) : [];
   if (rows.length === 0 && available.length === 0) return null;
 
@@ -133,7 +137,7 @@ export default function BookingServices({
                 <span className={r.waitingRoom ? "badge-pending" : BADGE[r.status]}>
                   {r.waitingRoom ? "รอห้องอนุมัติ" : SERVICE_STATUS_LABEL[r.status]}
                 </span>
-                {canRequesterCancel({ status: r.status, startTime: new Date(r.startTime) }, new Date()) && (
+                {r.requesterId === myId && canRequesterCancel({ status: r.status, startTime: new Date(r.startTime) }, new Date()) && (
                   <button type="button" className="btn-text" onClick={() => setCancelling(r)}>
                     <span className="icon icon--20" aria-hidden="true">cancel</span>
                     ยกเลิกคำร้อง

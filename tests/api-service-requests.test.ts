@@ -168,6 +168,28 @@ describe("GET /api/service-requests", () => {
     expect(rows.map((r: any) => r.waitingRoom)).toEqual([true, false]);
   });
 
+  describe("scope=booking", () => {
+    it("booker gets the rows", async () => {
+      prisma.booking.findUnique.mockResolvedValue(booking());
+      const res = await list("scope=booking&bookingId=b1");
+      expect(res.status).toBe(200);
+      expect(prisma.serviceRequest.findMany.mock.calls[0][0].where).toEqual({ bookingId: "b1" });
+      expect((await res.json()).map((r: any) => r.waitingRoom)).toEqual([true, false]);
+    });
+    it("beneficiary gets the rows", async () => {
+      prisma.booking.findUnique.mockResolvedValue(booking({ userId: "other", bookedForId: "u1" }));
+      expect((await list("scope=booking&bookingId=b1")).status).toBe(200);
+    });
+    it("stranger gets 404", async () => {
+      prisma.booking.findUnique.mockResolvedValue(booking({ userId: "other", bookedForId: "x" }));
+      expect((await list("scope=booking&bookingId=b1")).status).toBe(404);
+      expect(prisma.serviceRequest.findMany).not.toHaveBeenCalled();
+    });
+    it("missing bookingId gets 400", async () => {
+      expect((await list("scope=booking")).status).toBe(400);
+    });
+  });
+
   it("queue without membership → 403", async () => {
     expect((await list("scope=queue&dept=AV")).status).toBe(403);
   });

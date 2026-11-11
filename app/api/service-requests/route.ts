@@ -158,6 +158,13 @@ export async function GET(request: NextRequest) {
       const m = membershipIn(actor.memberships, dept);
       if (!m) return bad("คุณไม่มีสิทธิ์ดูคิวของแผนกนี้", 403);
       where = queueWhere(actor.id, m);
+    } else if (scope === "booking") {
+      // Everything filed against one booking, for its booker or beneficiary.
+      const bookingId = sp.get("bookingId");
+      if (!bookingId) return bad("ไม่พบรหัสการจอง");
+      const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
+      if (!booking || (booking.userId !== actor.id && booking.bookedForId !== actor.id)) return bad("ไม่พบการจอง", 404);
+      where = { bookingId };
     } else if (scope === "mine") {
       where = { requesterId: actor.id };
     } else {
