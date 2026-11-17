@@ -127,8 +127,8 @@ MeetingRoom/
 ### Room Admin Routes
 - `GET  /admin/pending-approvals` - Pending booking requests
 - `GET  /admin/my-rooms` - Manage owned rooms
-- `PUT  /api/rooms/[id]` - Update room details
-- `PUT  /api/bookings/[id]` - Approve/reject bookings
+- `POST /api/rooms/[id]/update` - Update room details
+- `POST /api/bookings/[id]/decide` - Approve/reject bookings
 
 ### System Admin Routes
 - `GET  /admin/dashboard` - System dashboard with statistics
@@ -138,6 +138,10 @@ MeetingRoom/
 
 ## API Endpoints
 
+> The production server blocks `PUT` and `DELETE`, so the frontend calls the
+> `POST` alias routes below. Each alias re-exports the original `PUT`/`DELETE`
+> handler from the parent `route.ts`, so the logic lives in one place.
+
 ### Authentication
 - `POST /api/auth/register` - Register new user
 - `POST /api/auth/[...nextauth]` - NextAuth endpoints
@@ -146,22 +150,26 @@ MeetingRoom/
 - `GET  /api/rooms` - Get all active rooms
 - `POST /api/rooms` - Create room (System Admin only)
 - `GET  /api/rooms/[id]` - Get room details
-- `PUT  /api/rooms/[id]` - Update room (Room Admin or System Admin)
-- `DELETE /api/rooms/[id]` - Delete room (System Admin only)
+- `POST /api/rooms/[id]/update` - Update room (Room Admin or System Admin)
+- `POST /api/rooms/[id]/delete` - Delete room (System Admin only)
 - `GET  /api/rooms/[id]/bookings` - Get room's bookings
 
 ### Bookings
 - `GET  /api/bookings` - Get user's bookings
 - `POST /api/bookings` - Create booking request
 - `GET  /api/bookings/[id]` - Get booking details
-- `PUT  /api/bookings/[id]` - Update booking status
-- `DELETE /api/bookings/[id]` - Cancel booking
+- `POST /api/bookings/[id]/decide` - Approve/reject booking
+- `POST /api/bookings/[id]/cancel` - Cancel booking
 
 ### Admin
 - `GET  /api/admin/pending-bookings` - Get pending bookings
 - `GET  /api/admin/users` - Get all users (System Admin)
 - `POST /api/admin/users` - Create user (System Admin)
-- `PUT  /api/admin/users` - Update user role (System Admin)
+- `POST /api/admin/users/update` - Update user role (System Admin)
+- `GET  /api/admin/departments` - Get departments
+- `POST /api/admin/departments` - Create department (System Admin)
+- `POST /api/admin/departments/update` - Rename department (System Admin)
+- `POST /api/admin/departments/delete` - Delete department (System Admin)
 - `GET  /api/admin/dashboard-stats` - Dashboard statistics
 
 ## Database Schema
