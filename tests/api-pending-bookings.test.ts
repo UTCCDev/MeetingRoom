@@ -36,7 +36,11 @@ describe("GET /api/admin/pending-bookings", () => {
     await GET({} as any);
     const args = prisma.booking.findMany.mock.calls[0][0];
     expect(args.where.room).toEqual({
-      OR: [{ requiresPresidentApproval: false, roomAdminId: "u1" }, { requiresPresidentApproval: true }],
+      OR: [
+        { requiresPresidentApproval: false, roomAdminId: "u1" },
+        { requiresPresidentApproval: false, approvers: { some: { id: "u1" } } },
+        { requiresPresidentApproval: true },
+      ],
     });
     expect(args.include.bookedFor).toBeTruthy();
   });

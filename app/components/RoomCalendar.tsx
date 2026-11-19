@@ -188,7 +188,7 @@ export default function RoomCalendar({ bookings, selectedDate, maxDate, onPickDa
       <div className="flex flex-wrap gap-x-5 gap-y-2 mt-4 text-body-small text-ink-subtle">
         <span className="flex items-center gap-2"><span className="w-4 h-4 rounded-xs bg-success-95 border border-success-80" /> ว่าง</span>
         <span className="flex items-center gap-2"><span className="w-4 h-4 rounded-xs bg-primary-container border-l-4 border-primary" /> อนุมัติแล้ว</span>
-        <span className="flex items-center gap-2"><span className="w-4 h-4 rounded-xs bg-highlight-container border-l-4 border-highlight" /> รอการตัดสินใจ</span>
+        <span className="flex items-center gap-2"><span className="w-4 h-4 rounded-xs bg-highlight-container border-l-4 border-highlight" /> รอการอนุมัติ</span>
         <span className="flex items-center gap-2"><span className="w-4 h-4 rounded-xs bg-surface-variant" /> เลยเวลาแล้ว</span>
       </div>
     </div>

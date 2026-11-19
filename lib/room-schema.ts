@@ -84,4 +84,6 @@ export const roomSchema = z.object({
   requiresPresidentApproval: z.boolean().optional(),
   // Bookings approved instantly without waiting for the room admin.
   autoApprove: z.boolean().optional(),
+  // Extra approvers besides the room admin (user ids).
+  approverIds: z.array(z.string()).max(50).optional(),
 });

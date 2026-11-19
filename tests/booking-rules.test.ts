@@ -42,6 +42,19 @@ describe("approvalRoute — normal room", () => {
   });
 });
 
+describe("canDecide — extra room approvers", () => {
+  const withApprover: RoomRule = { ...normal, approvers: [{ id: "a2" }] };
+  it("listed approver may decide even if not the room admin", () => {
+    expect(canDecide(actor({ id: "a2", role: "ROOM_ADMIN" }), withApprover)).toBe(true);
+  });
+  it("other room admins still may not", () => {
+    expect(canDecide(actor({ id: "a3", role: "ROOM_ADMIN" }), withApprover)).toBe(false);
+  });
+  it("president rooms ignore the list", () => {
+    expect(canDecide(actor({ id: "a2", role: "ROOM_ADMIN" }), { ...special, approvers: [{ id: "a2" }] })).toBe(false);
+  });
+});
+
 describe("approvalRoute — president room", () => {
   it("booker with auto only waits for the president", () => {
     expect(approvalRoute(actor({ autoApproveBooking: true }), null, special)).toBe("PRESIDENT");
@@ -122,12 +135,16 @@ describe("decidableRoomWhere", () => {
   });
   it("ROOM_ADMIN: own normal rooms", () => {
     expect(decidableRoomWhere(actor({ id: "a", role: "ROOM_ADMIN" }))).toEqual({
-      OR: [{ requiresPresidentApproval: false, roomAdminId: "a" }],
+      OR: [{ requiresPresidentApproval: false, roomAdminId: "a" }, { requiresPresidentApproval: false, approvers: { some: { id: "a" } } }],
     });
   });
   it("president approver adds president rooms", () => {
     expect(decidableRoomWhere(actor({ id: "a", role: "ROOM_ADMIN", isPresidentApprover: true }))).toEqual({
-      OR: [{ requiresPresidentApproval: false, roomAdminId: "a" }, { requiresPresidentApproval: true }],
+      OR: [
+        { requiresPresidentApproval: false, roomAdminId: "a" },
+        { requiresPresidentApproval: false, approvers: { some: { id: "a" } } },
+        { requiresPresidentApproval: true },
+      ],
     });
   });
 });

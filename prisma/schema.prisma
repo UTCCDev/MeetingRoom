@@ -30,6 +30,7 @@ model User {
   bookingsFor Booking[] @relation("BookedFor")
   bookingsApproved Booking[] @relation("ApprovedBy")
   roomsAsAdmin Room[] // Rooms this user administers
+  roomsAsApprover Room[] @relation("RoomApprovers") // extra approvers besides the room admin
 
   @@map("users")
 }
@@ -72,6 +73,7 @@ model Room {
 
   // Relations
   roomAdmin   User     @relation(fields: [roomAdminId], references: [id], onDelete: Cascade)
+  approvers   User[]   @relation("RoomApprovers") // may also approve bookings in this room
   bookings    Booking[]
 
   @@map("rooms")

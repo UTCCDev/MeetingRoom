@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { checkApprovers } from "@/lib/room-approvers";
 import { DUPLICATE_ROOM_CODE_ERROR, isDuplicateRoomCode, roomCodeMismatch, roomSchema } from "@/lib/room-schema";
 import { firstError } from "@/lib/validation";
 
@@ -94,7 +95,7 @@ export async function PUT(
       return NextResponse.json({ error: firstError(parsed.error) }, { status: 400 });
     }
 
-    const { calendarEmail, requiresPresidentApproval, autoApprove, roomType, roomNumber, code, name, description, capacity, pricePerHour, image, amenities, photos, status, roomAdminId } = parsed.data;
+    const { approverIds, calendarEmail, requiresPresidentApproval, autoApprove, roomType, roomNumber, code, name, description, capacity, pricePerHour, image, amenities, photos, status, roomAdminId } = parsed.data;
 
     // The app writes events into this mailbox, so only system admins may point it elsewhere.
     if (
@@ -131,6 +132,16 @@ export async function PUT(
       }
     }
 
+    if (approverIds !== undefined) {
+      const current = (await prisma.room.findUnique({ where: { id }, select: { approvers: { select: { id: true } } } }))?.approvers ?? [];
+      const same = current.length === approverIds.length && current.every((a) => approverIds.includes(a.id));
+      if (!same && userRole !== "SYSTEM_ADMIN") {
+        return NextResponse.json({ error: "เฉพาะผู้ดูแลระบบเท่านั้นที่เปลี่ยนผู้อนุมัติได้" }, { status: 403 });
+      }
+      const approverError = await checkApprovers(approverIds);
+      if (approverError) return approverError;
+    }
+
     const updatedRoom = await prisma.room.update({
       where: { id: id },
       data: {
@@ -149,11 +160,13 @@ export async function PUT(
         ...(photos && { photos }),
         ...(status !== undefined && { status }),
         ...(roomAdminId && { roomAdminId }),
+        ...(approverIds !== undefined && { approvers: { set: approverIds.map((id) => ({ id })) } }),
       },
       include: {
         roomAdmin: {
           select: { id: true, name: true, email: true },
         },
+        approvers: { select: { id: true, name: true, email: true } },
       },
     });
 

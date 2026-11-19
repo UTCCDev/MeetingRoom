@@ -29,6 +29,7 @@ const room = (over = {}) => ({
   roomAdminId: "admin1",
   requiresPresidentApproval: false,
   roomAdmin: { id: "admin1", email: "admin1@utcc.ac.th" },
+  approvers: [],
   ...over,
 });
 

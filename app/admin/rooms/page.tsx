@@ -39,6 +39,7 @@ interface Room {
     id: string;
     name: string;
   };
+  approvers?: { id: string; name: string; email: string }[];
 }
 
 interface User {
@@ -66,6 +67,7 @@ type RoomForm = {
   amenities: string[];
   photos: RoomPhotos;
   roomAdminId: string;
+  approverIds: string[];
   status: boolean;
 };
 
@@ -85,6 +87,7 @@ const EMPTY_FORM: RoomForm = {
   amenities: [],
   photos: {},
   roomAdminId: "",
+  approverIds: [],
   status: true,
 };
 
@@ -207,6 +210,7 @@ export default function RoomsManagementPage() {
       amenities: Array.isArray(room.amenities) ? room.amenities : [],
       photos: parseRoomPhotos(room.photos),
       roomAdminId: room.roomAdmin.id,
+      approverIds: (room.approvers ?? []).map((a) => a.id),
       status: room.status,
     });
     setFormErrors({});
@@ -268,6 +272,7 @@ export default function RoomsManagementPage() {
           amenities: form.amenities,
           photos: pruneAmenityPhotos(form.photos, form.amenities),
           roomAdminId: form.roomAdminId,
+          approverIds: form.approverIds.filter((id) => id !== form.roomAdminId),
           status: form.status,
         }),
       });
@@ -677,7 +682,7 @@ export default function RoomsManagementPage() {
                         <span>
                           <span className="text-title-small text-ink">ต้องได้รับการอนุมัติ</span>
                           <span className="block text-body-small text-ink-subtle">
-                            การจองจะอยู่ในสถานะรอการตัดสินใจ จนกว่าผู้ดูแลห้องจะอนุมัติ
+                            การจองจะอยู่ในสถานะรอการอนุมัติ จนกว่าผู้ดูแลห้องจะอนุมัติ
                           </span>
                         </span>
                       </label>
@@ -714,6 +719,43 @@ export default function RoomsManagementPage() {
                       invalid={!!formErrors.roomAdminId}
                     />
                     {errorText("roomAdminId")}
+                  </div>
+
+                  <div className="md:col-span-6">
+                    <label htmlFor="room-approvers" className="field-label">ผู้อนุมัติเพิ่มเติม</label>
+                    {form.approverIds.length > 0 && (
+                      <ul className="flex flex-wrap gap-2 mb-2">
+                        {form.approverIds.map((id) => {
+                          const u = users.find((x) => x.id === id);
+                          return (
+                            <li key={id} className="flex items-center gap-1 pl-3 pr-1 py-1 rounded-full bg-surface-variant text-body-medium text-ink">
+                              {u?.name ?? id}
+                              <button
+                                type="button"
+                                className="icon-btn"
+                                aria-label={`นำ ${u?.name ?? "ผู้อนุมัติ"} ออก`}
+                                onClick={() => updateField("approverIds", form.approverIds.filter((x) => x !== id))}
+                              >
+                                <span className="icon icon--20" aria-hidden="true">close</span>
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                    <Dropdown
+                      id="room-approvers"
+                      value=""
+                      onChange={(v) => v && updateField("approverIds", [...form.approverIds, v])}
+                      options={users
+                        .filter((user) => user.id !== form.roomAdminId && !form.approverIds.includes(user.id))
+                        .map((user) => ({ value: user.id, label: user.name, hint: user.email }))}
+                      placeholder="เพิ่มผู้อนุมัติ"
+                      searchPlaceholder="ค้นหาชื่อหรืออีเมล"
+                    />
+                    <p className="text-body-small text-ink-subtle mt-1">
+                      นอกจากผู้ดูแลห้องแล้ว คนเหล่านี้อนุมัติหรือปฏิเสธการจองห้องนี้ได้ และได้รับอีเมลแจ้งเมื่อมีคำขอใหม่ (ไม่ใช้กับห้องที่ต้องให้อธิการฯ อนุมัติ)
+                    </p>
                   </div>
 
                   <fieldset className="md:col-span-6">

@@ -656,7 +656,7 @@ export default function RoomDetailPage() {
                       <span className="text-title-small text-ink tabular-nums">{formatRange(booking.startTime, booking.endTime)}</span>
                       <span className="text-ink-muted flex-1 min-w-0 truncate">{booking.title || "มีการจองแล้ว"}</span>
                       <span className={booking.status === "APPROVED" ? "badge-available" : "badge-pending"}>
-                        {booking.status === "APPROVED" ? "อนุมัติแล้ว" : "รอการตัดสินใจ"}
+                        {booking.status === "APPROVED" ? "อนุมัติแล้ว" : "รอการอนุมัติ"}
                       </span>
                     </li>
                   ))}

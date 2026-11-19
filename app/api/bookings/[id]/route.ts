@@ -12,7 +12,7 @@ type RouteContext = { params: Promise<{ id: string }> };
 
 // Never include the full user row: it carries the password hash.
 const USER_PUBLIC = { select: { id: true, name: true, email: true } } as const;
-const INCLUDE = { room: true, user: USER_PUBLIC, bookedFor: USER_PUBLIC, approvedBy: USER_PUBLIC, department: { select: { id: true, name: true } } } as const;
+const INCLUDE = { room: { include: { approvers: { select: { id: true } } } }, user: USER_PUBLIC, bookedFor: USER_PUBLIC, approvedBy: USER_PUBLIC, department: { select: { id: true, name: true } } } as const;
 
 const SERVER_ERROR = "เกิดข้อผิดพลาดที่เซิร์ฟเวอร์ กรุณาลองใหม่";
 const UNAUTHORIZED = () => NextResponse.json({ error: "ไม่ได้รับอนุญาต" }, { status: 401 });

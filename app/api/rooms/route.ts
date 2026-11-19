@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { DUPLICATE_ROOM_CODE_ERROR, isDuplicateRoomCode, roomCodeMismatch, roomSchema } from "@/lib/room-schema";
 import { firstError } from "@/lib/validation";
 import { defaultRequiresPresidentApproval } from "@/lib/room-code";
+import { checkApprovers } from "@/lib/room-approvers";
 
 // GET active rooms (public). Includes upcoming booked time ranges only, so the
 // search page can filter by availability without exposing booking details.
@@ -28,6 +29,7 @@ export async function GET(request: NextRequest) {
         roomAdmin: {
           select: { id: true, name: true, email: true },
         },
+        approvers: { select: { id: true, name: true, email: true } },
         bookings: {
           where: {
             status: { in: ["PENDING", "APPROVED"] },
@@ -78,7 +80,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: firstError(parsed.error) }, { status: 400 });
     }
 
-    const { calendarEmail, requiresPresidentApproval, autoApprove, roomType, roomNumber, code, name, description, capacity, pricePerHour, image, amenities, photos, roomAdminId, status } = parsed.data;
+    const { approverIds, calendarEmail, requiresPresidentApproval, autoApprove, roomType, roomNumber, code, name, description, capacity, pricePerHour, image, amenities, photos, roomAdminId, status } = parsed.data;
 
     const codeError = roomCodeMismatch(code, roomType ?? "MEETING");
     if (codeError) {
@@ -97,6 +99,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const approverError = await checkApprovers(approverIds);
+    if (approverError) return approverError;
+
     const room = await prisma.room.create({
       data: {
         calendarEmail: calendarEmail ?? null,
@@ -114,11 +119,13 @@ export async function POST(request: NextRequest) {
         photos: photos ?? undefined,
         roomAdminId,
         status: status ?? true,
+        ...(approverIds && { approvers: { connect: approverIds.map((id) => ({ id })) } }),
       },
       include: {
         roomAdmin: {
           select: { id: true, name: true, email: true },
         },
+        approvers: { select: { id: true, name: true, email: true } },
       },
     });
 

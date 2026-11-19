@@ -125,7 +125,7 @@ export function formatPricePerHour(pricePerHour: number): string {
 }
 
 export const STATUS_LABELS: Record<string, string> = {
-  PENDING: "รอการตัดสินใจ",
+  PENDING: "รอการอนุมัติ",
   APPROVED: "อนุมัติแล้ว",
   REJECTED: "ปฏิเสธแล้ว",
   CANCELLED: "ยกเลิกแล้ว",

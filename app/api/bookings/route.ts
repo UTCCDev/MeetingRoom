@@ -71,7 +71,10 @@ export async function POST(request: NextRequest) {
 
     const room = await prisma.room.findUnique({
       where: { id: data.roomId },
-      include: { roomAdmin: { select: { id: true, email: true } } },
+      include: {
+        roomAdmin: { select: { id: true, email: true } },
+        approvers: { where: { active: true }, select: { id: true, email: true } },
+      },
     });
 
     if (!room || !room.status) {
@@ -136,7 +139,7 @@ export async function POST(request: NextRequest) {
                 select: { email: true },
               })
             ).map((u) => u.email)
-          : [room.roomAdmin.email];
+          : [...new Set([room.roomAdmin.email, ...room.approvers.map((a) => a.email)])];
       if (approvers.length === 0 && route === "PRESIDENT") {
         console.warn(
           `[booking] ${booking.id} in ${room.name} needs a president approver, but no active ROOM_ADMIN/SYSTEM_ADMIN has isPresidentApprover; it will stay PENDING.`

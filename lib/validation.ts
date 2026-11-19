@@ -28,7 +28,13 @@ export type Actor = {
   autoApproveBooking: boolean;
 };
 
-export type RoomRule = { roomAdminId: string; requiresPresidentApproval: boolean; autoApprove?: boolean };
+export type RoomRule = {
+  roomAdminId: string;
+  requiresPresidentApproval: boolean;
+  autoApprove?: boolean;
+  /** Extra approvers besides the room admin. */
+  approvers?: { id: string }[];
+};
 
 export type ApprovalRoute = "AUTO" | "ROOM_ADMIN" | "PRESIDENT";
 
@@ -51,14 +57,21 @@ export function approvalRoute(booker: Actor, beneficiary: Actor | null, room: Ro
  */
 export function canDecide(user: Actor, room: RoomRule): boolean {
   if (room.requiresPresidentApproval) return user.isPresidentApprover;
-  return user.role === "SYSTEM_ADMIN" || (user.role === "ROOM_ADMIN" && room.roomAdminId === user.id);
+  return (
+    user.role === "SYSTEM_ADMIN" ||
+    (user.role === "ROOM_ADMIN" && room.roomAdminId === user.id) ||
+    !!room.approvers?.some((a) => a.id === user.id)
+  );
 }
 
 /** Prisma room filter matching canDecide: the rooms whose bookings this user may decide. Null = none. */
 export function decidableRoomWhere(user: Actor): { OR: Record<string, unknown>[] } | null {
   const OR: Record<string, unknown>[] = [];
   if (user.role === "SYSTEM_ADMIN") OR.push({ requiresPresidentApproval: false });
-  else if (user.role === "ROOM_ADMIN") OR.push({ requiresPresidentApproval: false, roomAdminId: user.id });
+  else if (user.role === "ROOM_ADMIN") {
+    OR.push({ requiresPresidentApproval: false, roomAdminId: user.id });
+    OR.push({ requiresPresidentApproval: false, approvers: { some: { id: user.id } } });
+  }
   if (user.isPresidentApprover) OR.push({ requiresPresidentApproval: true });
   return OR.length ? { OR } : null;
 }

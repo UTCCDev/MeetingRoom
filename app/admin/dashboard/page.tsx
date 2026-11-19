@@ -88,7 +88,7 @@ export default function AdminDashboardPage() {
     { icon: "group", label: "ผู้ใช้ทั้งหมด", value: stats.totalUsers, card: "" },
     { icon: "event_note", label: "การจองทั้งหมด", value: stats.totalBookings, card: "" },
     // Status tiles are semantic cards: one on-* colour for icon and text.
-    { icon: STATUS_ICONS.PENDING, label: "รอการตัดสินใจ", value: stats.pendingBookings, card: "card--warning" },
+    { icon: STATUS_ICONS.PENDING, label: "รอการอนุมัติ", value: stats.pendingBookings, card: "card--warning" },
     { icon: STATUS_ICONS.APPROVED, label: "อนุมัติแล้ว", value: stats.approvedBookings, card: "card--success" },
   ];
   const maxRoomBookings = Math.max(...stats.roomUtilization.map((r) => r.bookingCount), 1);
@@ -183,7 +183,7 @@ export default function AdminDashboardPage() {
           {[
             { href: "/admin/users", icon: "group", title: "จัดการผู้ใช้", body: "สร้างและจัดการบัญชีผู้ใช้" },
             { href: "/admin/rooms", icon: "domain", title: "จัดการห้อง", body: "สร้างและจัดการห้องประชุม" },
-            { href: "/admin/pending-approvals", icon: "fact_check", title: "ตรวจสอบการจอง", body: "อนุมัติหรือปฏิเสธการจองที่รอการตัดสินใจ" },
+            { href: "/admin/pending-approvals", icon: "fact_check", title: "ตรวจสอบการจอง", body: "อนุมัติหรือปฏิเสธการจองที่รอการอนุมัติ" },
           ].map((a) => (
             <Link key={a.href} href={a.href} className="card card--interactive group flex items-center gap-4">
               <span

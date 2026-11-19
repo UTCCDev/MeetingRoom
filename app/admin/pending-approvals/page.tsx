@@ -247,7 +247,7 @@ export default function PendingApprovalsPage() {
 
   return (
     <div className="min-h-screen bg-canvas">
-      <AppHeader title="คำขอจองที่รอการตัดสินใจ" breadcrumbs={[{ label: "อนุมัติการจอง" }]} />
+      <AppHeader title="คำขอจองที่รอการอนุมัติ" breadcrumbs={[{ label: "อนุมัติการจอง" }]} />
 
       <div className="max-w-[120rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {error && (
@@ -318,7 +318,7 @@ export default function PendingApprovalsPage() {
             <span className="icon icon--40 text-ink-subtle" aria-hidden="true">task_alt</span>
             <p>
               {bookings.length === 0
-                ? "ไม่มีคำขอที่รอการตัดสินใจ"
+                ? "ไม่มีคำขอที่รอการอนุมัติ"
                 : visible.length === 0 && expired.length > 0 && !roomFilter && !dateFilter
                 ? "ไม่มีคำขอที่รออนุมัติ (มีเฉพาะคำขอที่เลยเวลาแล้วด้านล่าง)"
                 : "ไม่มีคำขอที่ตรงกับตัวกรอง"}
@@ -351,7 +351,7 @@ export default function PendingApprovalsPage() {
                           )}
                           <span className="badge-pending">
                             <span className="icon icon--20" aria-hidden="true">hourglass_top</span>
-                            รอการตัดสินใจ
+                            รอการอนุมัติ
                           </span>
                         </div>
                         <p className="flex items-center gap-2 text-title-small text-ink tabular-nums mt-2">
