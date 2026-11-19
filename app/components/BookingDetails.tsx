@@ -24,6 +24,7 @@ export interface BookingDetail {
   createdAt?: string;
   user?: Person;
   bookedFor?: Person | null;
+  department?: { name: string } | null;
   approvedBy?: Person | null;
 }
 
@@ -81,7 +82,8 @@ export function BookingDetailBody({ booking, titleId }: { booking: BookingDetail
       {row("location_on", roomLabel(booking.room))}
       {row("group", <><span className="tabular-nums">{booking.attendees}</span> คน</>)}
       {booking.user && row("person", `ผู้จอง: ${booking.user.name}`)}
-      {booking.bookedFor && row("person_add", `จองเพื่อ: ${booking.bookedFor.name}`)}
+      {booking.department && row("apartment", `หน่วยงาน: ${booking.department.name}`)}
+      {booking.bookedFor && row("person_add", `ผู้ประสานงาน: ${booking.bookedFor.name}`)}
       {booking.approvedBy && row("verified", `ผู้อนุมัติ: ${booking.approvedBy.name}`)}
       {booking.createdAt && row("history", `จองเมื่อ ${formatDate(booking.createdAt)}`)}
 

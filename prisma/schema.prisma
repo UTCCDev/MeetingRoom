@@ -38,6 +38,7 @@ model Department {
   id    String @id @default(cuid())
   name  String @unique
   users User[]
+  bookings Booking[]
 
   @@map("departments")
 }
@@ -65,6 +66,7 @@ model Room {
   roomAdminId String
   status      Boolean  @default(true) // true = active, false = inactive
   requiresPresidentApproval Boolean @default(false) // e.g. ห้องไทรทอง, building 24 floor 8
+  autoApprove Boolean @default(false) // true = bookings are approved immediately; false = room admin must approve. Ignored for president rooms
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -94,7 +96,8 @@ model Booking {
   status        BookingStatus @default(PENDING)
   rejectionReason String?
   graphEventId  String? // Microsoft Graph calendar event id in the room mailbox, set when approved
-  bookedForId   String? // beneficiary when booked on someone else's behalf; null = the booker
+  bookedForId   String? // coordinator (ผู้ประสานงาน) when not the booker; null = the booker
+  departmentId  String? // department the booking is for (จองสำหรับหน่วยงาน)
   approvedById  String?
   autoApproved  Boolean       @default(false)
   decisionNote  String?       @db.Text
@@ -106,6 +109,7 @@ model Booking {
   bookedFor     User?         @relation("BookedFor", fields: [bookedForId], references: [id], onDelete: SetNull)
   approvedBy    User?         @relation("ApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
   room          Room          @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  department    Department?   @relation(fields: [departmentId], references: [id], onDelete: SetNull)
 
   @@map("bookings")
 }

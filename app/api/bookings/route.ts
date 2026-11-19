@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     const me = (session.user as any).id as string;
     const bookings = await prisma.booking.findMany({
       where: { OR: [{ userId: me }, { bookedForId: me }] },
-      include: { room: true, user: USER_PUBLIC, bookedFor: USER_PUBLIC },
+      include: { room: true, user: USER_PUBLIC, bookedFor: USER_PUBLIC, department: { select: { id: true, name: true } } },
       orderBy: { startTime: "asc" },
     });
 
@@ -59,9 +59,14 @@ export async function POST(request: NextRequest) {
     const beneficiary = bookedForId ? await loadActor({ user: { id: bookedForId } }) : null;
     if (bookedForId && !beneficiary) {
       return NextResponse.json(
-        { error: "ไม่พบผู้ใช้ที่ต้องการจองให้ หรือบัญชีถูกปิดใช้งาน", field: "bookedForId" },
+        { error: "ไม่พบผู้ประสานงาน หรือบัญชีถูกปิดใช้งาน", field: "bookedForId" },
         { status: 400 }
       );
+    }
+
+    const departmentId = data.departmentId || null;
+    if (departmentId && !(await prisma.department.findUnique({ where: { id: departmentId } }))) {
+      return NextResponse.json({ error: "ไม่พบหน่วยงานที่เลือก", field: "departmentId" }, { status: 400 });
     }
 
     const room = await prisma.room.findUnique({
@@ -105,6 +110,7 @@ export async function POST(request: NextRequest) {
       data: {
         userId: booker.id,
         bookedForId,
+        departmentId,
         roomId: data.roomId,
         title: data.title,
         description: data.description || null,
@@ -115,7 +121,7 @@ export async function POST(request: NextRequest) {
         autoApproved: auto,
         approvedById: auto ? booker.id : null,
       },
-      include: { room: true, user: USER_PUBLIC, bookedFor: USER_PUBLIC },
+      include: { room: true, user: USER_PUBLIC, bookedFor: USER_PUBLIC, department: { select: { id: true, name: true } } },
     });
 
     if (auto) {

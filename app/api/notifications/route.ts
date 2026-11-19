@@ -107,6 +107,15 @@ export async function GET() {
       }
     }
 
+    // Someone else named me as the coordinator (ผู้ประสานงาน) of their booking.
+    const coordinating = await prisma.booking.findMany({
+      where: { bookedForId: me, userId: { not: me }, createdAt: { gte: since }, status: { in: ["PENDING", "APPROVED"] } },
+      include: { room: ROOM, user: REQUESTER },
+      orderBy: { createdAt: "desc" },
+      take: 10,
+    });
+    coordinating.forEach((b) => items.push(item("coordinator", b.createdAt, b)));
+
     items.sort((a, b) => b.at.localeCompare(a.at));
     return NextResponse.json({
       items: items.slice(0, LIMIT),

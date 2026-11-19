@@ -26,6 +26,7 @@ interface Room {
   roomNumber?: string | null;
   calendarEmail?: string | null;
   requiresPresidentApproval?: boolean;
+  autoApprove?: boolean;
   name: string;
   description?: string;
   capacity: number;
@@ -54,6 +55,7 @@ type RoomForm = {
   roomNumber: string;
   calendarEmail: string;
   requiresPresidentApproval: boolean;
+  autoApprove: boolean;
   name: string;
   department: string;
   building: string;
@@ -72,6 +74,7 @@ const EMPTY_FORM: RoomForm = {
   roomNumber: "",
   calendarEmail: "",
   requiresPresidentApproval: false,
+  autoApprove: false,
   name: "",
   department: "",
   building: "",
@@ -195,6 +198,7 @@ export default function RoomsManagementPage() {
       roomNumber: room.roomNumber || "",
       calendarEmail: room.calendarEmail || "",
       requiresPresidentApproval: !!room.requiresPresidentApproval,
+      autoApprove: !!room.autoApprove,
       name: room.name,
       ...parseDescription(room.description),
       capacity: String(room.capacity),
@@ -254,6 +258,7 @@ export default function RoomsManagementPage() {
           roomNumber: form.roomNumber.trim(),
           calendarEmail: form.calendarEmail.trim(),
           requiresPresidentApproval: form.requiresPresidentApproval,
+          autoApprove: form.autoApprove,
           code: roomCode ?? "",
           name: form.name.trim(),
           description: composeDescription(form),
@@ -657,6 +662,45 @@ export default function RoomsManagementPage() {
                       </span>
                     </label>
                   </div>
+
+                  <fieldset className="md:col-span-6" disabled={form.requiresPresidentApproval}>
+                    <legend className="field-label">การอนุมัติการจอง</legend>
+                    <div className="flex flex-col gap-2">
+                      <label className="flex items-start gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="room-approval-mode"
+                          className="mt-1"
+                          checked={form.requiresPresidentApproval || !form.autoApprove}
+                          onChange={() => updateField("autoApprove", false)}
+                        />
+                        <span>
+                          <span className="text-title-small text-ink">ต้องได้รับการอนุมัติ</span>
+                          <span className="block text-body-small text-ink-subtle">
+                            การจองจะอยู่ในสถานะรอการตัดสินใจ จนกว่าผู้ดูแลห้องจะอนุมัติ
+                          </span>
+                        </span>
+                      </label>
+                      <label className="flex items-start gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="room-approval-mode"
+                          className="mt-1"
+                          checked={!form.requiresPresidentApproval && form.autoApprove}
+                          onChange={() => updateField("autoApprove", true)}
+                        />
+                        <span>
+                          <span className="text-title-small text-ink">จองได้ทันที</span>
+                          <span className="block text-body-small text-ink-subtle">
+                            การจองห้องนี้จะได้รับการอนุมัติอัตโนมัติ ไม่ต้องรอผู้ดูแลห้อง
+                          </span>
+                        </span>
+                      </label>
+                    </div>
+                    {form.requiresPresidentApproval && (
+                      <p className="text-body-small text-ink-subtle mt-1">ห้องที่ต้องให้อธิการฯ อนุมัติ ไม่สามารถตั้งเป็นจองได้ทันที</p>
+                    )}
+                  </fieldset>
 
                   <div className="md:col-span-6">
                     <label htmlFor="room-admin" className="field-label">ผู้ดูแลห้อง *</label>

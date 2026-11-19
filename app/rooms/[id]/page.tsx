@@ -108,6 +108,28 @@ export default function RoomDetailPage() {
   const [description, setDescription] = useState("");
   const [attendees, setAttendees] = useState("1");
   const [bookedFor, setBookedFor] = useState<PickedUser | null>(null);
+  const [departmentId, setDepartmentId] = useState("");
+  const [myDepartmentId, setMyDepartmentId] = useState("");
+  // Coordinator only matters when booking for a department other than the user's own.
+  const showCoordinator = departmentId !== myDepartmentId;
+  const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    fetch("/api/admin/departments")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((list) => setDepartments(Array.isArray(list) ? list : []))
+      .catch(() => setDepartments([]));
+    // Default to the signed-in user's own department; the user can still change it.
+    fetch("/api/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((me) => {
+        if (me?.departmentId) {
+          setMyDepartmentId(me.departmentId);
+          setDepartmentId((current) => current || me.departmentId);
+        }
+      })
+      .catch(() => {});
+  }, []);
   const [date, setDate] = useState(todayKey());
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
@@ -319,7 +341,8 @@ export default function RoomDetailPage() {
           // Explicit +07:00 offset so the server never guesses the timezone.
           startTime: bangkokISO(date, startTime),
           endTime: bangkokISO(date, endTime),
-          bookedForId: bookedFor?.id,
+          bookedForId: showCoordinator ? bookedFor?.id : null,
+          departmentId: departmentId || null,
         }),
       });
 
@@ -701,11 +724,33 @@ export default function RoomDetailPage() {
               </div>
 
               <div>
-                <label htmlFor="booking-for" className="field-label">
-                  จองเพื่อ
+                <label htmlFor="booking-department" className="field-label">
+                  จองสำหรับหน่วยงาน
                 </label>
-                <UserPicker inputId="booking-for" value={bookedFor} onChange={setBookedFor} selfId={(session?.user as any)?.id} />
+                <Dropdown
+                  id="booking-department"
+                  value={departmentId}
+                  onChange={setDepartmentId}
+                  options={[{ value: "", label: "ไม่ระบุ" }, ...departments.map((d) => ({ value: d.id, label: d.name }))]}
+                  placeholder="เลือกหน่วยงาน"
+                  searchPlaceholder="ค้นหาหน่วยงาน"
+                />
               </div>
+
+              {showCoordinator && (
+                <div>
+                  <label htmlFor="booking-for" className="field-label">
+                    ผู้ประสานงาน
+                  </label>
+                  <UserPicker
+                    inputId="booking-for"
+                    value={bookedFor}
+                    onChange={setBookedFor}
+                    selfId={(session?.user as any)?.id}
+                    placeholder="กรุณาเลือกผู้ประสานงาน"
+                  />
+                </div>
+              )}
 
               <div>
                 <label htmlFor="booking-description" className="field-label">

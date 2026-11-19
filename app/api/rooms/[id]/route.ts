@@ -94,7 +94,7 @@ export async function PUT(
       return NextResponse.json({ error: firstError(parsed.error) }, { status: 400 });
     }
 
-    const { calendarEmail, requiresPresidentApproval, roomType, roomNumber, code, name, description, capacity, pricePerHour, image, amenities, photos, status, roomAdminId } = parsed.data;
+    const { calendarEmail, requiresPresidentApproval, autoApprove, roomType, roomNumber, code, name, description, capacity, pricePerHour, image, amenities, photos, status, roomAdminId } = parsed.data;
 
     // The app writes events into this mailbox, so only system admins may point it elsewhere.
     if (
@@ -136,6 +136,7 @@ export async function PUT(
       data: {
         ...(calendarEmail !== undefined && { calendarEmail }),
         ...(requiresPresidentApproval !== undefined && { requiresPresidentApproval }),
+        ...(autoApprove !== undefined && { autoApprove }),
         ...(roomType && { roomType }),
         ...(roomNumber !== undefined && { roomNumber }),
         ...(code !== undefined && { code }),

@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
 
     const bookings = await prisma.booking.findMany({
       where: { status: "PENDING", room: rooms },
-      include: { room: true, user: PERSON, bookedFor: PERSON },
+      include: { room: true, user: PERSON, bookedFor: PERSON, department: { select: { name: true } } },
       orderBy: { startTime: "asc" },
     });
 

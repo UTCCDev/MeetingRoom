@@ -28,7 +28,7 @@ export type Actor = {
   autoApproveBooking: boolean;
 };
 
-export type RoomRule = { roomAdminId: string; requiresPresidentApproval: boolean };
+export type RoomRule = { roomAdminId: string; requiresPresidentApproval: boolean; autoApprove?: boolean };
 
 export type ApprovalRoute = "AUTO" | "ROOM_ADMIN" | "PRESIDENT";
 
@@ -41,6 +41,7 @@ export function approvalRoute(booker: Actor, beneficiary: Actor | null, room: Ro
   if (room.requiresPresidentApproval) {
     return booker.autoApproveBooking && booker.isPresidentApprover ? "AUTO" : "PRESIDENT";
   }
+  if (room.autoApprove) return "AUTO";
   return booker.autoApproveBooking || beneficiary?.autoApproveBooking ? "AUTO" : "ROOM_ADMIN";
 }
 
@@ -118,6 +119,7 @@ export const createBookingSchema = z
     startTime: bangkokDate,
     endTime: bangkokDate,
     bookedForId: z.string().optional().nullable(),
+    departmentId: z.string().optional().nullable(),
   })
   .refine((d) => d.endTime > d.startTime, {
     message: "เวลาสิ้นสุดต้องหลังเวลาเริ่มต้น",

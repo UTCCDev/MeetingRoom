@@ -1,4 +1,4 @@
-export type NotificationType = "approval" | "approved" | "rejected" | "cancelled" | "reminder";
+export type NotificationType = "approval" | "approved" | "rejected" | "cancelled" | "reminder" | "coordinator";
 
 export interface NotificationItem {
   id: string; // `${type}:${bookingId}` — stable, so read state survives refetches

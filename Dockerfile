@@ -29,4 +29,4 @@ COPY --from=build /app/next.config.js ./
 EXPOSE 3001
 
 # Apply pending migrations, then serve on 3001 (package.json "start").
-CMD ["sh", -c, "npx prisma migrate deploy && npm start"]
+CMD ["sh", "-c", "npx prisma migrate deploy && npm start"]

@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: firstError(parsed.error) }, { status: 400 });
     }
 
-    const { calendarEmail, requiresPresidentApproval, roomType, roomNumber, code, name, description, capacity, pricePerHour, image, amenities, photos, roomAdminId, status } = parsed.data;
+    const { calendarEmail, requiresPresidentApproval, autoApprove, roomType, roomNumber, code, name, description, capacity, pricePerHour, image, amenities, photos, roomAdminId, status } = parsed.data;
 
     const codeError = roomCodeMismatch(code, roomType ?? "MEETING");
     if (codeError) {
@@ -101,6 +101,7 @@ export async function POST(request: NextRequest) {
       data: {
         calendarEmail: calendarEmail ?? null,
         requiresPresidentApproval: requiresPresidentApproval ?? defaultRequiresPresidentApproval({ name, code }),
+        autoApprove: autoApprove ?? false,
         roomType: roomType ?? undefined,
         roomNumber: roomNumber ?? null,
         code: code ?? null,

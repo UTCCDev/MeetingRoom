@@ -29,6 +29,7 @@ interface Booking {
   autoApproved?: boolean;
   user?: { id: string; name: string };
   bookedFor?: { id: string; name: string } | null;
+  department?: { name: string } | null;
 }
 
 
@@ -234,8 +235,14 @@ export default function MyBookingsPage() {
                           <p className="flex items-center gap-2 card__body mt-1">
                             <span className="icon icon--20 text-ink-subtle" aria-hidden="true">person</span>
                             {booking.bookedFor.id === (session?.user as any)?.id
-                              ? `จองให้คุณโดย ${booking.user?.name ?? "-"}`
-                              : `จองเพื่อ ${booking.bookedFor.name}`}
+                              ? `คุณเป็นผู้ประสานงาน (จองโดย ${booking.user?.name ?? "-"})`
+                              : `ผู้ประสานงาน: ${booking.bookedFor.name}`}
+                          </p>
+                        )}
+                        {booking.department && (
+                          <p className="flex items-center gap-2 card__body mt-1">
+                            <span className="icon icon--20 text-ink-subtle" aria-hidden="true">apartment</span>
+                            หน่วยงาน: {booking.department.name}
                           </p>
                         )}
                         <p className="flex items-center gap-2 card__body">

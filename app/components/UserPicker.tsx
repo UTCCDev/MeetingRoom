@@ -21,12 +21,15 @@ export default function UserPicker({
   onChange,
   inputId = "booking-for",
   selfId,
+  placeholder,
 }: {
   value: PickedUser | null;
   onChange: (user: PickedUser | null) => void;
   inputId?: string;
   /** Signed-in user's id, hidden from the list since "ตัวฉันเอง" covers it. */
   selfId?: string;
+  /** When set, null shows this placeholder and the "ตัวฉันเอง" option is hidden. */
+  placeholder?: string;
 }) {
   const [users, setUsers] = useState<PickedUser[]>([]);
   const [query, setQuery] = useState<string | null>(null);
@@ -51,7 +54,7 @@ export default function UserPicker({
   const onQueryChange = useCallback((q: string) => setQuery(q), []);
 
   const options: DropdownOption[] = [
-    { value: SELF, label: "ตัวฉันเอง" },
+    ...(placeholder ? [] : [{ value: SELF, label: "ตัวฉันเอง" }]),
     ...users
       .filter((u) => u.id !== selfId)
       .map((u) => ({ value: u.id, label: u.name, hint: u.department ? `${u.email} · ${u.department}` : u.email })),
@@ -61,7 +64,8 @@ export default function UserPicker({
     <Dropdown
       id={inputId}
       options={options}
-      value={value?.id ?? SELF}
+      value={value?.id ?? (placeholder ? "" : SELF)}
+      placeholder={placeholder}
       selectedLabel={value ? `${value.name} (${value.email})` : undefined}
       onQueryChange={onQueryChange}
       searchPlaceholder="พิมพ์ชื่อหรืออีเมล"

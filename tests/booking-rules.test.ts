@@ -34,6 +34,12 @@ describe("approvalRoute — normal room", () => {
   it("beneficiary with autoApproveBooking is AUTO", () => {
     expect(approvalRoute(actor(), actor({ id: "u2", autoApproveBooking: true }), normal)).toBe("AUTO");
   });
+  it("room with autoApprove is AUTO for anyone", () => {
+    expect(approvalRoute(actor(), null, { ...normal, autoApprove: true })).toBe("AUTO");
+  });
+  it("president room ignores autoApprove", () => {
+    expect(approvalRoute(actor(), null, { ...special, autoApprove: true })).toBe("PRESIDENT");
+  });
 });
 
 describe("approvalRoute — president room", () => {

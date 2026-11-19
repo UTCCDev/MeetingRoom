@@ -16,6 +16,7 @@ const LOOK: Record<NotificationType, { icon: string; tone: string }> = {
   rejected: { icon: "cancel", tone: "bg-error-container text-on-error-container" },
   cancelled: { icon: "event_busy", tone: "bg-surface-variant text-ink-muted" },
   reminder: { icon: "alarm", tone: "bg-primary-container text-on-primary-container" },
+  coordinator: { icon: "person_add", tone: "bg-primary-container text-on-primary-container" },
 };
 
 function headline(n: NotificationItem): React.ReactNode {
@@ -31,6 +32,8 @@ function headline(n: NotificationItem): React.ReactNode {
       return <><span className="font-medium text-ink">{n.requester?.name}</span> ยกเลิกการจอง {t}</>;
     case "reminder":
       return <>ใกล้ถึงเวลาประชุม {t}</>;
+    case "coordinator":
+      return <><span className="font-medium text-ink">{n.requester?.name}</span> ระบุให้คุณเป็นผู้ประสานงาน {t}</>;
   }
 }
 

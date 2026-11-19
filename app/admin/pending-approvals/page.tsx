@@ -24,6 +24,7 @@ interface Booking {
     department?: { name: string } | null;
   };
   bookedFor?: { id: string; name: string; email: string; department?: { name: string } | null } | null;
+  department?: { name: string } | null;
   room: {
     id: string;
     name: string;
@@ -369,9 +370,15 @@ export default function PendingApprovalsPage() {
                         <p className="text-body-small text-ink-subtle">ผู้ขอ</p>
                         <p className="text-title-small text-ink">{booking.user.name}</p>
                         <p className="text-body-small text-ink-subtle break-all">{booking.user.email}</p>
+                        {booking.department && (
+                          <>
+                            <p className="text-body-small text-ink-subtle mt-2">จองสำหรับหน่วยงาน</p>
+                            <p className="text-title-small text-ink">{booking.department.name}</p>
+                          </>
+                        )}
                         {booking.bookedFor && (
                           <>
-                            <p className="text-body-small text-ink-subtle mt-2">จองเพื่อ</p>
+                            <p className="text-body-small text-ink-subtle mt-2">ผู้ประสานงาน</p>
                             <p className="text-title-small text-ink">{booking.bookedFor.name}</p>
                             <p className="text-body-small text-ink-subtle break-all">
                               {booking.bookedFor.department?.name || "ไม่ระบุแผนก"} · {booking.bookedFor.email}

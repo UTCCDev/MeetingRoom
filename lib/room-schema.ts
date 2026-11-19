@@ -82,4 +82,6 @@ export const roomSchema = z.object({
   status: z.boolean().optional(),
   // Bookings need a president approver (e.g. ห้องไทรทอง). System admins only.
   requiresPresidentApproval: z.boolean().optional(),
+  // Bookings approved instantly without waiting for the room admin.
+  autoApprove: z.boolean().optional(),
 });
