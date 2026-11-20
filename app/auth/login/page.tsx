@@ -2,11 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { getProviders, signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
 import "./login.css";
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MICROSOFT_PROVIDER = "azure-ad";
 
 // next-auth redirects back with ?error=<code> when an OAuth sign-in fails.
@@ -14,7 +11,9 @@ const OAUTH_ERRORS: Record<string, string> = {
   AccessDenied: "บัญชี Microsoft 365 นี้ไม่มีสิทธิ์เข้าใช้ระบบ หรือบัญชีถูกระงับ",
   OAuthAccountNotLinked: "อีเมลนี้เชื่อมกับวิธีเข้าสู่ระบบอื่นอยู่แล้ว",
 };
-// Lucide-style 24px stroke icons used by the alerts and the security note.
+const DEFAULT_OAUTH_ERROR = "เข้าสู่ระบบด้วย Microsoft 365 ไม่สำเร็จ กรุณาลองใหม่";
+
+// Lucide-style 24px stroke icons.
 function Icon({ children }: { children: React.ReactNode }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -25,17 +24,28 @@ function Icon({ children }: { children: React.ReactNode }) {
 const CircleAlertIcon = () => (
   <Icon><circle cx="12" cy="12" r="10" /><line x1="12" x2="12" y1="8" y2="12" /><line x1="12" x2="12.01" y1="16" y2="16" /></Icon>
 );
-const CircleCheckIcon = () => (
-  <Icon><circle cx="12" cy="12" r="10" /><path d="m9 12 2 2 4-4" /></Icon>
-);
 const ShieldCheckIcon = () => (
   <Icon>
     <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
     <path d="m9 12 2 2 4-4" />
   </Icon>
 );
+const DoorIcon = () => (
+  <Icon><path d="M13 4h3a2 2 0 0 1 2 2v14" /><path d="M2 20h3" /><path d="M13 20h9" /><path d="M10 12v.01" /><path d="M13 4.562v16.157a1 1 0 0 1-1.242.97L5 20V5.562a2 2 0 0 1 1.515-1.94l4-1A2 2 0 0 1 13 4.561Z" /></Icon>
+);
+const CalendarIcon = () => (
+  <Icon><path d="M8 2v4" /><path d="M16 2v4" /><rect width="18" height="18" x="3" y="4" rx="2" /><path d="M3 10h18" /><path d="m9 16 2 2 4-4" /></Icon>
+);
+const BellIcon = () => (
+  <Icon><path d="M10.268 21a2 2 0 0 0 3.464 0" /><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326" /></Icon>
+);
 
-const DEFAULT_OAUTH_ERROR = "เข้าสู่ระบบด้วย Microsoft 365 ไม่สำเร็จ กรุณาลองใหม่";
+// What the system does, shown under the button so a single-button card doesn't feel empty.
+const HIGHLIGHTS = [
+  { icon: <DoorIcon />, label: "ดูห้องว่าง" },
+  { icon: <CalendarIcon />, label: "จองในไม่กี่คลิก" },
+  { icon: <BellIcon />, label: "แจ้งผลอนุมัติ" },
+];
 
 // Only same-site relative paths, so the login page can't be used as an open redirect.
 function safeCallbackUrl(): string {
@@ -51,121 +61,51 @@ function safeCallbackUrl(): string {
 }
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [notice, setNotice] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [hasMicrosoft, setHasMicrosoft] = useState(false);
-  const [isSsoLoading, setIsSsoLoading] = useState(false);
-  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("registered") === "1") {
-      setNotice("ลงทะเบียนสำเร็จ กรุณาเข้าสู่ระบบ");
-    }
-    // Credentials failures are handled inline (redirect: false), so any error here is from SSO.
-    const oauthError = params.get("error");
-    if (oauthError) {
-      setError(OAUTH_ERRORS[oauthError] ?? DEFAULT_OAUTH_ERROR);
-    }
+    const oauthError = new URLSearchParams(window.location.search).get("error");
+    if (oauthError) setError(OAUTH_ERRORS[oauthError] ?? DEFAULT_OAUTH_ERROR);
 
     getProviders()
       .then((providers) => setHasMicrosoft(!!providers?.[MICROSOFT_PROVIDER]))
       .catch(() => setHasMicrosoft(false));
   }, []);
 
-  const handleMicrosoftSignIn = async () => {
+  const handleSignIn = async () => {
     setError("");
     // The button is shown before the Entra ID app is set up (AZURE_AD_* in .env).
     if (!hasMicrosoft) {
-      setError("การเข้าสู่ระบบด้วย Microsoft 365 ยังไม่เปิดใช้งาน กรุณาใช้อีเมลและรหัสผ่าน");
+      setError("การเข้าสู่ระบบด้วย Microsoft 365 ยังไม่เปิดใช้งาน กรุณาติดต่อผู้ดูแลระบบ");
       return;
     }
-    setIsSsoLoading(true);
+    setIsLoading(true);
     try {
       // Full-page redirect to Microsoft; we only get back here if it fails to start.
       await signIn(MICROSOFT_PROVIDER, { callbackUrl: safeCallbackUrl() });
     } catch {
       setError(DEFAULT_OAUTH_ERROR);
-      setIsSsoLoading(false);
-    }
-  };
-
-  const isBusy = isLoading || isSsoLoading;
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-
-    if (!email.trim() || !password) {
-      setError("กรุณากรอกอีเมลและรหัสผ่าน");
-      return;
-    }
-    if (!EMAIL_PATTERN.test(email.trim())) {
-      setError("รูปแบบอีเมลไม่ถูกต้อง");
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      const result = await signIn("credentials", {
-        email: email.trim(),
-        password,
-        redirect: false,
-      });
-
-      if (result?.error) {
-        setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
-      } else if (result?.ok) {
-        router.push(safeCallbackUrl());
-        router.refresh();
-      }
-    } catch (err) {
-      setError("เกิดข้อผิดพลาดบางประการ");
-    } finally {
       setIsLoading(false);
     }
   };
 
-  const clearError = () => setError("");
-
   return (
     <div className="login">
-      <aside className="login__brand">
-        <div className="login__logo">
-          {/* UTCC Meeting Room logo, white + yellow variant for the primary brand panel. */}
-          <img src="/brand/utcc-meetingroom-white.svg" alt="UTCC Meeting Room" width={226} height={80} />
-        </div>
-        <div>
-          <div className="login__overline">ระบบงานภายใน</div>
-          <h1 className="login__headline">ยินดีต้อนรับ</h1>
-          <p className="login__lede">
-            <span className="login__phrase">จองห้องประชุมส่วนกลาง</span>{" "}
-            <span className="login__phrase">ตรวจสอบห้องว่าง</span>{" "}
-            <span className="login__phrase">และติดตามสถานะการจอง</span>
-            <span className="login__phrase">ได้ในที่เดียว</span>
+      <img className="login__shield" src="/brand/utcc-shield-stroke-white.svg" alt="" aria-hidden="true" />
+
+      <main className="login__stage">
+        <img className="login__logo" src="/brand/utcc-meetingroom-white.svg" alt="UTCC Meeting Room" width={226} height={80} />
+
+        <section className="login__card" aria-labelledby="login-title">
+          <div className="login__overline">ระบบจองห้องประชุม</div>
+          <h1 id="login-title" className="login__title">เข้าสู่ระบบ</h1>
+          <p className="login__subtitle">
+            <span className="login__phrase">ห้องประชุมทั้งมหาวิทยาลัย</span>{" "}
+            <span className="login__phrase">พร้อมให้คุณจอง</span>{" "}
+            <span className="login__phrase">ด้วยบัญชีเดียว</span>
           </p>
-        </div>
-        <div className="login__legal">© {new Date().getFullYear()} มหาวิทยาลัยหอการค้าไทย สงวนลิขสิทธิ์</div>
-      </aside>
-
-      <main className="login__main">
-        <form className="login__form" onSubmit={handleSubmit} noValidate>
-          <div>
-            <h2 className="login__title">เข้าสู่ระบบ</h2>
-            <p className="login__subtitle">ใช้อีเมลและรหัสผ่านของคุณเพื่อเข้าสู่ระบบ</p>
-          </div>
-
-          {notice && !error && (
-            <p className="alert alert--success" role="status">
-              <CircleCheckIcon />
-              {notice}
-            </p>
-          )}
 
           {error && (
             <p className="alert alert--error" role="alert">
@@ -174,107 +114,38 @@ export default function LoginPage() {
             </p>
           )}
 
-          <div className="field">
-            <label className="field__label" htmlFor="login-email">
-              <span>อีเมล</span>
-            </label>
-            <div className="field__control">
-              <input
-                id="login-email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                inputMode="email"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  clearError();
-                }}
-                className="field__input"
-                placeholder="example@utcc.ac.th"
-              />
-            </div>
-          </div>
-
-          <div className="field">
-            <label className="field__label" htmlFor="login-password">
-              <span>รหัสผ่าน</span>
-            </label>
-            <div className="field__control">
-              <input
-                id="login-password"
-                name="password"
-                type={showPassword ? "text" : "password"}
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  clearError();
-                }}
-                className="field__input field__input--with-toggle"
-                placeholder="••••••••"
-              />
-              <button
-                type="button"
-                className="field__toggle"
-                onClick={() => setShowPassword((s) => !s)}
-                aria-pressed={showPassword}
-                aria-controls="login-password"
-              >
-                {showPassword ? "ซ่อน" : "แสดง"}
-              </button>
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={isBusy}
-            aria-busy={isLoading || undefined}
-            className="btn btn--filled btn--l btn--block"
-          >
-            {isLoading ? "กำลังเข้าสู่ระบบ…" : "เข้าสู่ระบบ"}
-          </button>
-
-          <div className="divider">หรือ</div>
-
           <button
             type="button"
-            onClick={handleMicrosoftSignIn}
-            disabled={isBusy}
-            aria-busy={isSsoLoading || undefined}
-            className="btn btn--sso btn--l btn--block"
+            onClick={handleSignIn}
+            disabled={isLoading}
+            aria-busy={isLoading || undefined}
+            className="btn btn--filled btn--l btn--block"
           >
             <span className="m365-logo" aria-hidden="true">
               <img src="/brand/microsoft-365.svg" alt="" width={20} height={20} />
             </span>
-            {isSsoLoading ? "กำลังเชื่อมต่อ Microsoft 365…" : "เข้าสู่ระบบด้วย Microsoft 365"}
+            {isLoading ? "กำลังเชื่อมต่อ Microsoft 365…" : "เข้าสู่ระบบด้วย Microsoft 365"}
           </button>
 
           <p className="login__note">
             <ShieldCheckIcon />
-            ยืนยันตัวตนผ่านระบบของ Microsoft อย่างปลอดภัย
+            ใช้บัญชี @utcc.ac.th ยืนยันตัวตนผ่าน Microsoft อย่างปลอดภัย
           </p>
 
-          <div className="divider">ยังไม่มีบัญชี?</div>
+          <ul className="login__highlights">
+            {HIGHLIGHTS.map((h) => (
+              <li key={h.label}>
+                {h.icon}
+                <span>{h.label}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
 
-          <Link href="/auth/register" className="btn btn--outlined btn--l btn--block">
-            ลงทะเบียนบัญชีใหม่
-          </Link>
-
-          {/* Demo accounts. TODO: remove this box and the seed users before going live. */}
-          <div className="login__demo">
-            <p className="login__demo-title">ข้อมูลสำหรับทดสอบ (รหัสผ่าน: password)</p>
-            <dl className="login__demo-list">
-              <dt>ผู้ใช้ทั่วไป</dt>
-              <dd>user@example.com</dd>
-              <dt>ผู้ดูแลห้อง</dt>
-              <dd>admin@example.com</dd>
-              <dt>ผู้ดูแลระบบ</dt>
-              <dd>system@example.com</dd>
-            </dl>
-          </div>
-        </form>
+        <p className="login__quote">“ประชุมได้ตรงเวลา เริ่มจากห้องที่พร้อม”</p>
       </main>
+
+      <footer className="login__legal">© {new Date().getFullYear() + 543} มหาวิทยาลัยหอการค้าไทย สงวนลิขสิทธิ์</footer>
     </div>
   );
 }
