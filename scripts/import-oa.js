@@ -17,7 +17,9 @@ const path = require("path");
 const { PrismaClient } = require("@prisma/client");
 
 const OWNER_EMAIL = process.env.OWNER_EMAIL || "system@example.com";
-const FILE = path.join(__dirname, "..", "old", "oa", "oa-bookings.json");
+// Optional: --file=<path> (e.g. old/oa/oa-bookings-f16.json for อาคาร 24 ชั้น 16 / M241601)
+const fileArg = process.argv.find((a) => a.startsWith("--file="));
+const FILE = fileArg ? path.resolve(fileArg.slice(7)) : path.join(__dirname, "..", "old", "oa", "oa-bookings.json");
 const commit = process.argv.includes("--commit");
 const prisma = new PrismaClient();
 

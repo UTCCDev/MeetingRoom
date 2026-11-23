@@ -587,6 +587,24 @@
   /* .ui-lg — one step larger form text and 56px controls for pages many older staff use
      (landing quick search, room detail / booking form). */
   .ui-lg .field-label { font-size: 1.25rem; }
+  /* "?" circle beside a .field-label: same size as the label's line box (font-size × line-height 1.3). */
+  .field-help {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.125rem;
+    width: 1.3em;
+    height: 1.3em;
+    border-radius: 9999px;
+    color: var(--color-ink-subtle);
+    transition: color 150ms, background-color 150ms;
+  }
+  .field-help .icon { font-size: 1.3em; --icon-opsz: 20; }
+  .field-help:hover { color: var(--color-primary); }
+  .field-help:hover .icon { --icon-fill: 1; }
+  .field-help:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; color: var(--color-primary); }
+  .ui-lg .field-help { font-size: 1.25rem; }
   .ui-lg .field-error { font-size: 1.125rem; }
   .ui-lg input.input-field,
   .ui-lg select.input-field,

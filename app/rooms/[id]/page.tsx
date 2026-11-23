@@ -10,6 +10,7 @@ import DatePicker from "@/app/components/DatePicker";
 import RoomGallery from "@/app/components/RoomGallery";
 import RoomCalendar from "@/app/components/RoomCalendar";
 import UserPicker, { type PickedUser } from "@/app/components/UserPicker";
+import FieldHelp from "@/app/components/FieldHelp";
 import { roomImage, roomPhotos } from "@/lib/room-photos";
 import { SkeletonCards } from "@/app/components/Skeleton";
 import { useToast } from "@/app/components/Toast";
@@ -703,9 +704,35 @@ export default function RoomDetailPage() {
             ) : (
             <form onSubmit={handleBooking} className="space-y-6" noValidate>
               <div>
-                <label htmlFor="booking-title" className="field-label">
-                  ชื่อเรื่องการประชุม *
-                </label>
+                <div className="flex items-center gap-2 mb-2">
+                  <label htmlFor="booking-title" className="field-label !mb-0">
+                    ชื่อเรื่องการประชุม *
+                  </label>
+                  <FieldHelp title="วิธีตั้งชื่อการจอง">
+                    <p>ตั้งชื่อให้บอกได้ชัดว่าประชุมเรื่องอะไร ผู้ดูแลห้องจะได้พิจารณาการจองได้ง่ายขึ้น</p>
+                    <div>
+                      <p className="flex items-center gap-1 text-title-small text-ink">
+                        <span className="icon icon--20 icon--success" aria-hidden="true">check_circle</span>
+                        ตัวอย่างที่ดี
+                      </p>
+                      <ul className="list-disc pl-7 text-ink-muted">
+                        <li>ประชุมแผนการดำเนินงาน</li>
+                        <li>ประชุมอนุกรรมการ</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <p className="flex items-center gap-1 text-title-small text-ink">
+                        <span className="icon icon--20 text-error" aria-hidden="true">cancel</span>
+                        ตัวอย่างที่ควรหลีกเลี่ยง
+                      </p>
+                      <ul className="list-disc pl-7 text-ink-muted">
+                        <li>ประชุมกับพี่เอ</li>
+                        <li>ประชุมกับอาจารย์</li>
+                        <li>คุยงาน</li>
+                      </ul>
+                    </div>
+                  </FieldHelp>
+                </div>
                 <input
                   id="booking-title"
                   type="text"
@@ -721,12 +748,29 @@ export default function RoomDetailPage() {
                   aria-describedby="booking-title-error"
                 />
                 <FieldError id="booking-title-error" message={fieldErrors.title} />
+                <div className="text-body-small text-ink-muted">
+                  ตั้งชื่อการจองให้ชัดเจนเพื่อให้ผู้ดูแลห้องทราบว่าการจองนี้เกี่ยวกับอะไร เช่นประชุมอนุมัติแผนงาน, ประชุมอนุกรรมการ ไม่ควรตั้งชื่อที่ไม่ชัดเจน เช่น ประชุมกับพี่นัท, คุยงาน เป็นต้น                </div>
               </div>
 
               <div>
-                <label htmlFor="booking-department" className="field-label">
-                  จองสำหรับหน่วยงาน
-                </label>
+                <div className="flex items-center gap-2 mb-2">
+                  <label htmlFor="booking-department" className="field-label !mb-0">
+                    จองสำหรับหน่วยงาน
+                  </label>
+                  <FieldHelp title="จองสำหรับหน่วยงาน">
+                    <div>
+                      <p className="text-title-small text-ink">จองใช้เอง</p>
+                      <p className="text-ink-muted">เลือกหน่วยงานของคุณเอง</p>
+                    </div>
+                    <div>
+                      <p className="text-title-small text-ink">จองแทนผู้อื่น</p>
+                      <ol className="list-decimal pl-5 text-ink-muted">
+                        <li>เลือกหน่วยงานของผู้ที่จะใช้ห้อง</li>
+                        <li>ระบบจะแสดงช่อง “ผู้ประสานงาน” ให้เลือกชื่อผู้ประสานงานของหน่วยงานนั้น</li>
+                      </ol>
+                    </div>
+                  </FieldHelp>
+                </div>
                 <Dropdown
                   id="booking-department"
                   value={departmentId}
