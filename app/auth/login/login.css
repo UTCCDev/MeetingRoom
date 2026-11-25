@@ -146,3 +146,17 @@
   .login__card { padding: 28px 20px 24px; border-radius: 22px; }
   .login__shield { width: 70vw; right: -20vw; bottom: -10vh; }
 }
+
+/* "กลับหน้าหลัก" link, top-left on the dark background. */
+.login__back {
+  position: absolute; top: 20px; left: 20px; z-index: 1;
+  display: inline-flex; align-items: center; gap: 8px;
+  min-height: 44px; padding: 0 16px 0 12px; border-radius: 9999px;
+  font: var(--type-label); color: var(--color-on-primary); text-decoration: none;
+  background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .24);
+  transition: background-color 150ms, border-color 150ms;
+}
+.login__back svg { width: 20px; height: 20px; }
+.login__back:hover { background: rgba(255, 255, 255, .16); border-color: rgba(255, 255, 255, .4); }
+.login__back:focus-visible { outline: var(--focus-ring); outline-offset: 3px; }
+@media (max-width: 480px) { .login__back { top: 12px; left: 12px; } }

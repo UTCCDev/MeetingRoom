@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getProviders, signIn } from "next-auth/react";
+import Link from "next/link";
 import "./login.css";
 
 const MICROSOFT_PROVIDER = "azure-ad";
@@ -35,6 +36,9 @@ const DoorIcon = () => (
 );
 const CalendarIcon = () => (
   <Icon><path d="M8 2v4" /><path d="M16 2v4" /><rect width="18" height="18" x="3" y="4" rx="2" /><path d="M3 10h18" /><path d="m9 16 2 2 4-4" /></Icon>
+);
+const ArrowLeftIcon = () => (
+  <Icon><path d="m12 19-7-7 7-7" /><path d="M19 12H5" /></Icon>
 );
 const BellIcon = () => (
   <Icon><path d="M10.268 21a2 2 0 0 0 3.464 0" /><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326" /></Icon>
@@ -93,6 +97,10 @@ export default function LoginPage() {
 
   return (
     <div className="login">
+      <Link href="/" className="login__back">
+        <ArrowLeftIcon />
+        กลับหน้าหลัก
+      </Link>
       <img className="login__shield" src="/brand/utcc-shield-stroke-white.svg" alt="" aria-hidden="true" />
 
       <main className="login__stage">

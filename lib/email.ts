@@ -74,19 +74,21 @@ export const sendApprovalRequest = async (
   to: string | string[],
   booking: { title: string; attendees: number; startTime: Date; endTime: Date },
   roomName: string,
-  requesterName: string
+  requesterName: string,
+  place?: { code?: string | null; location?: string }
 ) => {
   const base = (process.env.NEXTAUTH_URL || "").replace(/\/$/, "");
   const link = `${base}/admin/pending-approvals`;
-  const subject = `คำขอจองห้อง ${roomName} รอการอนุมัติ`;
+  const roomFull = place?.code ? `${roomName} (${place.code})` : roomName;
+  const subject = `คำขอจองห้อง ${roomFull} รอการอนุมัติ`;
 
   const message = `
     <h2>มีคำขอจองห้องประชุมรอการอนุมัติ</h2>
+    <p><strong>${escapeHtml(booking.title)} - ${escapeHtml(roomFull)}</strong></p>
+    <p>สถานที่: ${escapeHtml(place?.location || "-")}</p>
     <p>ผู้ขอ: <strong>${escapeHtml(requesterName)}</strong></p>
-    <p>ห้องประชุม: ${escapeHtml(roomName)}</p>
-    <p>หัวข้อการประชุม: ${escapeHtml(booking.title)}</p>
     <p>เวลา: ${formatDate(booking.startTime)} ${formatTime(booking.startTime)}–${formatTime(booking.endTime)} น.</p>
-    <p>จำนวนผู้เข้าร่วม: ${booking.attendees} คน</p>
+    <p>ผู้เข้าร่วม: ${booking.attendees} คน</p>
     <p style="margin-top:24px">
       <a href="${link}" style="background:#2E3192;color:#fff;padding:12px 28px;border-radius:4px;text-decoration:none;display:inline-block">
         ตรวจสอบและอนุมัติ

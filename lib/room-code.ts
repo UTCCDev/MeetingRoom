@@ -41,3 +41,17 @@ export function buildRoomCode(
 export function defaultRequiresPresidentApproval(room: { name: string; code?: string | null }): boolean {
   return room.name.includes("ไทรทอง") || /^[MES]2408\d{2}$/.test(room.code ?? "");
 }
+
+/**
+ * Building and floor of a room, from its code (M241601 → 24 / 16) or, for rooms without a
+ * code yet, from "อาคาร 24 ชั้น 16" in the description. Missing parts are "".
+ */
+export function roomPlace(room: { code?: string | null; description?: string | null }): { building: string; floor: string } {
+  const m = (room.code ?? "").match(/^[MES](\d{2})([0-9A-Z]{2,3})\d{2}$/);
+  if (m) return { building: String(Number(m[1])), floor: m[2].replace(/^0+(?=.)/, "") };
+  const d = room.description ?? "";
+  return {
+    building: d.match(/อาคาร\s*([0-9A-Za-z]+)/)?.[1] ?? "",
+    floor: d.match(/ชั้น\s*([0-9A-Za-z]+)/)?.[1] ?? "",
+  };
+}

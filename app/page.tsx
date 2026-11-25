@@ -90,9 +90,9 @@ export default async function Home() {
 
   const [activeRooms, upcoming, nextMeeting, pending, myRooms, users] = await Promise.all([
     prisma.room.count({ where: { status: true } }),
-    prisma.booking.count({ where: { userId: me, status: { in: ["PENDING", "APPROVED"] }, endTime: { gt: now } } }),
+    prisma.booking.count({ where: { OR: [{ userId: me }, { bookedForId: me }], status: { in: ["PENDING", "APPROVED"] }, endTime: { gt: now } } }),
     prisma.booking.findFirst({
-      where: { userId: me, status: { in: ["PENDING", "APPROVED"] }, endTime: { gt: now } },
+      where: { OR: [{ userId: me }, { bookedForId: me }], status: { in: ["PENDING", "APPROVED"] }, endTime: { gt: now } },
       orderBy: { startTime: "asc" },
       include: { room: { select: { name: true, description: true } } },
     }),

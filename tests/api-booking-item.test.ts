@@ -59,10 +59,10 @@ describe("GET/DELETE /api/bookings/[id]", () => {
     as("ben");
     expect((await GET({} as any, ctx)).status).toBe(200);
   });
-  it("stranger gets 404", async () => {
+  it("any signed-in user can view (calendar details are public to users)", async () => {
     as("admin1");
     prisma.booking.findUnique.mockResolvedValue(booking({ room: { roomAdminId: "other", requiresPresidentApproval: false } }));
-    expect((await GET({} as any, ctx)).status).toBe(404);
+    expect((await GET({} as any, ctx)).status).toBe(200);
   });
   it("view works when the beneficiary account is gone", async () => {
     as("booker");

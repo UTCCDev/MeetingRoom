@@ -17,9 +17,9 @@ vi.mock("@/lib/booking-approval", () => approval);
 
 import { POST } from "@/app/api/bookings/route";
 
-type U = { id: string; role?: string; active?: boolean; isPresidentApprover?: boolean; autoApproveBooking?: boolean };
+type U = { id: string; role?: string; active?: boolean; isPresidentApprover?: boolean; autoApproveBooking?: boolean; departmentId?: string | null };
 let users: Record<string, U>;
-const user = (u: U) => ({ role: "USER", active: true, isPresidentApprover: false, autoApproveBooking: false, name: u.id, email: `${u.id}@utcc.ac.th`, ...u });
+const user = (u: U) => ({ role: "USER", active: true, isPresidentApprover: false, autoApproveBooking: false, departmentId: "d1", name: u.id, email: `${u.id}@utcc.ac.th`, ...u });
 
 const room = (over = {}) => ({
   id: "r1",
@@ -30,6 +30,7 @@ const room = (over = {}) => ({
   requiresPresidentApproval: false,
   roomAdmin: { id: "admin1", email: "admin1@utcc.ac.th" },
   approvers: [],
+  allowedDepartments: [],
   ...over,
 });
 
@@ -119,5 +120,19 @@ describe("POST /api/bookings", () => {
   it("booking for yourself stores no beneficiary", async () => {
     await call(body({ bookedForId: "u1" }));
     expect(created().bookedForId).toBeNull();
+  });
+
+  it("restricted room rejects other departments → 403", async () => {
+    prisma.room.findUnique.mockResolvedValue(room({ allowedDepartments: [{ id: "d9" }] }));
+    expect((await call(body())).status).toBe(403);
+    expect(prisma.booking.create).not.toHaveBeenCalled();
+  });
+
+  it("restricted room accepts a listed department; system admin is exempt", async () => {
+    prisma.room.findUnique.mockResolvedValue(room({ allowedDepartments: [{ id: "d1" }] }));
+    expect((await call(body())).status).toBe(201);
+    prisma.room.findUnique.mockResolvedValue(room({ allowedDepartments: [{ id: "d9" }] }));
+    Object.assign(users.u1, { role: "SYSTEM_ADMIN" });
+    expect((await call(body())).status).toBe(201);
   });
 });

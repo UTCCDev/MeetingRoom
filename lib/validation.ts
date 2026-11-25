@@ -26,7 +26,15 @@ export type Actor = {
   role: Role;
   isPresidentApprover: boolean;
   autoApproveBooking: boolean;
+  /** Only read when booking a room limited to some departments. */
+  departmentId?: string | null;
 };
+
+/** Rooms with an allow-list only take bookings from those departments' staff; system admins are exempt. */
+export function mayBookRoom(user: Pick<Actor, "role" | "departmentId">, allowed: { id: string }[]): boolean {
+  if (allowed.length === 0 || user.role === "SYSTEM_ADMIN") return true;
+  return !!user.departmentId && allowed.some((d) => d.id === user.departmentId);
+}
 
 export type RoomRule = {
   roomAdminId: string;

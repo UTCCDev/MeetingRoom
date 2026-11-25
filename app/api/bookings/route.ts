@@ -5,7 +5,11 @@ import { prisma } from "@/lib/prisma";
 import { loadActor } from "@/lib/actor";
 import { onBookingApproved } from "@/lib/booking-approval";
 import { sendApprovalRequest } from "@/lib/email";
-import { approvalRoute, createBookingSchema, firstError, normalizeBeneficiary } from "@/lib/validation";
+import { roomPlace } from "@/lib/room-code";
+
+const placeText = (p: { building: string; floor: string }) =>
+  [p.building && `อาคาร ${p.building}`, p.floor && `ชั้น ${p.floor}`].filter(Boolean).join(" ");
+import { approvalRoute, createBookingSchema, firstError, mayBookRoom, normalizeBeneficiary } from "@/lib/validation";
 
 const USER_PUBLIC = { select: { id: true, name: true, email: true } } as const;
 const SERVER_ERROR = "เกิดข้อผิดพลาดที่เซิร์ฟเวอร์ กรุณาลองใหม่";
@@ -74,11 +78,16 @@ export async function POST(request: NextRequest) {
       include: {
         roomAdmin: { select: { id: true, email: true } },
         approvers: { where: { active: true }, select: { id: true, email: true } },
+        allowedDepartments: { select: { id: true } },
       },
     });
 
     if (!room || !room.status) {
       return NextResponse.json({ error: "ไม่พบห้องนี้หรือห้องปิดใช้งาน" }, { status: 404 });
+    }
+
+    if (!mayBookRoom(booker, room.allowedDepartments)) {
+      return NextResponse.json({ error: "ห้องนี้จองได้เฉพาะหน่วยงานที่กำหนด" }, { status: 403 });
     }
 
     if (data.attendees > room.capacity) {
@@ -146,7 +155,10 @@ export async function POST(request: NextRequest) {
         );
       }
       if (approvers.length > 0) {
-        sendApprovalRequest(approvers, booking, room.name, booking.user.name).catch((err) =>
+        sendApprovalRequest(approvers, booking, room.name, booking.user.name, {
+          code: room.code,
+          location: placeText(roomPlace(room)),
+        }).catch((err) =>
           console.error("Approval request email failed:", err)
         );
       }

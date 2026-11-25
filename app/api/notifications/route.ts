@@ -10,8 +10,10 @@ const DAY = 24 * 60 * 60 * 1000;
 const HISTORY_DAYS = 30;
 const LIMIT = 40;
 
-const ROOM = { select: { id: true, name: true, description: true, capacity: true } } as const;
-const REQUESTER = { select: { name: true, email: true } } as const;
+const ROOM = { select: { id: true, code: true, name: true, description: true, capacity: true } } as const;
+const REQUESTER = { select: { name: true, email: true, department: { select: { name: true } } } } as const;
+// Pending cards show who booked, for whom, and for which department.
+const PEOPLE = { user: REQUESTER, bookedFor: REQUESTER, department: { select: { name: true } } } as const;
 
 type Row = {
   id: string;
@@ -23,8 +25,10 @@ type Row = {
   createdAt: Date;
   rejectionReason: string | null;
   autoApproved?: boolean;
-  room: { id: string; name: string; description: string | null; capacity: number };
-  user?: { name: string; email: string };
+  room: { id: string; code: string | null; name: string; description: string | null; capacity: number };
+  user?: { name: string; email: string; department?: { name: string } | null };
+  bookedFor?: { name: string; email: string; department?: { name: string } | null } | null;
+  department?: { name: string } | null;
 };
 
 function item(type: NotificationType, at: Date, b: Row): NotificationItem {
@@ -36,12 +40,15 @@ function item(type: NotificationType, at: Date, b: Row): NotificationItem {
     title: b.title,
     roomId: b.room.id,
     roomName: b.room.name,
+    roomCode: b.room.code,
     roomDescription: b.room.description,
     capacity: b.room.capacity,
     startTime: b.startTime.toISOString(),
     endTime: b.endTime.toISOString(),
     attendees: b.attendees,
-    requester: b.user,
+    requester: b.user && { name: b.user.name, email: b.user.email, department: b.user.department?.name ?? null },
+    bookedFor: b.bookedFor ? { name: b.bookedFor.name, email: b.bookedFor.email, department: b.bookedFor.department?.name ?? null } : null,
+    forDepartment: b.department?.name ?? null,
     reason: type === "rejected" ? b.rejectionReason : undefined,
     autoApproved: b.autoApproved,
   };
@@ -71,7 +78,7 @@ export async function GET() {
 
       const pending = await prisma.booking.findMany({
         where: { ...scope, status: "PENDING", startTime: { gt: now } },
-        include: { room: ROOM, user: REQUESTER },
+        include: { room: ROOM, ...PEOPLE },
         orderBy: { createdAt: "desc" },
         take: LIMIT,
       });

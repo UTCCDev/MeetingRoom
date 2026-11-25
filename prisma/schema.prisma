@@ -40,6 +40,7 @@ model Department {
   name  String @unique
   users User[]
   bookings Booking[]
+  rooms Room[] @relation("RoomDepartments") // rooms restricted to a list of departments
 
   @@map("departments")
 }
@@ -74,6 +75,7 @@ model Room {
   // Relations
   roomAdmin   User     @relation(fields: [roomAdminId], references: [id], onDelete: Cascade)
   approvers   User[]   @relation("RoomApprovers") // may also approve bookings in this room
+  allowedDepartments Department[] @relation("RoomDepartments") // empty = any department may book
   bookings    Booking[]
 
   @@map("rooms")

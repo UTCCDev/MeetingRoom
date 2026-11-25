@@ -15,5 +15,6 @@ export async function loadActor(session: { user?: { id?: string } | null } | nul
     role: user.role as Role,
     isPresidentApprover: user.isPresidentApprover,
     autoApproveBooking: user.autoApproveBooking,
+    departmentId: user.departmentId,
   };
 }

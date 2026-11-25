@@ -8,12 +8,17 @@ export interface NotificationItem {
   title: string;
   roomId: string;
   roomName: string;
+  roomCode: string | null;
   roomDescription: string | null;
   capacity: number;
   startTime: string;
   endTime: string;
   attendees: number;
-  requester?: { name: string; email: string };
+  requester?: { name: string; email: string; department?: string | null };
+  /** ผู้ประสานงาน, when the booking was made for someone else. */
+  bookedFor?: { name: string; email: string; department?: string | null } | null;
+  /** "จองสำหรับหน่วยงาน" chosen on the form. */
+  forDepartment?: string | null;
   reason?: string | null;
   autoApproved?: boolean;
 }

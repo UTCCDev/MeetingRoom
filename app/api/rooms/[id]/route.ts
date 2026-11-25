@@ -19,6 +19,7 @@ export async function GET(
         roomAdmin: {
           select: { id: true, name: true, email: true },
         },
+        allowedDepartments: { select: { id: true, name: true } },
       },
     });
 

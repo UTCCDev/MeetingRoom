@@ -45,7 +45,7 @@ export function useBookingDetail(id: string | null) {
         const data = await res.json().catch(() => ({}));
         if (!alive) return;
         if (res.ok) setBooking(data);
-        else setError(res.status === 404 ? "ไม่พบการจองนี้ หรือคุณไม่มีสิทธิ์ดูรายละเอียด" : data.error || "โหลดข้อมูลไม่สำเร็จ");
+        else setError(res.status === 404 ? "ไม่พบการจองนี้" : data.error || "โหลดข้อมูลไม่สำเร็จ");
       })
       .catch(() => alive && setError("โหลดข้อมูลไม่สำเร็จ"))
       .finally(() => alive && setLoading(false));

@@ -111,8 +111,16 @@ export default function RoomDetailPage() {
   const [bookedFor, setBookedFor] = useState<PickedUser | null>(null);
   const [departmentId, setDepartmentId] = useState("");
   const [myDepartmentId, setMyDepartmentId] = useState("");
+  const [me, setMe] = useState<{ role: string; departmentId: string | null } | null>(null);
   // Coordinator only matters when booking for a department other than the user's own.
   const showCoordinator = departmentId !== myDepartmentId;
+  // Mirrors the server rule in POST /api/bookings (mayBookRoom).
+  const allowedDepts: { id: string; name: string }[] = (room as any)?.allowedDepartments ?? [];
+  const bookingBlock = !me
+    ? ""
+    : allowedDepts.length > 0 && me.role !== "SYSTEM_ADMIN" && !allowedDepts.some((d) => d.id === me.departmentId)
+        ? `ห้องนี้จองได้เฉพาะ ${allowedDepts.map((d) => d.name).join(", ")}`
+        : "";
   const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
@@ -124,6 +132,7 @@ export default function RoomDetailPage() {
     fetch("/api/me")
       .then((r) => (r.ok ? r.json() : null))
       .then((me) => {
+        if (me) setMe(me);
         if (me?.departmentId) {
           setMyDepartmentId(me.departmentId);
           setDepartmentId((current) => current || me.departmentId);
@@ -700,6 +709,11 @@ export default function RoomDetailPage() {
                   <span className="icon icon--24" aria-hidden="true">login</span>
                   เข้าสู่ระบบเพื่อจอง
                 </Link>
+              </div>
+            ) : bookingBlock ? (
+              <div className="text-center py-6">
+                <span className="icon icon--40 text-ink-subtle mb-3 inline-block" aria-hidden="true">lock</span>
+                <p className="text-body-medium text-ink-muted">{bookingBlock}</p>
               </div>
             ) : (
             <form onSubmit={handleBooking} className="space-y-6" noValidate>

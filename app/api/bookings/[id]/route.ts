@@ -6,7 +6,7 @@ import { loadActor } from "@/lib/actor";
 import { bookingRecipients, onBookingApproved } from "@/lib/booking-approval";
 import { sendBookingNotification } from "@/lib/email";
 import { deleteRoomEvent, isRoomCalendarConfigured } from "@/lib/room-calendar";
-import { canCancel, canDecide, canTransition, canView } from "@/lib/validation";
+import { canCancel, canDecide, canTransition } from "@/lib/validation";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -17,7 +17,8 @@ const INCLUDE = { room: { include: { approvers: { select: { id: true } } } }, us
 const SERVER_ERROR = "เกิดข้อผิดพลาดที่เซิร์ฟเวอร์ กรุณาลองใหม่";
 const UNAUTHORIZED = () => NextResponse.json({ error: "ไม่ได้รับอนุญาต" }, { status: 401 });
 
-// GET a specific booking (booker, beneficiary, or anyone who may decide it)
+// GET a specific booking. Any signed-in user may read it (room calendars show everyone the details);
+// approving and cancelling are still restricted below.
 export async function GET(request: NextRequest, { params }: RouteContext) {
   try {
     const { id } = await params;
@@ -26,8 +27,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
 
     const booking = await prisma.booking.findUnique({ where: { id }, include: INCLUDE });
 
-    // Respond 404 rather than 403 so booking ids can't be probed.
-    if (!booking || !canView(actor, booking)) {
+    if (!booking) {
       return NextResponse.json({ error: "ไม่พบการจองนี้" }, { status: 404 });
     }
 

@@ -1,149 +1,183 @@
-"use client";
+'use client'
 
-import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useToast } from "./Toast";
-import { formatRange, roomLocation } from "@/lib/format";
-import { timeAgo, type NotificationItem, type NotificationType } from "@/lib/notifications";
+import Link from 'next/link'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useToast } from './Toast'
+import { formatRange } from '@/lib/format'
+import { roomPlace } from '@/lib/room-code'
 
-const POLL_MS = 60_000;
+// Room names repeat across buildings, so always show the code and building/floor too.
+function roomPlaceText(n: NotificationItem): string {
+  const { building, floor } = roomPlace({ code: n.roomCode, description: n.roomDescription })
+  return [building && `อาคาร ${building}`, floor && `ชั้น ${floor}`].filter(Boolean).join(' ')
+}
+function roomWhere(n: NotificationItem): string {
+  return [n.roomCode && `(${n.roomCode})`, roomPlaceText(n)].filter(Boolean).join(' ')
+}
+import { timeAgo, type NotificationItem, type NotificationType } from '@/lib/notifications'
+
+const POLL_MS = 60_000
 /** Fired after a decision so open pages (e.g. อนุมัติการจอง) can refetch. */
-export const BOOKING_DECIDED_EVENT = "booking-decided";
+export const BOOKING_DECIDED_EVENT = 'booking-decided'
 
 const LOOK: Record<NotificationType, { icon: string; tone: string }> = {
-  approval: { icon: "pending_actions", tone: "bg-highlight-container text-on-highlight-container" },
-  approved: { icon: "check_circle", tone: "bg-success-container text-on-success-container" },
-  rejected: { icon: "cancel", tone: "bg-error-container text-on-error-container" },
-  cancelled: { icon: "event_busy", tone: "bg-surface-variant text-ink-muted" },
-  reminder: { icon: "alarm", tone: "bg-primary-container text-on-primary-container" },
-  coordinator: { icon: "person_add", tone: "bg-primary-container text-on-primary-container" },
-};
+  approval: { icon: 'pending_actions', tone: 'bg-highlight-container text-on-highlight-container' },
+  approved: { icon: 'check_circle', tone: 'bg-success-container text-on-success-container' },
+  rejected: { icon: 'cancel', tone: 'bg-error-container text-on-error-container' },
+  cancelled: { icon: 'event_busy', tone: 'bg-surface-variant text-ink-muted' },
+  reminder: { icon: 'alarm', tone: 'bg-primary-container text-on-primary-container' },
+  coordinator: { icon: 'person_add', tone: 'bg-primary-container text-on-primary-container' },
+}
 
 function headline(n: NotificationItem): React.ReactNode {
-  const t = <span className="font-medium text-ink">“{n.title}”</span>;
+  const t = <span className="font-medium text-ink">“{n.title}”</span>
   switch (n.type) {
-    case "approval":
-      return <><span className="font-medium text-ink">{n.requester?.name}</span> ขอจอง {n.roomName}</>;
-    case "approved":
-      return <>การจอง {t} ได้รับการอนุมัติแล้ว</>;
-    case "rejected":
-      return <>การจอง {t} ถูกปฏิเสธ</>;
-    case "cancelled":
-      return <><span className="font-medium text-ink">{n.requester?.name}</span> ยกเลิกการจอง {t}</>;
-    case "reminder":
-      return <>ใกล้ถึงเวลาประชุม {t}</>;
-    case "coordinator":
-      return <><span className="font-medium text-ink">{n.requester?.name}</span> ระบุให้คุณเป็นผู้ประสานงาน {t}</>;
+    case 'approval':
+      return (
+        <>
+          <span className="font-medium text-ink">{n.requester?.name}</span> ขอจอง{' '}
+          <span className="font-medium text-ink">{n.roomName}</span> {roomWhere(n)}
+        </>
+      )
+    case 'approved':
+      return <>การจอง {t} ได้รับการอนุมัติแล้ว</>
+    case 'rejected':
+      return <>การจอง {t} ถูกปฏิเสธ</>
+    case 'cancelled':
+      return (
+        <>
+          <span className="font-medium text-ink">{n.requester?.name}</span> ยกเลิกการจอง {t}
+        </>
+      )
+    case 'reminder':
+      return <>ใกล้ถึงเวลาประชุม {t}</>
+    case 'coordinator':
+      return (
+        <>
+          <span className="font-medium text-ink">{n.requester?.name}</span>{' '}
+          ระบุให้คุณเป็นผู้ประสานงาน {t}
+        </>
+      )
   }
 }
 
-export default function NotificationBell({ userId, isApprover }: { userId: string; isApprover: boolean }) {
-  const [items, setItems] = useState<NotificationItem[]>([]);
-  const [open, setOpen] = useState(false);
-  const [seenAt, setSeenAt] = useState(0);
-  const [highlightAfter, setHighlightAfter] = useState(0); // unread marker kept while the panel is open
-  const [busy, setBusy] = useState<string | null>(null);
-  const [rejecting, setRejecting] = useState<string | null>(null);
-  const [reason, setReason] = useState("");
-  const [reasonError, setReasonError] = useState("");
-  const rootRef = useRef<HTMLDivElement>(null);
-  const toast = useToast();
-  const storageKey = `notif-seen:${userId}`;
+export default function NotificationBell({
+  userId,
+  isApprover,
+}: {
+  userId: string
+  isApprover: boolean
+}) {
+  const [items, setItems] = useState<NotificationItem[]>([])
+  const [open, setOpen] = useState(false)
+  const [seenAt, setSeenAt] = useState(0)
+  const [highlightAfter, setHighlightAfter] = useState(0) // unread marker kept while the panel is open
+  const [busy, setBusy] = useState<string | null>(null)
+  const [rejecting, setRejecting] = useState<string | null>(null)
+  const [reason, setReason] = useState('')
+  const [reasonError, setReasonError] = useState('')
+  const rootRef = useRef<HTMLDivElement>(null)
+  const toast = useToast()
+  const storageKey = `notif-seen:${userId}`
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch("/api/notifications", { cache: "no-store" });
-      if (!res.ok) return;
-      const data = await res.json();
-      setItems(data.items || []);
+      const res = await fetch('/api/notifications', { cache: 'no-store' })
+      if (!res.ok) return
+      const data = await res.json()
+      setItems(data.items || [])
     } catch {
       // offline or server hiccup — keep the last list
     }
-  }, []);
+  }, [])
 
   useEffect(() => {
     try {
-      setSeenAt(Number(localStorage.getItem(storageKey)) || 0);
+      setSeenAt(Number(localStorage.getItem(storageKey)) || 0)
     } catch {
       /* storage blocked */
     }
-    load();
-    const timer = setInterval(load, POLL_MS);
-    const onFocus = () => load();
-    window.addEventListener("focus", onFocus);
-    window.addEventListener(BOOKING_DECIDED_EVENT, onFocus);
+    load()
+    const timer = setInterval(load, POLL_MS)
+    const onFocus = () => load()
+    window.addEventListener('focus', onFocus)
+    window.addEventListener(BOOKING_DECIDED_EVENT, onFocus)
     return () => {
-      clearInterval(timer);
-      window.removeEventListener("focus", onFocus);
-      window.removeEventListener(BOOKING_DECIDED_EVENT, onFocus);
-    };
-  }, [load, storageKey]);
+      clearInterval(timer)
+      window.removeEventListener('focus', onFocus)
+      window.removeEventListener(BOOKING_DECIDED_EVENT, onFocus)
+    }
+  }, [load, storageKey])
 
   // Close on outside click / Esc.
   useEffect(() => {
-    if (!open) return;
+    if (!open) return
     const onDown = (e: MouseEvent) => {
-      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
-    };
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
-    document.addEventListener("mousedown", onDown);
-    document.addEventListener("keydown", onKey);
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false)
+    document.addEventListener('mousedown', onDown)
+    document.addEventListener('keydown', onKey)
     return () => {
-      document.removeEventListener("mousedown", onDown);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
+      document.removeEventListener('mousedown', onDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
 
   const markSeen = () => {
-    const now = Date.now();
-    setSeenAt(now);
+    const now = Date.now()
+    setSeenAt(now)
     try {
-      localStorage.setItem(storageKey, String(now));
+      localStorage.setItem(storageKey, String(now))
     } catch {
       /* storage blocked */
     }
-  };
+  }
 
   const toggle = () => {
     if (!open) {
-      setHighlightAfter(seenAt);
-      markSeen();
-      load();
+      setHighlightAfter(seenAt)
+      markSeen()
+      load()
     }
-    setOpen((o) => !o);
-  };
+    setOpen((o) => !o)
+  }
 
-  const decide = async (n: NotificationItem, status: "APPROVED" | "REJECTED") => {
-    if (status === "REJECTED" && !reason.trim()) {
-      setReasonError("กรุณาระบุเหตุผลในการปฏิเสธ");
-      return;
+  const decide = async (n: NotificationItem, status: 'APPROVED' | 'REJECTED') => {
+    if (status === 'REJECTED' && !reason.trim()) {
+      setReasonError('กรุณาระบุเหตุผลในการปฏิเสธ')
+      return
     }
-    setBusy(n.id);
+    setBusy(n.id)
     try {
       const res = await fetch(`/api/bookings/${n.bookingId}/decide`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(status === "APPROVED" ? { status } : { status, rejectionReason: reason.trim() }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || "ดำเนินการไม่สำเร็จ");
-      setItems((list) => list.filter((i) => i.id !== n.id));
-      setRejecting(null);
-      setReason("");
-      toast(status === "APPROVED" ? `อนุมัติ “${n.title}” แล้ว` : `ปฏิเสธ “${n.title}” แล้ว`, { type: "success" });
-      window.dispatchEvent(new Event(BOOKING_DECIDED_EVENT));
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(
+          status === 'APPROVED' ? { status } : { status, rejectionReason: reason.trim() }
+        ),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'ดำเนินการไม่สำเร็จ')
+      setItems((list) => list.filter((i) => i.id !== n.id))
+      setRejecting(null)
+      setReason('')
+      toast(status === 'APPROVED' ? `อนุมัติ “${n.title}” แล้ว` : `ปฏิเสธ “${n.title}” แล้ว`, {
+        type: 'success',
+      })
+      window.dispatchEvent(new Event(BOOKING_DECIDED_EVENT))
     } catch (err) {
-      toast(err instanceof Error ? err.message : "ดำเนินการไม่สำเร็จ", { type: "error" });
-      load();
+      toast(err instanceof Error ? err.message : 'ดำเนินการไม่สำเร็จ', { type: 'error' })
+      load()
     } finally {
-      setBusy(null);
+      setBusy(null)
     }
-  };
+  }
 
-  const unread = items.filter((i) => new Date(i.at).getTime() > seenAt).length;
-  const approvals = items.filter((i) => i.type === "approval");
-  const updates = items.filter((i) => i.type !== "approval");
-  const isNew = (n: NotificationItem) => new Date(n.at).getTime() > highlightAfter;
+  const unread = items.filter((i) => new Date(i.at).getTime() > seenAt).length
+  const approvals = items.filter((i) => i.type === 'approval')
+  const updates = items.filter((i) => i.type !== 'approval')
+  const isNew = (n: NotificationItem) => new Date(n.at).getTime() > highlightAfter
 
   return (
     <div ref={rootRef} className="relative">
@@ -151,16 +185,16 @@ export default function NotificationBell({ userId, isApprover }: { userId: strin
         type="button"
         onClick={toggle}
         className="icon-button relative"
-        aria-label={`การแจ้งเตือน${unread ? ` (${unread} รายการใหม่)` : ""}`}
+        aria-label={`การแจ้งเตือน${unread ? ` (${unread} รายการใหม่)` : ''}`}
         aria-expanded={open}
         aria-controls="notification-panel"
       >
-        <span className={`icon icon--24 ${open ? "icon--filled" : ""}`} aria-hidden="true">
+        <span className={`icon icon--24 ${open ? 'icon--filled' : ''}`} aria-hidden="true">
           notifications
         </span>
         {unread > 0 && (
           <span className="absolute top-0.5 left-[1.375rem] min-w-[1.25rem] h-5 px-1 rounded-full bg-error text-on-error text-label-medium leading-5 text-center tabular-nums ring-2 ring-white">
-            {unread > 99 ? "99+" : unread}
+            {unread > 99 ? '99+' : unread}
           </span>
         )}
       </button>
@@ -175,7 +209,9 @@ export default function NotificationBell({ userId, isApprover }: { userId: strin
           <div className="flex items-center justify-between px-5 h-16 border-b border-line flex-none">
             <h2 className="text-title-large text-ink">การแจ้งเตือน</h2>
             <button type="button" onClick={load} className="icon-button -mr-2" aria-label="รีเฟรช">
-              <span className="icon icon--24" aria-hidden="true">refresh</span>
+              <span className="icon icon--24" aria-hidden="true">
+                refresh
+              </span>
             </button>
           </div>
 
@@ -188,41 +224,96 @@ export default function NotificationBell({ userId, isApprover }: { userId: strin
                 </h3>
                 {approvals.length === 0 ? (
                   <p className="flex items-center gap-2 px-5 pb-4 text-body-medium text-ink-subtle">
-                    <span className="icon icon--24" aria-hidden="true">task_alt</span>
+                    <span className="icon icon--24" aria-hidden="true">
+                      task_alt
+                    </span>
                     ไม่มีคำขอค้าง
                   </p>
                 ) : (
                   <ul>
                     {approvals.map((n) => {
-                      const over = n.attendees > n.capacity;
+                      const over = n.attendees > n.capacity
                       return (
-                        <li key={n.id} className={`px-5 py-4 border-b border-line ${isNew(n) ? "bg-primary-99" : ""}`}>
+                        <li
+                          key={n.id}
+                          className={`px-5 py-4 border-b border-line ${isNew(n) ? 'bg-primary-99' : ''}`}
+                        >
                           <div className="flex gap-3">
                             <span className={`icon-tile ${LOOK.approval.tone}`} aria-hidden="true">
                               <span className="icon icon--24">{LOOK.approval.icon}</span>
                             </span>
                             <div className="min-w-0 flex-1">
-                              <p className="text-body-medium text-ink-muted">{headline(n)}</p>
-                              <p className="text-title-medium text-ink mt-1">{n.title}</p>
-                              <p className="flex items-center gap-2 mt-1 text-body-small text-ink-muted tabular-nums">
-                                <span className="icon icon--20 text-ink-subtle" aria-hidden="true">schedule</span>
+                              {/* What and where in one block: room names repeat, so code and place sit under the title. */}
+                              <div className="rounded-lg bg-surface-variant px-3 py-2 mb-2">
+                                <p className="text-title-medium text-ink break-words">{n.title}</p>
+                                <p className="flex items-center gap-1 mt-1 text-body-small text-ink-muted">
+                                  <span className="icon icon--20 text-ink-subtle" aria-hidden="true">
+                                    meeting_room
+                                  </span>
+                                  <span>
+                                    {n.roomName}
+                                    {n.roomCode && <span className="tabular-nums"> ({n.roomCode})</span>}
+                                    {roomPlaceText(n) && ` · ${roomPlaceText(n)}`}
+                                  </span>
+                                </p>
+                              </div>
+                              <p className="flex items-start gap-2 text-body-small text-ink-muted">
+                                <span className="icon icon--20 text-ink-subtle" aria-hidden="true">
+                                  person
+                                </span>
+                                <span>
+                                  ผู้จอง: <span className="font-medium text-ink">{n.requester?.name}</span>
+                                  {n.requester?.department && ` (${n.requester.department})`}
+                                </span>
+                              </p>
+                              {n.bookedFor && (
+                                <p className="flex items-start gap-2 text-body-small text-ink-muted">
+                                  <span className="icon icon--20 text-ink-subtle" aria-hidden="true">
+                                    person_add
+                                  </span>
+                                  <span>
+                                    จองให้: <span className="font-medium text-ink">{n.bookedFor.name}</span>
+                                    {n.bookedFor.department && ` (${n.bookedFor.department})`}
+                                  </span>
+                                </p>
+                              )}
+                              {n.forDepartment && (
+                                <p className="flex items-start gap-2 text-body-small text-ink-muted">
+                                  <span className="icon icon--20 text-ink-subtle" aria-hidden="true">
+                                    apartment
+                                  </span>
+                                  <span>สำหรับหน่วยงาน: {n.forDepartment}</span>
+                                </p>
+                              )}
+                              <p className="flex items-center gap-2 text-body-small text-ink-muted tabular-nums">
+                                <span className="icon icon--20 text-ink-subtle" aria-hidden="true">
+                                  schedule
+                                </span>
                                 {formatRange(n.startTime, n.endTime)}
                               </p>
                               <p className="flex items-center gap-2 text-body-small text-ink-muted">
-                                <span className="icon icon--20 text-ink-subtle" aria-hidden="true">group</span>
-                                <span className="tabular-nums">{n.attendees}</span> คน / ความจุ {n.capacity}
+                                <span className="icon icon--20 text-ink-subtle" aria-hidden="true">
+                                  group
+                                </span>
+                                ผู้เข้าร่วม:{' '}
+                                <span className="tabular-nums">
+                                  {n.attendees}/{n.capacity}
+                                </span>
                                 {over && (
                                   <span className="badge--error">
-                                    <span className="icon icon--20" aria-hidden="true">warning</span>
+                                    <span className="icon icon--20" aria-hidden="true">
+                                      warning
+                                    </span>
                                     เกินความจุ
                                   </span>
                                 )}
                               </p>
                               <p className="text-body-small text-ink-subtle">{timeAgo(n.at)}</p>
-
                               {rejecting === n.id ? (
                                 <div className="mt-2">
-                                  <label htmlFor={`notif-reason-${n.id}`} className="sr-only">เหตุผลในการปฏิเสธ</label>
+                                  <label htmlFor={`notif-reason-${n.id}`} className="sr-only">
+                                    เหตุผลในการปฏิเสธ
+                                  </label>
                                   <textarea
                                     id={`notif-reason-${n.id}`}
                                     rows={2}
@@ -230,11 +321,11 @@ export default function NotificationBell({ userId, isApprover }: { userId: strin
                                     autoFocus
                                     value={reason}
                                     onChange={(e) => {
-                                      setReason(e.target.value);
-                                      setReasonError("");
+                                      setReason(e.target.value)
+                                      setReasonError('')
                                     }}
                                     placeholder="เหตุผลในการปฏิเสธ (จำเป็น)"
-                                    className={`input-field ${reasonError ? "border-error" : ""}`}
+                                    className={`input-field ${reasonError ? 'border-error' : ''}`}
                                     aria-invalid={!!reasonError}
                                   />
                                   {reasonError && <p className="field-error">{reasonError}</p>}
@@ -243,35 +334,49 @@ export default function NotificationBell({ userId, isApprover }: { userId: strin
                                       type="button"
                                       className="btn-text"
                                       onClick={() => {
-                                        setRejecting(null);
-                                        setReason("");
-                                        setReasonError("");
+                                        setRejecting(null)
+                                        setReason('')
+                                        setReasonError('')
                                       }}
                                     >
                                       ยกเลิก
                                     </button>
-                                    <button type="button" className="btn-danger" disabled={busy === n.id} onClick={() => decide(n, "REJECTED")}>
-                                      {busy === n.id ? "กำลังส่ง…" : "ยืนยันปฏิเสธ"}
+                                    <button
+                                      type="button"
+                                      className="btn-danger"
+                                      disabled={busy === n.id}
+                                      onClick={() => decide(n, 'REJECTED')}
+                                    >
+                                      {busy === n.id ? 'กำลังส่ง…' : 'ยืนยันปฏิเสธ'}
                                     </button>
                                   </div>
                                 </div>
                               ) : (
                                 <div className="flex flex-wrap gap-3 mt-3">
-                                  <button type="button" className="btn-primary" disabled={busy === n.id} onClick={() => decide(n, "APPROVED")}>
-                                    <span className="icon icon--20" aria-hidden="true">check</span>
-                                    {busy === n.id ? "กำลังอนุมัติ…" : "อนุมัติ"}
+                                  <button
+                                    type="button"
+                                    className="btn-primary"
+                                    disabled={busy === n.id}
+                                    onClick={() => decide(n, 'APPROVED')}
+                                  >
+                                    <span className="icon icon--20" aria-hidden="true">
+                                      check
+                                    </span>
+                                    {busy === n.id ? 'กำลังอนุมัติ…' : 'อนุมัติ'}
                                   </button>
                                   <button
                                     type="button"
                                     className="btn-outline-error"
                                     disabled={busy === n.id}
                                     onClick={() => {
-                                      setRejecting(n.id);
-                                      setReason("");
-                                      setReasonError("");
+                                      setRejecting(n.id)
+                                      setReason('')
+                                      setReasonError('')
                                     }}
                                   >
-                                    <span className="icon icon--20" aria-hidden="true">close</span>
+                                    <span className="icon icon--20" aria-hidden="true">
+                                      close
+                                    </span>
                                     ปฏิเสธ
                                   </button>
                                 </div>
@@ -279,7 +384,7 @@ export default function NotificationBell({ userId, isApprover }: { userId: strin
                             </div>
                           </div>
                         </li>
-                      );
+                      )
                     })}
                   </ul>
                 )}
@@ -290,7 +395,9 @@ export default function NotificationBell({ userId, isApprover }: { userId: strin
               <h3 className="px-5 pt-4 pb-2 text-title-small text-ink-muted">อัปเดตล่าสุด</h3>
               {updates.length === 0 ? (
                 <p className="flex items-center gap-2 px-5 pb-5 text-body-medium text-ink-subtle">
-                  <span className="icon icon--24" aria-hidden="true">notifications_off</span>
+                  <span className="icon icon--24" aria-hidden="true">
+                    notifications_off
+                  </span>
                   ยังไม่มีการแจ้งเตือน
                 </p>
               ) : (
@@ -298,25 +405,35 @@ export default function NotificationBell({ userId, isApprover }: { userId: strin
                   {updates.map((n) => (
                     <li key={n.id}>
                       <Link
-                        href={n.type === "cancelled" ? `/rooms/${n.roomId}` : "/my-bookings"}
+                        href={n.type === 'cancelled' ? `/rooms/${n.roomId}` : '/my-bookings'}
                         onClick={() => setOpen(false)}
-                        className={`flex gap-3 px-5 py-4 border-b border-line hover:bg-surface-variant ${isNew(n) ? "bg-primary-99" : ""}`}
+                        className={`flex gap-3 px-5 py-4 border-b border-line hover:bg-surface-variant ${isNew(n) ? 'bg-primary-99' : ''}`}
                       >
                         <span className={`icon-tile ${LOOK[n.type].tone}`} aria-hidden="true">
                           <span className="icon icon--24">{LOOK[n.type].icon}</span>
                         </span>
                         <span className="min-w-0 flex-1">
-                          <span className="block text-body-medium text-ink-muted">{headline(n)}</span>
-                          <span className="block mt-1 text-body-small text-ink-subtle tabular-nums">
-                            {n.roomName}
-                            {roomLocation(n.roomDescription) && ` · ${roomLocation(n.roomDescription)}`} · {formatRange(n.startTime, n.endTime)}
+                          <span className="block text-body-medium text-ink-muted">
+                            {headline(n)}
                           </span>
-                          {n.type === "rejected" && n.reason && (
-                            <span className="block mt-1 text-body-medium text-on-error-container">เหตุผล: {n.reason}</span>
+                          <span className="block mt-1 text-body-small text-ink-subtle tabular-nums">
+                            {n.roomName} {roomWhere(n)} · {formatRange(n.startTime, n.endTime)}
+                          </span>
+                          {n.type === 'rejected' && n.reason && (
+                            <span className="block mt-1 text-body-medium text-on-error-container">
+                              เหตุผล: {n.reason}
+                            </span>
                           )}
-                          <span className="block text-body-small text-ink-subtle">{timeAgo(n.at)}</span>
+                          <span className="block text-body-small text-ink-subtle">
+                            {timeAgo(n.at)}
+                          </span>
                         </span>
-                        {isNew(n) && <span className="w-2.5 h-2.5 mt-2 flex-none rounded-full bg-primary" aria-label="ใหม่" />}
+                        {isNew(n) && (
+                          <span
+                            className="w-2.5 h-2.5 mt-2 flex-none rounded-full bg-primary"
+                            aria-label="ใหม่"
+                          />
+                        )}
                       </Link>
                     </li>
                   ))}
@@ -330,14 +447,20 @@ export default function NotificationBell({ userId, isApprover }: { userId: strin
               การจองของฉัน
             </Link>
             {isApprover && (
-              <Link href="/admin/pending-approvals" onClick={() => setOpen(false)} className="btn-text">
+              <Link
+                href="/admin/pending-approvals"
+                onClick={() => setOpen(false)}
+                className="btn-text"
+              >
                 ดูคำขอทั้งหมด
-                <span className="icon icon--20" aria-hidden="true">arrow_forward</span>
+                <span className="icon icon--20" aria-hidden="true">
+                  arrow_forward
+                </span>
               </Link>
             )}
           </div>
         </div>
       )}
     </div>
-  );
+  )
 }
