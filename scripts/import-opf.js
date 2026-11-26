@@ -16,8 +16,12 @@ const path = require("path");
 const { PrismaClient } = require("@prisma/client");
 
 const OWNER_EMAIL = "admin20@utcc.ac.th";
-const FILE = path.join(__dirname, "..", "old", "opf", "opf-bookings.json");
+// Optional: --file=<path> (e.g. old/opf/opf-bak-bookings.json from scripts/opf-bak-build.py)
+const fileArg = process.argv.find((a) => a.startsWith("--file="));
+const FILE = fileArg ? path.resolve(fileArg.slice(7)) : path.join(__dirname, "..", "old", "opf", "opf-bookings.json");
 const commit = process.argv.includes("--commit");
+// --skip-clashes: don't insert APPROVED rows that overlap a live booking in the same room (listed for review instead).
+const skipClashes = process.argv.includes("--skip-clashes");
 const prisma = new PrismaClient();
 
 // Excel times are Bangkok local time.
@@ -44,6 +48,9 @@ async function main() {
     select: { id: true, roomId: true, title: true, description: true, startTime: true, endTime: true, status: true },
   });
   const markers = new Set(existing.map((b) => (b.description || "").match(/\[OPF#[^\]]+\]/)?.[0]).filter(Boolean));
+  // Old reservation ids already imported (any time slot), to catch reservations re-timed in the old system.
+  const importedIds = new Set([...markers].map((m) => m.match(/^\[OPF#(.+)@/)?.[1]));
+  const changed = [];
   const live = existing.filter((b) => b.status === "PENDING" || b.status === "APPROVED");
 
   const data = [];
@@ -54,10 +61,14 @@ async function main() {
     const endTime = bkk(r.endTime);
     const marker = `[OPF#${r.old_ReserveID}@${r.startTime}]`;
     if (markers.has(marker)) { skipped++; continue; }
+    if (importedIds.has(String(r.old_ReserveID))) { changed.push(`${r.room_code} ${r.startTime} "${r.title}" (OPF#${r.old_ReserveID})`); continue; }
     const room = roomByCode[r.room_code];
     if (r.status === "APPROVED") {
       const clash = live.find((b) => b.roomId === room.id && b.startTime < endTime && b.endTime > startTime);
-      if (clash) conflicts.push(`${r.room_code} ${r.startTime} "${r.title}" ชนกับ booking ${clash.id} "${clash.title}"`);
+      if (clash) {
+        conflicts.push(`${r.room_code} ${r.startTime} "${r.title}" ชนกับ booking ${clash.id} "${clash.title}"`);
+        if (skipClashes) continue;
+      }
     }
     const desc = [
       marker,
@@ -81,8 +92,11 @@ async function main() {
   console.log(`rows in file: ${rows.length}`);
   console.log(`already imported (skipped): ${skipped}`);
   console.log(`to insert: ${data.length} (APPROVED ${data.filter((d) => d.status === "APPROVED").length}, CANCELLED ${data.filter((d) => d.status === "CANCELLED").length})`);
+  console.log(`already imported with different time (skipped, check by hand): ${changed.length}`);
+  changed.slice(0, 30).forEach((c) => console.log("  - " + c));
   console.log(`clashes with existing bookings in DB: ${conflicts.length}`);
-  conflicts.slice(0, 30).forEach((c) => console.log("  - " + c));
+  if (skipClashes) console.log(`  (--skip-clashes: these are NOT inserted)`);
+  (skipClashes ? conflicts : conflicts.slice(0, 30)).forEach((c) => console.log("  - " + c));
 
   if (!commit) { console.log("\nDry run only. Re-run with --commit to insert."); return; }
   for (let i = 0; i < data.length; i += 500) {
