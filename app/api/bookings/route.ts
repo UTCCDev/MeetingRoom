@@ -24,9 +24,33 @@ export async function GET(request: NextRequest) {
     }
 
     const me = (session.user as any).id as string;
+    const include = {
+      room: true,
+      user: USER_PUBLIC,
+      bookedFor: USER_PUBLIC,
+      department: { select: { id: true, name: true } },
+    } as const;
+
+    // scope=department: bookings made by, or for, the caller's department (read-only view)
+    if (request.nextUrl.searchParams.get("scope") === "department") {
+      const row = await prisma.user.findUnique({
+        where: { id: me },
+        select: { department: { select: { id: true, name: true } } },
+      });
+      const department = row?.department ?? null;
+      if (!department) return NextResponse.json({ department: null, bookings: [] });
+
+      const bookings = await prisma.booking.findMany({
+        where: { OR: [{ departmentId: department.id }, { user: { departmentId: department.id } }] },
+        include,
+        orderBy: { startTime: "asc" },
+      });
+      return NextResponse.json({ department, bookings });
+    }
+
     const bookings = await prisma.booking.findMany({
       where: { OR: [{ userId: me }, { bookedForId: me }] },
-      include: { room: true, user: USER_PUBLIC, bookedFor: USER_PUBLIC, department: { select: { id: true, name: true } } },
+      include,
       orderBy: { startTime: "asc" },
     });
 

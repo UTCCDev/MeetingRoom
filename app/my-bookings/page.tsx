@@ -54,7 +54,10 @@ const STATUS_CLASS = STATUS_BADGE;
 
 export default function MyBookingsPage() {
   const { data: session } = useSession();
-  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [myBookings, setBookings] = useState<Booking[]>([]);
+  const [deptBookings, setDeptBookings] = useState<Booking[] | null>(null);
+  const [department, setDepartment] = useState<{ id: string; name: string } | null>(null);
+  const [scope, setScope] = useState<"mine" | "department">("mine");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [tab, setTab] = useState<"upcoming" | "history">("upcoming");
@@ -84,6 +87,32 @@ export default function MyBookingsPage() {
     }
   };
 
+  const fetchDepartmentBookings = async () => {
+    try {
+      const response = await fetch("/api/bookings?scope=department");
+      if (!response.ok) throw new Error("Failed to fetch department bookings");
+      const data = await response.json();
+      setDepartment(data.department);
+      setDeptBookings(data.bookings);
+    } catch (err) {
+      setError("ไม่สามารถโหลดการจองของหน่วยงานได้");
+      setDeptBookings([]);
+    }
+  };
+
+  const changeScope = (next: "mine" | "department") => {
+    setScope(next);
+    setFilter("ALL");
+    setError("");
+    if (next === "department") fetchDepartmentBookings();
+  };
+
+  const me = (session?.user as any)?.id as string | undefined;
+  const bookings = scope === "mine" ? myBookings : deptBookings ?? [];
+  const loading = isLoading || (scope === "department" && deptBookings === null);
+  // Department members see each other's bookings read-only; only the booker/coordinator may cancel.
+  const isOwn = (b: Booking) => b.user?.id === me || b.bookedFor?.id === me;
+
   const confirmCancel = async () => {
     if (!pendingCancel) return;
     setIsCancelling(true);
@@ -96,9 +125,10 @@ export default function MyBookingsPage() {
 
       if (!response.ok) throw new Error(data.error || "ไม่สามารถยกเลิกการจองได้");
 
-      setBookings((bs) =>
-        bs.map((b) => (b.id === pendingCancel.id ? { ...b, status: "CANCELLED" } : b))
-      );
+      const markCancelled = (bs: Booking[]) =>
+        bs.map((b) => (b.id === pendingCancel.id ? { ...b, status: "CANCELLED" } : b));
+      setBookings(markCancelled);
+      setDeptBookings((bs) => (bs ? markCancelled(bs) : bs));
       toast("ยกเลิกการจองแล้ว", { type: "success" });
       setPendingCancel(null);
     } catch (err) {
@@ -124,7 +154,7 @@ export default function MyBookingsPage() {
       const created = new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime();
       return created || new Date(b.startTime).getTime() - new Date(a.startTime).getTime();
     });
-  const paged = usePagination(visible, 10, `${tab}|${filter}`);
+  const paged = usePagination(visible, 10, `${scope}|${tab}|${filter}`);
 
   const upcomingCount = bookings.filter(isUpcoming).length;
 
@@ -133,6 +163,31 @@ export default function MyBookingsPage() {
       <AppHeader title="การจองของฉัน" breadcrumbs={[{ label: "การจองของฉัน" }]} />
 
       <div className="max-w-[120rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="chip-group mb-4" role="group" aria-label="ขอบเขตการจอง">
+          {[
+            { value: "mine" as const, icon: "person", label: "การจองของฉัน" },
+            { value: "department" as const, icon: "apartment", label: "การจองของหน่วยงาน" },
+          ].map((s) => (
+            <button
+              key={s.value}
+              type="button"
+              onClick={() => changeScope(s.value)}
+              aria-pressed={scope === s.value}
+              className="chip"
+            >
+              <span className="icon icon--20" aria-hidden="true">{s.icon}</span>
+              {s.label}
+            </button>
+          ))}
+        </div>
+
+        {scope === "department" && department && (
+          <p className="flex items-center gap-2 card__body mb-4">
+            <span className="icon icon--20 text-ink-subtle" aria-hidden="true">apartment</span>
+            หน่วยงาน: {department.name}
+          </p>
+        )}
+
         <div className="flex border-b border-line mb-6" role="tablist">
           {[
             { value: "upcoming" as const, icon: "upcoming", label: "กำลังจะมาถึง", count: upcomingCount },
@@ -185,14 +240,21 @@ export default function MyBookingsPage() {
           </div>
         )}
 
-        {isLoading ? (
+        {loading ? (
           <SkeletonCards count={3} />
+        ) : scope === "department" && !department ? (
+          <div className="empty-state">
+            <span className="icon icon--40 text-ink-subtle" aria-hidden="true">apartment</span>
+            <p>บัญชีของคุณยังไม่ได้ระบุหน่วยงาน จึงไม่มีการจองของหน่วยงานให้แสดง</p>
+          </div>
         ) : visible.length === 0 ? (
           <div className="empty-state">
             <span className="icon icon--40 text-ink-subtle" aria-hidden="true">event_busy</span>
             <p className="mb-2">
               {bookings.length === 0
-                ? "คุณยังไม่มีการจองใดๆ"
+                ? scope === "department"
+                  ? "หน่วยงานของคุณยังไม่มีการจอง"
+                  : "คุณยังไม่มีการจองใดๆ"
                 : filter !== "ALL"
                 ? "ไม่มีการจองที่ตรงกับตัวกรองที่เลือก"
                 : tab === "upcoming"
@@ -208,11 +270,12 @@ export default function MyBookingsPage() {
           <div ref={paged.listRef} className="scroll-mt-24">
             <div className="space-y-4">
               {paged.pageItems.map((booking) => {
-                const cancellable = isUpcoming(booking);
-                const countdown = cancellable
+                const upcoming = isUpcoming(booking);
+                const cancellable = upcoming && isOwn(booking);
+                const countdown = upcoming
                   ? timeUntil(new Date(booking.startTime), new Date(booking.endTime), now)
                   : null;
-                const muted = !cancellable;
+                const muted = !upcoming;
                 return (
                   <div
                     key={booking.id}
@@ -231,10 +294,16 @@ export default function MyBookingsPage() {
                           <span className="icon icon--20 text-ink-subtle" aria-hidden="true">location_on</span>
                           {roomLabel(booking.room)}
                         </p>
+                        {scope === "department" && !isOwn(booking) && (
+                          <p className="flex items-center gap-2 card__body mt-1">
+                            <span className="icon icon--20 text-ink-subtle" aria-hidden="true">person</span>
+                            จองโดย: {booking.user?.name ?? "-"}
+                          </p>
+                        )}
                         {booking.bookedFor && (
                           <p className="flex items-center gap-2 card__body mt-1">
                             <span className="icon icon--20 text-ink-subtle" aria-hidden="true">person</span>
-                            {booking.bookedFor.id === (session?.user as any)?.id
+                            {booking.bookedFor.id === me
                               ? `คุณเป็นผู้ประสานงาน (จองโดย ${booking.user?.name ?? "-"})`
                               : `ผู้ประสานงาน: ${booking.bookedFor.name}`}
                           </p>

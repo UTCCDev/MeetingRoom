@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import AppHeader from "@/app/components/AppHeader";
+import Link from "next/link";
 import Dropdown from "@/app/components/Dropdown";
 import DatePicker from "@/app/components/DatePicker";
 import { SkeletonCards } from "@/app/components/Skeleton";
@@ -153,7 +153,19 @@ export default function SchedulePage() {
 
   return (
     <div className="min-h-screen bg-canvas">
-      <AppHeader title="สรุปการใช้ห้อง" breadcrumbs={[{ label: "สรุปการใช้ห้อง" }]} />
+      {/* Standalone page: shared by link with staff who have no account, so no app menu. */}
+      <header className="bg-white border-b border-line">
+        <div className="max-w-[120rem] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center gap-3">
+          <span className="icon-tile bg-primary text-on-primary" aria-hidden="true">
+            <span className="icon icon--20 icon--filled">calendar_view_day</span>
+          </span>
+          <h1 className="text-title-large text-primary">สรุปการใช้ห้อง</h1>
+          <Link href="/" className="btn-secondary btn--s ml-auto">
+            <span className="icon icon--20" aria-hidden="true">home</span>
+            หน้าแรก
+          </Link>
+        </div>
+      </header>
 
       <div className="max-w-[120rem] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         <p className="text-body-medium text-ink-muted">
